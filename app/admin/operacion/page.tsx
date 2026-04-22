@@ -1,7 +1,6 @@
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, ChevronRight } from "lucide-react"
 
-import { OperacionWorkbench } from "@/components/admin/operacion-workbench"
 import { Button } from "@/components/ui/button"
 import { prisma } from "@/lib/prisma"
 
@@ -11,17 +10,7 @@ export default async function OperacionPage() {
     include: {
       disciplines: {
         include: {
-          teams: {
-            include: { players: true },
-            orderBy: { createdAt: "asc" },
-          },
-          matches: {
-            include: {
-              team1: { select: { id: true, name: true } },
-              team2: { select: { id: true, name: true } },
-            },
-            orderBy: { createdAt: "asc" },
-          },
+          _count: { select: { teams: true, matches: true } },
         },
         orderBy: { name: "asc" },
       },
@@ -45,30 +34,12 @@ export default async function OperacionPage() {
     )
   }
 
-  const disciplines = tournament.disciplines.map((d) => ({
-    id: d.id,
-    name: d.name,
-    slug: d.slug,
-    teamsCount: d.teamsCount,
-    format: d.format,
-    teams: d.teams,
-    matches: d.matches.map((m) => ({
-      id: m.id,
-      score1: m.score1,
-      score2: m.score2,
-      played: m.played,
-      stage: m.stage,
-      team1: m.team1,
-      team2: m.team2,
-    })),
-  }))
-
   return (
     <div className="min-h-screen bg-background px-4 py-6 md:px-8">
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="mx-auto max-w-2xl space-y-6">
         <header className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Modo operación · día del torneo</p>
+            <p className="text-sm text-muted-foreground">Modo operación</p>
             <h1 className="text-3xl font-bold text-foreground">{tournament.name}</h1>
           </div>
           <Button asChild variant="outline" size="sm">
@@ -79,17 +50,33 @@ export default async function OperacionPage() {
           </Button>
         </header>
 
-        {disciplines.length === 0 ? (
+        <p className="text-lg text-muted-foreground">Elegí un deporte para administrarlo:</p>
+
+        {tournament.disciplines.length === 0 ? (
           <div className="rounded-3xl border-2 border-dashed border-border p-10 text-center">
-            <p className="text-xl text-muted-foreground">
-              Este torneo no tiene disciplinas todavía.
-            </p>
+            <p className="text-xl text-muted-foreground">Este torneo no tiene disciplinas todavía.</p>
             <p className="mt-2 text-base text-muted-foreground">
               Agregalas desde el panel de administración.
             </p>
           </div>
         ) : (
-          <OperacionWorkbench disciplines={disciplines} />
+          <div className="space-y-3">
+            {tournament.disciplines.map((discipline) => (
+              <Link
+                key={discipline.id}
+                href={`/admin/operacion/${discipline.slug}`}
+                className="flex items-center justify-between rounded-3xl border-2 border-border bg-card p-6 transition-colors hover:border-primary hover:bg-primary/5"
+              >
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">{discipline.name}</h2>
+                  <p className="mt-1 text-base text-muted-foreground">
+                    {discipline._count.teams} inscritos · {discipline._count.matches} partidos
+                  </p>
+                </div>
+                <ChevronRight className="h-6 w-6 shrink-0 text-muted-foreground" />
+              </Link>
+            ))}
+          </div>
         )}
       </div>
     </div>
