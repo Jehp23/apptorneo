@@ -135,7 +135,7 @@ export default async function AdminPage() {
               <Link href="/torneo">Vista participante</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/pantalla">Modo pantalla</Link>
+              <Link href="/pantalla?mode=auto">Modo pantalla</Link>
             </Button>
             {isAdmin ? (
               <form action={logout}>
@@ -198,7 +198,7 @@ export default async function AdminPage() {
 
         <div className="flex justify-end">
           <Button asChild className="gap-2">
-            <Link href="/pantalla">
+            <Link href="/pantalla?mode=auto">
               <MonitorPlay className="h-4 w-4" />
               Abrir pantalla grande
             </Link>

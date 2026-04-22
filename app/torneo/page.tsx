@@ -67,7 +67,7 @@ const experienceCards = [
   {
     title: "Pantalla grande",
     description: "Vista optimizada para TV o monitor con estado global del torneo.",
-    href: "/pantalla",
+    href: "/pantalla?mode=auto",
     cta: "Abrir pantalla",
     icon: MonitorPlay,
   },
@@ -104,7 +104,7 @@ export default function TournamentHomePage() {
               <LogIn className="h-4 w-4" />
               Cambiar acceso
             </Link>
-            <Link href="/pantalla" className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 font-medium text-foreground transition-colors hover:bg-muted">
+            <Link href="/pantalla?mode=auto" className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 font-medium text-foreground transition-colors hover:bg-muted">
               Abrir pantalla
               <ArrowRight className="h-4 w-4" />
             </Link>
