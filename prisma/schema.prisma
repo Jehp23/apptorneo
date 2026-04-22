@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TeamType {
+  TEAM
+  PAIR
+  SINGLE
+}
+
+model Tournament {
+  id          String       @id @default(cuid())
+  name        String
+  location    String
+  year        Int
+  status      String
+  disciplines Discipline[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt()
+}
+
+model Discipline {
+  id           String   @id @default(cuid())
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  tournamentId String
+  name         String
+  slug         String   @unique
+  format       String?
+  teamsCount   Int?
+  playersCount Int?
+  details      String?
+  teams        Team[]
+  matches      Match[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt()
+}
+
+model Team {
+  id           String   @id @default(cuid())
+  discipline   Discipline @relation(fields: [disciplineId], references: [id])
+  disciplineId String
+  name         String
+  type         TeamType @default(TEAM)
+  group        String?
+  seed         Int?
+  players      Player[]
+  matchesAsTeam1 Match[] @relation("Team1Matches")
+  matchesAsTeam2 Match[] @relation("Team2Matches")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt()
+}
+
+model Player {
+  id        String @id @default(cuid())
+  team      Team   @relation(fields: [teamId], references: [id])
+  teamId    String
+  name      String
+  seniority Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+}
+
+model Match {
+  id           String   @id @default(cuid())
+  discipline   Discipline @relation(fields: [disciplineId], references: [id])
+  disciplineId String
+  team1        Team?     @relation("Team1Matches", fields: [team1Id], references: [id])
+  team1Id      String?
+  team2        Team?     @relation("Team2Matches", fields: [team2Id], references: [id])
+  team2Id      String?
+  score1       Int?
+  score2       Int?
+  played       Boolean   @default(false)
+  stage        String?
+  date         DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt()
+}

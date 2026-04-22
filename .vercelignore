@@ -1,0 +1,11 @@
+.env.local
+.env.*.local
+.next/
+out/
+build/
+dist/
+*.pem
+node_modules/
+.git/
+.gitignore
+README.md

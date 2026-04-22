@@ -1,35 +1,116 @@
-# v0-sports-tournament-dashboard
+# 🏆 Sistema de Torneos Deportivos
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+Dashboard para gestionar torneos deportivos locales. Una persona administra el torneo y los participantes pueden ver el estado en tiempo real.
 
-## Built with v0
+## ✨ Características
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+- **6 Disciplinas**: Futbol 5, Padel, Loba, Truco, Metegol, Sapo
+- **Gestión de Equipos y Jugadores**: Crear, editar y gestionar participantes
+- **Resultados en Vivo**: Actualizar scores en tiempo real
+- **Clasificaciones Automáticas**: Cálculo de posiciones con criterios de desempate
+- **Fixture y Fase Final**: Visualización de partidos y brackets
+- **Responsive Design**: Funciona en desktop y mobile
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_gng4ufumExdBcASA9Hllg0MEGk26)
+## 🚀 Quick Start
 
-## Getting Started
-
-First, run the development server:
-
+### 1. Clonar y Instalar
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+git clone <repo>
+cd v0-sports-tournament-dashboard
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configurar Base de Datos
+```bash
+# Crear archivo .env.local
+echo "DATABASE_URL=postgresql://..." > .env.local
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# Sincronizar BD
+npm run db:push
 
-## Learn More
+# Cargar datos de ejemplo (opcional)
+npm run db:seed
+```
 
-To learn more, take a look at the following resources:
+### 3. Desarrollo Local
+```bash
+npm run dev
+# Abre http://localhost:3000
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+## 📦 Stack Tecnológico
 
-<a href="https://v0.app/chat/api/kiro/clone/julianGonzalez22/v0-sports-tournament-dashboard" alt="Open in Kiro"><img src="https://pdgvvgmkdvyeydso.public.blob.vercel-storage.com/open%20in%20kiro.svg?sanitize=true" /></a>
+- **Frontend**: Next.js 16, React 19, TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui
+- **Base de Datos**: PostgreSQL (Neon)
+- **ORM**: Prisma
+- **Deployment**: Vercel
+
+## 🏗️ Estructura
+
+```
+app/
+├── (disciplinas)     # Páginas públicas de cada deporte
+├── api/
+│   ├── /tournaments  # API de torneos
+│   ├── /disciplines  # API de disciplinas
+│   └── /admin        # Panel administrativo
+components/          # Componentes reutilizables
+lib/                 # Utilidades y cliente Prisma
+prisma/              # Schema y migraciones
+```
+
+## 📖 Documentación
+
+- [**QUICKSTART.md**](./QUICKSTART.md) - Guía rápida de 5 minutos
+- [**DEPLOYMENT.md**](./DEPLOYMENT.md) - Instrucciones detalladas para Vercel + Neon
+
+## 🔌 API Endpoints
+
+### Públicas
+- `GET /api/tournaments` - Listar torneos
+- `GET /api/disciplines` - Listar disciplinas
+- `GET /api/disciplines/:slug` - Detalle de disciplina
+- `GET /api/disciplines/:slug/matches` - Partidos
+
+### Admin
+- `PATCH /api/admin/matches/:matchId` - Actualizar resultado
+- `POST /api/admin/disciplines/:slug/teams` - Crear equipo
+- `POST /api/tournaments` - Crear torneo
+
+## 🔐 Variables de Ambiente
+
+```env
+# Base de datos (obtén en neon.tech)
+DATABASE_URL=postgresql://user:password@ep-xxx.neon.tech/neondb
+
+# URL pública (para Vercel)
+NEXT_PUBLIC_API_URL=https://tu-app.vercel.app
+```
+
+## 🛠️ Comandos
+
+```bash
+npm run dev              # Desarrollo local
+npm run build            # Build para producción
+npm run start            # Ejecutar servidor
+npm run db:push          # Sincronizar BD
+npm run db:seed          # Cargar datos de ejemplo
+npm run db:migrate       # Crear nueva migración
+npm run prisma:generate  # Generar Prisma Client
+```
+
+## 🌐 Deploy
+
+### En Vercel (Recomendado)
+
+1. Push a GitHub
+2. Conecta el repo en [vercel.com/new](https://vercel.com/new)
+3. Añade `DATABASE_URL` en Environment Variables
+4. Deploy automático en cada push a `main`
+
+Ver [DEPLOYMENT.md](./DEPLOYMENT.md) para pasos detallados.
+
+## 📝 Licencia
+
+MIT
