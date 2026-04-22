@@ -7,6 +7,7 @@ import {
   CircleDot,
   Users,
   LogIn,
+  ArrowRight,
 } from "lucide-react"
 
 const disciplines = [
@@ -59,29 +60,34 @@ export default function Home() {
 
   return (
     <div className="p-8">
-      {/* Header */}
-      <div className="mb-10">
-        <h1 className="font-serif font-semibold text-3xl text-foreground mb-2">
-          Bienvenidos al Torneo Interno
-        </h1>
-        <p className="text-lg">
-          <span className="text-primary font-semibold">Sanatorio El Carmen</span>
-          <span className="text-muted-foreground"> - Edicion 2025</span>
-        </p>
+      <div className="mb-8 rounded-3xl border border-border bg-card p-6">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-2xl space-y-3">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">Torneo interno</p>
+            <h1 className="font-serif text-3xl font-semibold text-foreground">Bienvenidos al Torneo Interno</h1>
+            <p className="text-lg text-muted-foreground">
+              Esta es la vista pública para participantes. Si querés administrar el torneo, entrás por login. Si solo querés seguir cómo va, ya estás adentro.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              <span className="font-semibold text-primary">Sanatorio El Carmen</span>
+              <span> · Edición 2025</span>
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+              <LogIn className="h-4 w-4" />
+              Elegir acceso
+            </Link>
+            <Link href="/futbol5" className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 font-medium text-foreground transition-colors hover:bg-muted">
+              Ver torneo
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
       </div>
 
-      {/* Login Button */}
-      <div className="mb-8 flex justify-end">
-        <Link href="/login">
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
-            <LogIn className="w-4 h-4" />
-            Ingresar
-          </button>
-        </Link>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-10">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-10">
         <div className="bg-card rounded-xl border border-border p-5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -117,7 +123,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Disciplines Grid */}
       <div className="mb-6">
         <h2 className="font-serif font-semibold text-lg text-foreground mb-4">Disciplinas</h2>
       </div>

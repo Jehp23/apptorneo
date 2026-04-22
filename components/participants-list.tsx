@@ -1,11 +1,22 @@
 "use client"
 
-import type { Player, Team } from "@/lib/data"
 import { Users } from "lucide-react"
+
+interface ParticipantPlayer {
+  id: string
+  name: string
+  seniority?: number | null
+}
+
+interface ParticipantTeam {
+  id: string
+  name: string
+  players: ParticipantPlayer[]
+}
 
 interface ParticipantsListProps {
   title: string
-  teams: Team[]
+  teams: ParticipantTeam[]
 }
 
 export function ParticipantsList({ title, teams }: ParticipantsListProps) {
@@ -36,7 +47,7 @@ export function ParticipantsList({ title, teams }: ParticipantsListProps) {
                 >
                   <span className="text-foreground">{player.name}</span>
                   <span className="text-muted-foreground text-xs font-mono">
-                    {player.seniority} años
+                    {player.seniority ?? "—"} años
                   </span>
                 </li>
               ))}
@@ -53,8 +64,8 @@ interface PairParticipantsListProps {
   pairs: Array<{
     id: string
     name: string
-    player1: Player
-    player2: Player
+    player1: ParticipantPlayer
+    player2: ParticipantPlayer
   }>
 }
 
@@ -68,19 +79,19 @@ export function PairParticipantsList({ title, pairs }: PairParticipantsListProps
         <h3 className="font-serif font-semibold text-foreground">{title}</h3>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {pairs.map((pair, pairIndex) => (
+        {pairs.map((pair) => (
           <div key={pair.id} className="bg-card border border-border rounded-xl overflow-hidden hover:shadow-md transition-shadow">
             <div className="px-4 py-3 border-b border-border bg-muted/30">
               <span className="font-semibold text-foreground">{pair.name}</span>
             </div>
             <ul className="divide-y divide-border">
-              <li className={`flex items-center justify-between px-4 py-2.5 text-sm`}>
+              <li className="flex items-center justify-between px-4 py-2.5 text-sm">
                 <span className="text-foreground">{pair.player1.name}</span>
-                <span className="text-muted-foreground text-xs font-mono">{pair.player1.seniority}a</span>
+                <span className="text-muted-foreground text-xs font-mono">{pair.player1.seniority ?? "—"}a</span>
               </li>
               <li className="flex items-center justify-between px-4 py-2.5 text-sm bg-muted/20">
                 <span className="text-foreground">{pair.player2.name}</span>
-                <span className="text-muted-foreground text-xs font-mono">{pair.player2.seniority}a</span>
+                <span className="text-muted-foreground text-xs font-mono">{pair.player2.seniority ?? "—"}a</span>
               </li>
             </ul>
           </div>

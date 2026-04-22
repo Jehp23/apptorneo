@@ -86,6 +86,10 @@ DATABASE_URL=postgresql://user:password@ep-xxx.neon.tech/neondb
 
 # URL pública (para Vercel)
 NEXT_PUBLIC_API_URL=https://tu-app.vercel.app
+
+# Acceso admin
+ADMIN_PASSWORD=tu-clave-admin
+ADMIN_SECRET=un-secreto-largo-y-unico
 ```
 
 ## 🛠️ Comandos
