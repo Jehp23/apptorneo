@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Inter, Montserrat } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
-import { Sidebar } from '@/components/sidebar'
+import { AppShell } from '@/components/layout/app-shell'
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -46,12 +46,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${inter.variable} ${montserrat.variable} bg-background`}>
       <body className="font-sans antialiased">
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <main className="flex-1 ml-64">
-            {children}
-          </main>
-        </div>
+        <AppShell>{children}</AppShell>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

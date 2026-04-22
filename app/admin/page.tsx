@@ -76,7 +76,7 @@ export default async function AdminPage() {
 
           <div className="flex flex-wrap items-center gap-3">
             <Button asChild variant="outline">
-              <Link href="/">Ver vista participante</Link>
+              <Link href="/torneo">Ver vista participante</Link>
             </Button>
             {isAdmin ? (
               <form action={logout}>
