@@ -137,6 +137,9 @@ export default async function AdminPage() {
             <Button asChild variant="outline">
               <Link href="/pantalla?mode=auto">Modo pantalla</Link>
             </Button>
+            <Button asChild>
+              <Link href="/admin/operacion">Modo operación</Link>
+            </Button>
             {isAdmin ? (
               <form action={logout}>
                 <Button type="submit" variant="outline" className="gap-2">
