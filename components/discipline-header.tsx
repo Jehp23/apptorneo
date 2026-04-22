@@ -1,31 +1,27 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { type LucideIcon } from "lucide-react"
 
 interface DisciplineHeaderProps {
-  name: string;
-  icon: string;
+  name: string
+  Icon: LucideIcon
+  description?: string
 }
 
-export function DisciplineHeader({ name, icon }: DisciplineHeaderProps) {
+export function DisciplineHeader({ name, Icon, description }: DisciplineHeaderProps) {
   return (
-    <header className="border-b border-border">
-      <div className="max-w-5xl mx-auto px-6 py-12 md:py-16">
-        <Link 
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Volver
-        </Link>
-        <div className="flex items-center gap-5">
-          <span className="text-4xl md:text-5xl" role="img" aria-label={name}>
-            {icon}
-          </span>
-          <h1 className="text-3xl md:text-4xl font-light tracking-tight">{name}</h1>
+    <header className="mb-8">
+      <div className="flex items-center gap-4 mb-2">
+        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Icon className="w-6 h-6 text-primary" />
+        </div>
+        <div>
+          <h1 className="font-serif font-semibold text-2xl text-foreground">{name}</h1>
+          {description && (
+            <p className="text-sm text-muted-foreground">{description}</p>
+          )}
         </div>
       </div>
     </header>
-  );
+  )
 }

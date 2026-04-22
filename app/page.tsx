@@ -1,73 +1,135 @@
-import Link from "next/link";
-import { disciplines } from "@/lib/data";
-import { ArrowRight, FileText } from "lucide-react";
+import Link from "next/link"
+import {
+  Trophy,
+  Target,
+  Spade,
+  Gamepad2,
+  CircleDot,
+  Users,
+} from "lucide-react"
 
-export default function HomePage() {
+const disciplines = [
+  {
+    name: "Futbol 5",
+    href: "/futbol5",
+    icon: Trophy,
+    description: "6 equipos",
+    participants: 30,
+  },
+  {
+    name: "Padel",
+    href: "/padel",
+    icon: Target,
+    description: "8 parejas",
+    participants: 16,
+  },
+  {
+    name: "Loba",
+    href: "/loba",
+    icon: Spade,
+    description: "16 parejas",
+    participants: 32,
+  },
+  {
+    name: "Truco",
+    href: "/truco",
+    icon: Spade,
+    description: "16 parejas",
+    participants: 32,
+  },
+  {
+    name: "Metegol",
+    href: "/metegol",
+    icon: Gamepad2,
+    description: "12 parejas",
+    participants: 24,
+  },
+  {
+    name: "Sapo",
+    href: "/sapo",
+    icon: CircleDot,
+    description: "20 participantes",
+    participants: 20,
+  },
+]
+
+export default function Home() {
+  const totalParticipants = disciplines.reduce((acc, d) => acc + d.participants, 0)
+
   return (
-    <main className="min-h-screen bg-background">
+    <div className="p-8">
       {/* Header */}
-      <header className="border-b border-border">
-        <div className="max-w-5xl mx-auto px-6 py-16 md:py-24">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-4">
-            Sanatorio El Carmen
-          </p>
-          <h1 className="text-4xl md:text-6xl font-light tracking-tight text-balance">
-            Torneo Interno
-          </h1>
-          <p className="mt-4 text-muted-foreground max-w-md">
-            Competencias deportivas y de entretenimiento para todos los colaboradores.
-          </p>
-        </div>
-      </header>
-
-      {/* Disciplines */}
-      <section className="max-w-5xl mx-auto px-6 py-16">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-8">
-          Disciplinas
+      <div className="mb-10">
+        <h1 className="font-serif font-semibold text-3xl text-foreground mb-2">
+          Bienvenidos al Torneo Interno
+        </h1>
+        <p className="text-lg">
+          <span className="text-primary font-semibold">Sanatorio El Carmen</span>
+          <span className="text-muted-foreground"> - Edicion 2025</span>
         </p>
-        <div className="grid gap-px bg-border">
-          {disciplines.map((discipline) => (
-            <Link 
-              key={discipline.id} 
-              href={discipline.href}
-              className="group bg-background hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex items-center justify-between py-6 md:py-8">
-                <div className="flex items-center gap-6">
-                  <span className="text-3xl md:text-4xl w-14 text-center" role="img" aria-label={discipline.name}>
-                    {discipline.icon}
-                  </span>
-                  <span className="text-lg md:text-xl font-medium">{discipline.name}</span>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all" />
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      </div>
 
-      {/* Regulations */}
-      <section className="max-w-5xl mx-auto px-6 pb-16">
-        <Link 
-          href="/reglamento"
-          className="group flex items-center justify-between py-6 border-t border-b border-border hover:bg-muted/50 transition-colors"
-        >
-          <div className="flex items-center gap-4">
-            <FileText className="h-5 w-5 text-muted-foreground" />
-            <span className="font-medium">Reglamento General</span>
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4 mb-10">
+        <div className="bg-card rounded-xl border border-border p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Trophy className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-2xl font-semibold text-foreground">{disciplines.length}</p>
+              <p className="text-sm text-muted-foreground">Disciplinas</p>
+            </div>
           </div>
-          <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all" />
-        </Link>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-border">
-        <div className="max-w-5xl mx-auto px-6 py-8">
-          <p className="text-sm text-muted-foreground">
-            2026
-          </p>
         </div>
-      </footer>
-    </main>
-  );
+        <div className="bg-card rounded-xl border border-border p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
+              <Users className="w-5 h-5 text-secondary" />
+            </div>
+            <div>
+              <p className="text-2xl font-semibold text-foreground">{totalParticipants}</p>
+              <p className="text-sm text-muted-foreground">Participantes</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-card rounded-xl border border-border p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+              <Target className="w-5 h-5 text-accent" />
+            </div>
+            <div>
+              <p className="text-2xl font-semibold text-foreground">En Curso</p>
+              <p className="text-sm text-muted-foreground">Estado</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Disciplines Grid */}
+      <div className="mb-6">
+        <h2 className="font-serif font-semibold text-lg text-foreground mb-4">Disciplinas</h2>
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        {disciplines.map((discipline) => (
+          <Link
+            key={discipline.name}
+            href={discipline.href}
+            className="group bg-card rounded-xl border border-border p-6 hover:shadow-md hover:border-primary/20 transition-all duration-200"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <discipline.icon className="w-6 h-6 text-primary" />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-md">
+                {discipline.participants} jugadores
+              </span>
+            </div>
+            <h3 className="font-serif font-semibold text-foreground mb-1">{discipline.name}</h3>
+            <p className="text-sm text-muted-foreground">{discipline.description}</p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
 }

@@ -1,63 +1,38 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { DisciplineHeader } from "@/components/discipline-header";
-import { SimpleStandingsTable, type SimpleStandingRow } from "@/components/simple-standings-table";
-import { PairParticipantsList } from "@/components/participants-list";
-import { Regulations } from "@/components/regulations";
-import { metegolTeams, metegolGroups } from "@/lib/data";
-import { Trophy } from "lucide-react";
+import { useState } from "react"
+import { Gamepad2, Trophy } from "lucide-react"
+import { DisciplineHeader } from "@/components/discipline-header"
+import { SimpleStandingsTable, type SimpleStandingRow } from "@/components/simple-standings-table"
+import { PairParticipantsList } from "@/components/participants-list"
+import { Regulations } from "@/components/regulations"
+import { PremiumTabs } from "@/components/premium-tabs"
+import { InfoPanel } from "@/components/info-panel"
+import { metegolTeams, metegolGroups } from "@/lib/data"
 
 const regulations = [
   {
     title: "Formato del Torneo",
     items: [
       "36 jugadores en 18 equipos de 2",
-      "6 grupos de 3 equipos cada uno",
-      "Fase de grupos: todos contra todos",
-      "Ganador de cada grupo avanza a la fase final",
+      "6 grupos de 3 equipos",
+      "Ganador de cada grupo al hexagonal",
     ],
   },
   {
     title: "Fase Final",
-    items: [
-      "Hexagonal final: los 6 ganadores de grupo",
-      "Todos contra todos en la fase final",
-    ],
+    items: ["Hexagonal: 6 ganadores de grupo", "Todos contra todos"],
   },
   {
     title: "Formato de Partidos",
-    items: [
-      "Mejor de 3 partidos",
-      "Cada partido a 7 goles",
-    ],
+    items: ["Mejor de 3 partidos", "Cada partido a 7 goles"],
   },
   {
     title: "Sistema de Puntos",
-    items: [
-      "Victoria: 1 punto",
-      "Bonus por ganar 2-0: +2 puntos adicionales",
-      "Bonus por ganar 2-1: +1 punto adicional",
-    ],
+    items: ["Victoria: 1 punto", "Bonus por 2-0: +2 pts", "Bonus por 2-1: +1 pt"],
   },
-  {
-    title: "Reglas Especiales",
-    items: [
-      "Prohibido el remolino (spinning)",
-      "Se permite girar la barra maximo 360 grados",
-    ],
-  },
-  {
-    title: "Criterios de Desempate",
-    items: [
-      "1. Resultado entre empatados (cabeza a cabeza)",
-      "2. Antigüedad del equipo",
-      "3. Sorteo",
-    ],
-  },
-];
+]
 
-// Mock standings for groups (simulated data)
 const mockGroupStandings: Record<number, SimpleStandingRow[]> = {
   1: [
     { position: 1, teamName: "Los Goleadores", pj: 2, pg: 2, pp: 0, pts: 5, bonus: 3 },
@@ -89,9 +64,8 @@ const mockGroupStandings: Record<number, SimpleStandingRow[]> = {
     { position: 2, teamName: "Fuera de Juego", pj: 2, pg: 1, pp: 1, pts: 2, bonus: 1 },
     { position: 3, teamName: "Los Tarjetas", pj: 2, pg: 0, pp: 2, pts: 0, bonus: 0 },
   ],
-};
+}
 
-// Final hexagonal standings
 const hexagonalStandings: SimpleStandingRow[] = [
   { position: 1, teamName: "Los Goleadores", pj: 0, pg: 0, pp: 0, pts: 0 },
   { position: 2, teamName: "Fulbito FC", pj: 0, pg: 0, pp: 0, pts: 0 },
@@ -99,22 +73,22 @@ const hexagonalStandings: SimpleStandingRow[] = [
   { position: 4, teamName: "Mediocampo FC", pj: 0, pg: 0, pp: 0, pts: 0 },
   { position: 5, teamName: "Los Centros", pj: 0, pg: 0, pp: 0, pts: 0 },
   { position: 6, teamName: "Los Corners", pj: 0, pg: 0, pp: 0, pts: 0 },
-];
+]
 
 function GroupTablesView() {
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {Object.entries(metegolGroups).map(([groupNum, teamIds]) => {
-        const groupTeams = teamIds.map((id) => metegolTeams.find((t) => t.id === id)!);
+        const groupTeams = teamIds.map((id) => metegolTeams.find((t) => t.id === id)!)
         return (
-          <div key={groupNum} className="border border-border rounded-lg overflow-hidden">
+          <div key={groupNum} className="bg-card border border-border rounded-xl overflow-hidden">
             <div className="px-4 py-3 border-b border-border bg-muted/30">
-              <span className="font-medium">Grupo {groupNum}</span>
+              <span className="font-semibold text-foreground">Grupo {groupNum}</span>
             </div>
             <ul className="divide-y divide-border">
-              {groupTeams.map((team) => (
-                <li key={team.id} className="px-4 py-3">
-                  <div className="font-medium text-sm">{team.name}</div>
+              {groupTeams.map((team, index) => (
+                <li key={team.id} className={`px-4 py-3 ${index % 2 === 1 ? "bg-muted/20" : ""}`}>
+                  <div className="font-medium text-sm text-foreground">{team.name}</div>
                   <div className="text-xs text-muted-foreground mt-0.5">
                     {team.player1.name} y {team.player2.name}
                   </div>
@@ -122,125 +96,108 @@ function GroupTablesView() {
               ))}
             </ul>
           </div>
-        );
+        )
       })}
     </div>
-  );
+  )
 }
 
 function HexagonalView() {
-  const groupWinners = Object.entries(mockGroupStandings).map(
-    ([groupNum, standings]) => ({
-      group: groupNum,
-      winner: standings[0].teamName,
-    })
-  );
+  const groupWinners = Object.entries(mockGroupStandings).map(([groupNum, standings]) => ({
+    group: groupNum,
+    winner: standings[0].teamName,
+  }))
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8">
       {/* Group winners summary */}
-      <div>
+      <div className="bg-card rounded-xl border border-border p-6">
         <div className="flex items-center gap-3 mb-6">
-          <Trophy className="h-5 w-5" />
-          <h3 className="text-sm uppercase tracking-[0.15em] text-muted-foreground">Clasificados al Hexagonal</h3>
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Trophy className="w-4 h-4 text-primary" />
+          </div>
+          <h3 className="font-serif font-semibold text-foreground">Clasificados al Hexagonal</h3>
         </div>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {groupWinners.map((gw) => (
             <div
               key={gw.group}
-              className="flex items-center justify-between px-4 py-3 border border-border rounded-lg bg-muted/30"
+              className="flex items-center justify-between px-4 py-3 bg-muted/30 rounded-lg"
             >
               <span className="text-sm text-muted-foreground">Grupo {gw.group}</span>
-              <span className="font-medium">{gw.winner}</span>
+              <span className="font-medium text-foreground">{gw.winner}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Hexagonal table */}
-      <SimpleStandingsTable
-        title="Hexagonal Final"
-        standings={hexagonalStandings}
-        highlightTop={3}
-        showBonus
-      />
+      <SimpleStandingsTable title="Hexagonal Final" standings={hexagonalStandings} highlightTop={3} showBonus />
 
-      <div className="border border-dashed border-border rounded-lg px-6 py-8 text-center">
+      <div className="bg-muted/30 border-2 border-dashed border-border rounded-xl px-6 py-10 text-center">
         <p className="text-sm text-muted-foreground">
-          El hexagonal final aun no ha comenzado. Los 6 ganadores de grupo se
-          enfrentaran todos contra todos para determinar el campeon.
+          El hexagonal final aun no ha comenzado. Los 6 ganadores de grupo se enfrentaran todos contra
+          todos para determinar el campeon.
         </p>
       </div>
     </div>
-  );
+  )
 }
 
 const tabs = [
-  { id: "reglamento", label: "Reglamento" },
-  { id: "participantes", label: "Participantes" },
-  { id: "grupos", label: "Grupos" },
   { id: "posiciones", label: "Posiciones" },
+  { id: "grupos", label: "Grupos" },
+  { id: "participantes", label: "Equipos" },
   { id: "hexagonal", label: "Hexagonal" },
-];
+  { id: "reglamento", label: "Reglamento" },
+]
 
 export default function MetegolPage() {
-  const [activeTab, setActiveTab] = useState("posiciones");
+  const [activeTab, setActiveTab] = useState("posiciones")
 
-  // Format teams for PairParticipantsList
   const formattedTeams = metegolTeams.map((team) => ({
     id: team.id,
     name: team.name,
     player1: team.player1,
     player2: team.player2,
-  }));
+  }))
 
   return (
-    <div className="min-h-screen bg-background">
-      <DisciplineHeader name="Metegol" icon="🕹️" />
+    <div className="p-8">
+      <DisciplineHeader name="Metegol" Icon={Gamepad2} description="18 equipos - 6 grupos + hexagonal final" />
 
-      <main className="max-w-5xl mx-auto px-6 py-12">
-        {/* Tab Navigation */}
-        <nav className="flex gap-1 border-b border-border mb-12 overflow-x-auto">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap border-b-2 -mb-px ${
-                activeTab === tab.id
-                  ? "border-foreground text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+      <div className="flex gap-8">
+        <div className="flex-1 min-w-0">
+          <PremiumTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Content */}
-        {activeTab === "reglamento" && <Regulations sections={regulations} />}
+          {activeTab === "reglamento" && <Regulations sections={regulations} />}
 
-        {activeTab === "participantes" && (
-          <PairParticipantsList title="Equipos Participantes" pairs={formattedTeams} />
-        )}
+          {activeTab === "participantes" && (
+            <PairParticipantsList title="Equipos Participantes" pairs={formattedTeams} />
+          )}
 
-        {activeTab === "grupos" && <GroupTablesView />}
+          {activeTab === "grupos" && <GroupTablesView />}
 
-        {activeTab === "posiciones" && (
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {Object.entries(mockGroupStandings).map(([groupNum, standings]) => (
-              <SimpleStandingsTable
-                key={groupNum}
-                title={`Grupo ${groupNum}`}
-                standings={standings}
-                highlightTop={1}
-                showBonus
-              />
-            ))}
-          </div>
-        )}
+          {activeTab === "posiciones" && (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {Object.entries(mockGroupStandings).map(([groupNum, standings]) => (
+                <SimpleStandingsTable
+                  key={groupNum}
+                  title={`Grupo ${groupNum}`}
+                  standings={standings}
+                  highlightTop={1}
+                  showBonus
+                />
+              ))}
+            </div>
+          )}
 
-        {activeTab === "hexagonal" && <HexagonalView />}
-      </main>
+          {activeTab === "hexagonal" && <HexagonalView />}
+        </div>
+
+        <div className="hidden xl:block w-72 flex-shrink-0">
+          <InfoPanel teams={18} players={36} format="6 grupos + hexagonal" classification="1ro de cada grupo" />
+        </div>
+      </div>
     </div>
-  );
+  )
 }
