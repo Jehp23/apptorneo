@@ -7,7 +7,6 @@ import { FixtureList, type FixtureMatch } from "@/components/fixture-list";
 import { Bracket, type BracketMatch } from "@/components/bracket";
 import { PairParticipantsList } from "@/components/participants-list";
 import { Regulations } from "@/components/regulations";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trucoPairs, trucoGroups, trucoMatches } from "@/lib/data";
 
 // Calculate standings from matches
@@ -75,8 +74,8 @@ function getFixtureMatches(
         id: m.id,
         team1: pair1Name,
         team2: pair2Name,
-        score1: m.played ? (m.winner === m.pair1 ? "W" : "L") : undefined,
-        score2: m.played ? (m.winner === m.pair2 ? "W" : "L") : undefined,
+        score1: m.played ? (m.winner === m.pair1 ? "G" : "P") : undefined,
+        score2: m.played ? (m.winner === m.pair2 ? "G" : "P") : undefined,
         played: m.played,
         matchNumber: index + 1,
       };
@@ -125,8 +124,16 @@ const regulations = [
 
 // Mock bracket data
 const semis: BracketMatch[] = [
-  { id: "tsf1", team1: "Por definir (1° A)", team2: "Por definir (2° B)", played: false },
-  { id: "tsf2", team1: "Por definir (1° B)", team2: "Por definir (2° A)", played: false },
+  { id: "tsf1", team1: "Por definir (1ro A)", team2: "Por definir (2do B)", played: false },
+  { id: "tsf2", team1: "Por definir (1ro B)", team2: "Por definir (2do A)", played: false },
+];
+
+const tabs = [
+  { id: "reglamento", label: "Reglamento" },
+  { id: "participantes", label: "Participantes" },
+  { id: "fixture", label: "Fixture" },
+  { id: "posiciones", label: "Posiciones" },
+  { id: "fase-final", label: "Fase Final" },
 ];
 
 export default function TrucoPage() {
@@ -141,42 +148,48 @@ export default function TrucoPage() {
     <div className="min-h-screen bg-background">
       <DisciplineHeader name="Truco" icon="🎴" />
 
-      <main className="max-w-6xl mx-auto p-4 md:p-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 mb-6">
-            <TabsTrigger value="reglamento">Reglamento</TabsTrigger>
-            <TabsTrigger value="participantes">Participantes</TabsTrigger>
-            <TabsTrigger value="fixture">Fixture</TabsTrigger>
-            <TabsTrigger value="posiciones">Posiciones</TabsTrigger>
-            <TabsTrigger value="fase-final">Fase Final</TabsTrigger>
-          </TabsList>
+      <main className="max-w-5xl mx-auto px-6 py-12">
+        {/* Tab Navigation */}
+        <nav className="flex gap-1 border-b border-border mb-12 overflow-x-auto">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap border-b-2 -mb-px ${
+                activeTab === tab.id
+                  ? "border-foreground text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
 
-          <TabsContent value="reglamento">
-            <Regulations sections={regulations} />
-          </TabsContent>
+        {/* Content */}
+        {activeTab === "reglamento" && <Regulations sections={regulations} />}
 
-          <TabsContent value="participantes">
-            <PairParticipantsList title="Parejas Participantes" pairs={trucoPairs} />
-          </TabsContent>
+        {activeTab === "participantes" && (
+          <PairParticipantsList title="Parejas Participantes" pairs={trucoPairs} />
+        )}
 
-          <TabsContent value="fixture" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <FixtureList title="Grupo A" matches={fixtureA} />
-              <FixtureList title="Grupo B" matches={fixtureB} />
-            </div>
-          </TabsContent>
+        {activeTab === "fixture" && (
+          <div className="grid gap-12 lg:grid-cols-2">
+            <FixtureList title="Grupo A" matches={fixtureA} />
+            <FixtureList title="Grupo B" matches={fixtureB} />
+          </div>
+        )}
 
-          <TabsContent value="posiciones" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <SimpleStandingsTable title="Grupo A" standings={standingsA} />
-              <SimpleStandingsTable title="Grupo B" standings={standingsB} />
-            </div>
-          </TabsContent>
+        {activeTab === "posiciones" && (
+          <div className="grid gap-12 lg:grid-cols-2">
+            <SimpleStandingsTable title="Grupo A" standings={standingsA} />
+            <SimpleStandingsTable title="Grupo B" standings={standingsB} />
+          </div>
+        )}
 
-          <TabsContent value="fase-final">
-            <Bracket title="Fase Eliminatoria" semifinals={semis} thirdPlace={undefined} />
-          </TabsContent>
-        </Tabs>
+        {activeTab === "fase-final" && (
+          <Bracket title="Fase Eliminatoria" semifinals={semis} thirdPlace={undefined} />
+        )}
       </main>
     </div>
   );

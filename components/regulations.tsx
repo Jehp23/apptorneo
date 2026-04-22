@@ -1,7 +1,5 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 interface RegulationSection {
   title: string;
   items: string[];
@@ -13,23 +11,19 @@ interface RegulationsProps {
 
 export function Regulations({ sections }: RegulationsProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       {sections.map((section, index) => (
-        <Card key={index}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">{section.title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {section.items.map((item, itemIndex) => (
-                <li key={itemIndex} className="flex items-start gap-2 text-sm">
-                  <span className="text-primary font-bold">•</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <div key={index}>
+          <h4 className="text-sm font-medium mb-4">{section.title}</h4>
+          <ul className="space-y-2">
+            {section.items.map((item, itemIndex) => (
+              <li key={itemIndex} className="flex items-start gap-3 text-sm text-muted-foreground">
+                <span className="text-foreground mt-1.5 h-1 w-1 rounded-full bg-current flex-shrink-0" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       ))}
     </div>
   );

@@ -1,8 +1,5 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-
 export interface FixtureMatch {
   id: string;
   team1: string;
@@ -20,40 +17,35 @@ interface FixtureListProps {
 
 export function FixtureList({ title, matches }: FixtureListProps) {
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <div>
+      <h3 className="text-sm uppercase tracking-[0.15em] text-muted-foreground mb-6">{title}</h3>
+      <div className="border border-border rounded-lg divide-y divide-border">
         {matches.map((match, index) => (
           <div 
             key={match.id}
-            className={`flex items-center justify-between p-3 rounded-lg border ${
-              match.played ? "bg-muted/30" : "bg-background"
-            }`}
+            className="flex items-center py-4 px-5"
           >
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="font-mono">#{match.matchNumber || index + 1}</span>
-            </div>
-            <div className="flex items-center gap-3 flex-1 justify-center">
-              <span className="font-medium text-right flex-1 truncate">{match.team1}</span>
+            <span className="text-xs text-muted-foreground tabular-nums w-8">
+              {match.matchNumber || index + 1}
+            </span>
+            <div className="flex-1 flex items-center justify-center gap-4">
+              <span className="flex-1 text-right font-medium truncate">{match.team1}</span>
               {match.played ? (
-                <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-md min-w-[80px] justify-center">
-                  <span className="font-bold text-lg">{match.score1}</span>
-                  <span className="text-muted-foreground">-</span>
-                  <span className="font-bold text-lg">{match.score2}</span>
+                <div className="flex items-center gap-2 min-w-[72px] justify-center">
+                  <span className="font-semibold tabular-nums">{match.score1}</span>
+                  <span className="text-muted-foreground">:</span>
+                  <span className="font-semibold tabular-nums">{match.score2}</span>
                 </div>
               ) : (
-                <Badge variant="outline" className="min-w-[80px] justify-center">
-                  Pendiente
-                </Badge>
+                <span className="min-w-[72px] text-center text-xs text-muted-foreground">
+                  vs
+                </span>
               )}
-              <span className="font-medium text-left flex-1 truncate">{match.team2}</span>
+              <span className="flex-1 text-left font-medium truncate">{match.team2}</span>
             </div>
-            <div className="w-8" />
           </div>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

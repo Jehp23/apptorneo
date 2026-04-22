@@ -8,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export interface StandingRow {
   position: number;
@@ -31,49 +30,45 @@ interface StandingsTableProps {
 
 export function StandingsTable({ title, standings, highlightTop = 2 }: StandingsTableProps) {
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="w-12 text-center font-bold">#</TableHead>
-                <TableHead className="font-bold">Equipo</TableHead>
-                <TableHead className="w-12 text-center font-bold">PJ</TableHead>
-                <TableHead className="w-12 text-center font-bold">PG</TableHead>
-                <TableHead className="w-12 text-center font-bold">PE</TableHead>
-                <TableHead className="w-12 text-center font-bold">PP</TableHead>
-                <TableHead className="w-12 text-center font-bold">GF</TableHead>
-                <TableHead className="w-12 text-center font-bold">GC</TableHead>
-                <TableHead className="w-12 text-center font-bold">DG</TableHead>
-                <TableHead className="w-14 text-center font-bold bg-primary/10">PTS</TableHead>
+    <div>
+      <h3 className="text-sm uppercase tracking-[0.15em] text-muted-foreground mb-6">{title}</h3>
+      <div className="overflow-x-auto border border-border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-border hover:bg-transparent">
+              <TableHead className="w-12 text-center text-xs font-medium text-muted-foreground">#</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">Equipo</TableHead>
+              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">PJ</TableHead>
+              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">G</TableHead>
+              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">E</TableHead>
+              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">P</TableHead>
+              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">GF</TableHead>
+              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">GC</TableHead>
+              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">DG</TableHead>
+              <TableHead className="w-12 text-center text-xs font-medium text-muted-foreground">Pts</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {standings.map((row) => (
+              <TableRow 
+                key={row.teamName}
+                className={`border-b border-border last:border-0 ${row.position <= highlightTop ? "bg-muted/30" : ""}`}
+              >
+                <TableCell className="text-center font-medium tabular-nums">{row.position}</TableCell>
+                <TableCell className="font-medium">{row.teamName}</TableCell>
+                <TableCell className="text-center tabular-nums text-muted-foreground">{row.pj}</TableCell>
+                <TableCell className="text-center tabular-nums text-muted-foreground">{row.pg}</TableCell>
+                <TableCell className="text-center tabular-nums text-muted-foreground">{row.pe}</TableCell>
+                <TableCell className="text-center tabular-nums text-muted-foreground">{row.pp}</TableCell>
+                <TableCell className="text-center tabular-nums text-muted-foreground">{row.gf}</TableCell>
+                <TableCell className="text-center tabular-nums text-muted-foreground">{row.gc}</TableCell>
+                <TableCell className="text-center tabular-nums text-muted-foreground">{row.dg > 0 ? `+${row.dg}` : row.dg}</TableCell>
+                <TableCell className="text-center font-semibold tabular-nums">{row.pts}</TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {standings.map((row) => (
-                <TableRow 
-                  key={row.teamName}
-                  className={row.position <= highlightTop ? "bg-green-50 font-medium" : ""}
-                >
-                  <TableCell className="text-center font-semibold">{row.position}</TableCell>
-                  <TableCell className="font-medium">{row.teamName}</TableCell>
-                  <TableCell className="text-center">{row.pj}</TableCell>
-                  <TableCell className="text-center">{row.pg}</TableCell>
-                  <TableCell className="text-center">{row.pe}</TableCell>
-                  <TableCell className="text-center">{row.pp}</TableCell>
-                  <TableCell className="text-center">{row.gf}</TableCell>
-                  <TableCell className="text-center">{row.gc}</TableCell>
-                  <TableCell className="text-center">{row.dg > 0 ? `+${row.dg}` : row.dg}</TableCell>
-                  <TableCell className="text-center font-bold bg-primary/5">{row.pts}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 }

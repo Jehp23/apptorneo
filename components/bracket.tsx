@@ -1,7 +1,5 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 export interface BracketMatch {
   id: string;
   team1: string;
@@ -24,27 +22,27 @@ function BracketMatchCard({ match, label }: { match: BracketMatch; label: string
   const isWinner2 = match.winner === match.team2;
 
   return (
-    <div className="bg-card border rounded-lg overflow-hidden">
-      <div className="bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground">
-        {label}
+    <div className="border border-border rounded-lg overflow-hidden min-w-[200px]">
+      <div className="px-4 py-2 border-b border-border bg-muted/30">
+        <span className="text-xs text-muted-foreground">{label}</span>
       </div>
-      <div className="divide-y">
-        <div className={`flex items-center justify-between p-2 ${isWinner1 ? "bg-green-50" : ""}`}>
-          <span className={`font-medium text-sm ${isWinner1 ? "text-green-700" : ""}`}>
+      <div className="divide-y divide-border">
+        <div className={`flex items-center justify-between px-4 py-3 ${isWinner1 ? "bg-foreground/5" : ""}`}>
+          <span className={`text-sm ${isWinner1 ? "font-semibold" : "font-medium"}`}>
             {match.team1 || "Por definir"}
           </span>
           {match.played && (
-            <span className={`font-bold ${isWinner1 ? "text-green-700" : ""}`}>
+            <span className={`tabular-nums ${isWinner1 ? "font-semibold" : "text-muted-foreground"}`}>
               {match.score1}
             </span>
           )}
         </div>
-        <div className={`flex items-center justify-between p-2 ${isWinner2 ? "bg-green-50" : ""}`}>
-          <span className={`font-medium text-sm ${isWinner2 ? "text-green-700" : ""}`}>
+        <div className={`flex items-center justify-between px-4 py-3 ${isWinner2 ? "bg-foreground/5" : ""}`}>
+          <span className={`text-sm ${isWinner2 ? "font-semibold" : "font-medium"}`}>
             {match.team2 || "Por definir"}
           </span>
           {match.played && (
-            <span className={`font-bold ${isWinner2 ? "text-green-700" : ""}`}>
+            <span className={`tabular-nums ${isWinner2 ? "font-semibold" : "text-muted-foreground"}`}>
               {match.score2}
             </span>
           )}
@@ -56,55 +54,55 @@ function BracketMatchCard({ match, label }: { match: BracketMatch; label: string
 
 export function Bracket({ title, semifinals, final, thirdPlace }: BracketProps) {
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-12">
-          {/* Semifinals */}
-          <div className="flex flex-col gap-4 w-full lg:w-auto">
-            <h4 className="text-sm font-semibold text-center text-muted-foreground">Semifinales</h4>
-            <div className="flex flex-col gap-8">
-              {semifinals.map((match, index) => (
-                <BracketMatchCard key={match.id} match={match} label={`Semi ${index + 1}`} />
-              ))}
+    <div>
+      <h3 className="text-sm uppercase tracking-[0.15em] text-muted-foreground mb-6">{title}</h3>
+      <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8 lg:gap-12 overflow-x-auto pb-4">
+        {/* Semifinals */}
+        <div className="flex flex-col gap-6">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">Semifinales</p>
+          <div className="flex flex-col gap-6">
+            {semifinals.map((match, index) => (
+              <BracketMatchCard key={match.id} match={match} label={`Semi ${index + 1}`} />
+            ))}
+          </div>
+        </div>
+
+        {/* Connector */}
+        <div className="hidden lg:flex items-center self-center">
+          <div className="w-12 h-px bg-border" />
+        </div>
+
+        {/* Final */}
+        <div className="flex flex-col gap-6">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">Final</p>
+          {final ? (
+            <BracketMatchCard match={final} label="Final" />
+          ) : (
+            <div className="border border-dashed border-border rounded-lg px-4 py-8 min-w-[200px] text-center">
+              <span className="text-sm text-muted-foreground">Por definir</span>
             </div>
-          </div>
-
-          {/* Connector */}
-          <div className="hidden lg:block h-24 w-12 border-r-2 border-t-2 border-b-2 border-border rounded-r-lg" />
-
-          {/* Final */}
-          <div className="flex flex-col gap-4 w-full lg:w-auto">
-            <h4 className="text-sm font-semibold text-center text-muted-foreground">Final</h4>
-            {final ? (
-              <BracketMatchCard match={final} label="Final" />
-            ) : (
-              <div className="bg-muted/30 border border-dashed rounded-lg p-4 text-center text-sm text-muted-foreground">
-                Por definir
-              </div>
-            )}
-          </div>
-
-          {/* Third Place */}
-          {thirdPlace !== undefined && (
-            <>
-              <div className="hidden lg:block w-12" />
-              <div className="flex flex-col gap-4 w-full lg:w-auto">
-                <h4 className="text-sm font-semibold text-center text-muted-foreground">3er Puesto</h4>
-                {thirdPlace ? (
-                  <BracketMatchCard match={thirdPlace} label="3er Puesto" />
-                ) : (
-                  <div className="bg-muted/30 border border-dashed rounded-lg p-4 text-center text-sm text-muted-foreground">
-                    Por definir
-                  </div>
-                )}
-              </div>
-            </>
           )}
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Third Place */}
+        {thirdPlace !== undefined && (
+          <>
+            <div className="hidden lg:flex items-center self-center">
+              <div className="w-8 h-px bg-border" />
+            </div>
+            <div className="flex flex-col gap-6">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">3er Puesto</p>
+              {thirdPlace ? (
+                <BracketMatchCard match={thirdPlace} label="3er Puesto" />
+              ) : (
+                <div className="border border-dashed border-border rounded-lg px-4 py-8 min-w-[200px] text-center">
+                  <span className="text-sm text-muted-foreground">Por definir</span>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }

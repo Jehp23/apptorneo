@@ -5,9 +5,6 @@ import { DisciplineHeader } from "@/components/discipline-header";
 import { SimpleStandingsTable, type SimpleStandingRow } from "@/components/simple-standings-table";
 import { PairParticipantsList } from "@/components/participants-list";
 import { Regulations } from "@/components/regulations";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { metegolTeams, metegolGroups } from "@/lib/data";
 import { Trophy } from "lucide-react";
 
@@ -46,8 +43,8 @@ const regulations = [
   {
     title: "Reglas Especiales",
     items: [
-      "Prohibido el 'remolino' (spinning)",
-      "Se permite girar la barra máximo 360°",
+      "Prohibido el remolino (spinning)",
+      "Se permite girar la barra maximo 360 grados",
     ],
   },
   {
@@ -69,7 +66,7 @@ const mockGroupStandings: Record<number, SimpleStandingRow[]> = {
   ],
   2: [
     { position: 1, teamName: "Fulbito FC", pj: 2, pg: 2, pp: 0, pts: 4, bonus: 2 },
-    { position: 2, teamName: "Los Muñecos", pj: 2, pg: 1, pp: 1, pts: 2, bonus: 1 },
+    { position: 2, teamName: "Los Munecos", pj: 2, pg: 1, pp: 1, pts: 2, bonus: 1 },
     { position: 3, teamName: "Barra Brava", pj: 2, pg: 0, pp: 2, pts: 0, bonus: 0 },
   ],
   3: [
@@ -106,27 +103,25 @@ const hexagonalStandings: SimpleStandingRow[] = [
 
 function GroupTablesView() {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {Object.entries(metegolGroups).map(([groupNum, teamIds]) => {
         const groupTeams = teamIds.map((id) => metegolTeams.find((t) => t.id === id)!);
         return (
-          <Card key={groupNum}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Grupo {groupNum}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {groupTeams.map((team) => (
-                  <li key={team.id} className="p-2 bg-muted/30 rounded text-sm">
-                    <div className="font-medium">{team.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {team.player1.name} y {team.player2.name}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <div key={groupNum} className="border border-border rounded-lg overflow-hidden">
+            <div className="px-4 py-3 border-b border-border bg-muted/30">
+              <span className="font-medium">Grupo {groupNum}</span>
+            </div>
+            <ul className="divide-y divide-border">
+              {groupTeams.map((team) => (
+                <li key={team.id} className="px-4 py-3">
+                  <div className="font-medium text-sm">{team.name}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {team.player1.name} y {team.player2.name}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         );
       })}
     </div>
@@ -142,49 +137,51 @@ function HexagonalView() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-12">
       {/* Group winners summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-yellow-500" />
-            Clasificados al Hexagonal Final
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-            {groupWinners.map((gw) => (
-              <div
-                key={gw.group}
-                className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200"
-              >
-                <Badge variant="outline">Grupo {gw.group}</Badge>
-                <span className="font-medium text-green-700">{gw.winner}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div>
+        <div className="flex items-center gap-3 mb-6">
+          <Trophy className="h-5 w-5" />
+          <h3 className="text-sm uppercase tracking-[0.15em] text-muted-foreground">Clasificados al Hexagonal</h3>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {groupWinners.map((gw) => (
+            <div
+              key={gw.group}
+              className="flex items-center justify-between px-4 py-3 border border-border rounded-lg bg-muted/30"
+            >
+              <span className="text-sm text-muted-foreground">Grupo {gw.group}</span>
+              <span className="font-medium">{gw.winner}</span>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Hexagonal table */}
       <SimpleStandingsTable
-        title="Hexagonal Final - Tabla de Posiciones"
+        title="Hexagonal Final"
         standings={hexagonalStandings}
         highlightTop={3}
         showBonus
       />
 
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground text-center">
-            El hexagonal final aún no ha comenzado. Los 6 ganadores de grupo se
-            enfrentarán todos contra todos para determinar el campeón.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="border border-dashed border-border rounded-lg px-6 py-8 text-center">
+        <p className="text-sm text-muted-foreground">
+          El hexagonal final aun no ha comenzado. Los 6 ganadores de grupo se
+          enfrentaran todos contra todos para determinar el campeon.
+        </p>
+      </div>
     </div>
   );
 }
+
+const tabs = [
+  { id: "reglamento", label: "Reglamento" },
+  { id: "participantes", label: "Participantes" },
+  { id: "grupos", label: "Grupos" },
+  { id: "posiciones", label: "Posiciones" },
+  { id: "hexagonal", label: "Hexagonal" },
+];
 
 export default function MetegolPage() {
   const [activeTab, setActiveTab] = useState("posiciones");
@@ -201,46 +198,48 @@ export default function MetegolPage() {
     <div className="min-h-screen bg-background">
       <DisciplineHeader name="Metegol" icon="🕹️" />
 
-      <main className="max-w-6xl mx-auto p-4 md:p-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 mb-6">
-            <TabsTrigger value="reglamento">Reglamento</TabsTrigger>
-            <TabsTrigger value="participantes">Participantes</TabsTrigger>
-            <TabsTrigger value="grupos">Grupos</TabsTrigger>
-            <TabsTrigger value="posiciones">Posiciones</TabsTrigger>
-            <TabsTrigger value="hexagonal">Hexagonal</TabsTrigger>
-          </TabsList>
+      <main className="max-w-5xl mx-auto px-6 py-12">
+        {/* Tab Navigation */}
+        <nav className="flex gap-1 border-b border-border mb-12 overflow-x-auto">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap border-b-2 -mb-px ${
+                activeTab === tab.id
+                  ? "border-foreground text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
 
-          <TabsContent value="reglamento">
-            <Regulations sections={regulations} />
-          </TabsContent>
+        {/* Content */}
+        {activeTab === "reglamento" && <Regulations sections={regulations} />}
 
-          <TabsContent value="participantes">
-            <PairParticipantsList title="Equipos Participantes" pairs={formattedTeams} />
-          </TabsContent>
+        {activeTab === "participantes" && (
+          <PairParticipantsList title="Equipos Participantes" pairs={formattedTeams} />
+        )}
 
-          <TabsContent value="grupos">
-            <GroupTablesView />
-          </TabsContent>
+        {activeTab === "grupos" && <GroupTablesView />}
 
-          <TabsContent value="posiciones" className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {Object.entries(mockGroupStandings).map(([groupNum, standings]) => (
-                <SimpleStandingsTable
-                  key={groupNum}
-                  title={`Grupo ${groupNum}`}
-                  standings={standings}
-                  highlightTop={1}
-                  showBonus
-                />
-              ))}
-            </div>
-          </TabsContent>
+        {activeTab === "posiciones" && (
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {Object.entries(mockGroupStandings).map(([groupNum, standings]) => (
+              <SimpleStandingsTable
+                key={groupNum}
+                title={`Grupo ${groupNum}`}
+                standings={standings}
+                highlightTop={1}
+                showBonus
+              />
+            ))}
+          </div>
+        )}
 
-          <TabsContent value="hexagonal">
-            <HexagonalView />
-          </TabsContent>
-        </Tabs>
+        {activeTab === "hexagonal" && <HexagonalView />}
       </main>
     </div>
   );

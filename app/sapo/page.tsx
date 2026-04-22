@@ -4,8 +4,6 @@ import { useState } from "react";
 import { DisciplineHeader } from "@/components/discipline-header";
 import { PairParticipantsList } from "@/components/participants-list";
 import { Regulations } from "@/components/regulations";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -14,21 +12,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { sapoPairs } from "@/lib/data";
-import { Trophy, Target, ArrowRight } from "lucide-react";
+import { Trophy, ArrowRight } from "lucide-react";
 
 const regulations = [
   {
     title: "Formato del Torneo",
     items: [
       "15 parejas (30 jugadores)",
-      "Fase 1: Clasificación por puntaje total",
-      "Fase 2: Eliminación directa (Top 8)",
+      "Fase 1: Clasificacion por puntaje total",
+      "Fase 2: Eliminacion directa (Top 8)",
     ],
   },
   {
-    title: "Fase de Clasificación",
+    title: "Fase de Clasificacion",
     items: [
       "Cada pareja realiza 2 rondas de tiros",
       "Se suma el puntaje total de ambas rondas",
@@ -38,8 +35,8 @@ const regulations = [
   {
     title: "Fase Eliminatoria",
     items: [
-      "Cuartos de final → Semifinales → Final",
-      "Partidos de eliminación directa",
+      "Cuartos de final, Semifinales, Final",
+      "Partidos de eliminacion directa",
     ],
   },
   {
@@ -84,62 +81,55 @@ const bracketMatches: BracketMatchData[] = [
 
 function RankingTable() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Target className="h-5 w-5" />
-          Ranking de Clasificación
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="w-12 text-center font-bold">#</TableHead>
-                <TableHead className="font-bold">Pareja</TableHead>
-                <TableHead className="w-20 text-center font-bold">Ronda 1</TableHead>
-                <TableHead className="w-20 text-center font-bold">Ronda 2</TableHead>
-                <TableHead className="w-24 text-center font-bold bg-primary/10">Total</TableHead>
-                <TableHead className="w-24 text-center font-bold">Estado</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedPairs.map((pair, index) => {
-                const isQualified = index < 8;
-                return (
-                  <TableRow
-                    key={pair.id}
-                    className={isQualified ? "bg-green-50" : ""}
-                  >
-                    <TableCell className="text-center font-semibold">
-                      {index + 1}
-                    </TableCell>
-                    <TableCell className="font-medium">{pair.name}</TableCell>
-                    <TableCell className="text-center font-mono">
-                      {pair.round1Score}
-                    </TableCell>
-                    <TableCell className="text-center font-mono">
-                      {pair.round2Score}
-                    </TableCell>
-                    <TableCell className="text-center font-bold bg-primary/5">
-                      {pair.totalScore}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {isQualified ? (
-                        <Badge className="bg-green-500">Clasificado</Badge>
-                      ) : (
-                        <Badge variant="outline">Eliminado</Badge>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+    <div>
+      <h3 className="text-sm uppercase tracking-[0.15em] text-muted-foreground mb-6">Ranking de Clasificacion</h3>
+      <div className="overflow-x-auto border border-border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-border hover:bg-transparent">
+              <TableHead className="w-12 text-center text-xs font-medium text-muted-foreground">#</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">Pareja</TableHead>
+              <TableHead className="w-16 text-center text-xs font-medium text-muted-foreground">R1</TableHead>
+              <TableHead className="w-16 text-center text-xs font-medium text-muted-foreground">R2</TableHead>
+              <TableHead className="w-20 text-center text-xs font-medium text-muted-foreground">Total</TableHead>
+              <TableHead className="w-24 text-center text-xs font-medium text-muted-foreground">Estado</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedPairs.map((pair, index) => {
+              const isQualified = index < 8;
+              return (
+                <TableRow
+                  key={pair.id}
+                  className={`border-b border-border last:border-0 ${isQualified ? "bg-muted/30" : ""}`}
+                >
+                  <TableCell className="text-center font-medium tabular-nums">
+                    {index + 1}
+                  </TableCell>
+                  <TableCell className="font-medium">{pair.name}</TableCell>
+                  <TableCell className="text-center tabular-nums text-muted-foreground">
+                    {pair.round1Score}
+                  </TableCell>
+                  <TableCell className="text-center tabular-nums text-muted-foreground">
+                    {pair.round2Score}
+                  </TableCell>
+                  <TableCell className="text-center font-semibold tabular-nums">
+                    {pair.totalScore}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {isQualified ? (
+                      <span className="text-xs font-medium">Clasificado</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Eliminado</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 }
 
@@ -149,110 +139,101 @@ function BracketView() {
   const final = bracketMatches.find((m) => m.round === "Final");
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       {/* Qualified teams */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-yellow-500" />
-            Clasificados a la Fase Eliminatoria
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
-            {qualifiedPairs.map((pair, index) => (
-              <div
-                key={pair.id}
-                className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200"
-              >
-                <Badge variant="outline" className="font-mono">
-                  #{index + 1}
-                </Badge>
-                <span className="font-medium text-green-700 text-sm truncate ml-2">
-                  {pair.name}
-                </span>
-                <span className="text-xs text-green-600 font-mono">
-                  {pair.totalScore}pts
-                </span>
+      <div>
+        <div className="flex items-center gap-3 mb-6">
+          <Trophy className="h-5 w-5" />
+          <h3 className="text-sm uppercase tracking-[0.15em] text-muted-foreground">Clasificados</h3>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          {qualifiedPairs.map((pair, index) => (
+            <div
+              key={pair.id}
+              className="flex items-center justify-between px-4 py-3 border border-border rounded-lg bg-muted/30"
+            >
+              <span className="text-sm text-muted-foreground tabular-nums">#{index + 1}</span>
+              <span className="font-medium text-sm truncate mx-2 flex-1">{pair.name}</span>
+              <span className="text-xs text-muted-foreground tabular-nums">{pair.totalScore}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bracket visualization */}
+      <div className="flex flex-col lg:flex-row items-start gap-8 lg:gap-6 overflow-x-auto pb-4">
+        {/* Quarterfinals */}
+        <div className="flex flex-col gap-4 min-w-[200px]">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">Cuartos de Final</p>
+          <div className="flex flex-col gap-4">
+            {quarterfinals.map((match) => (
+              <div key={match.id} className="border border-border rounded-lg overflow-hidden">
+                <div className="px-3 py-1.5 border-b border-border bg-muted/30">
+                  <span className="text-xs text-muted-foreground">{match.id.toUpperCase()}</span>
+                </div>
+                <div className="divide-y divide-border">
+                  <div className="px-3 py-2">
+                    <span className="text-sm font-medium">{match.team1}</span>
+                  </div>
+                  <div className="px-3 py-2">
+                    <span className="text-sm font-medium">{match.team2}</span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Bracket visualization */}
-      <div className="grid gap-6 lg:grid-cols-4">
-        {/* Quarterfinals */}
-        <div className="space-y-4">
-          <h4 className="text-sm font-semibold text-center text-muted-foreground bg-muted py-2 rounded">
-            Cuartos de Final
-          </h4>
-          {quarterfinals.map((match) => (
-            <Card key={match.id} className="overflow-hidden">
-              <div className="bg-muted/50 px-3 py-1 text-xs font-medium text-center">
-                {match.id.toUpperCase()}
-              </div>
-              <CardContent className="p-0 divide-y">
-                <div className="flex items-center justify-between p-2">
-                  <span className="text-sm font-medium truncate">{match.team1}</span>
-                </div>
-                <div className="flex items-center justify-between p-2">
-                  <span className="text-sm font-medium truncate">{match.team2}</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
         </div>
 
         {/* Arrow */}
-        <div className="hidden lg:flex items-center justify-center">
-          <ArrowRight className="h-8 w-8 text-muted-foreground" />
+        <div className="hidden lg:flex items-center self-center">
+          <ArrowRight className="h-5 w-5 text-muted-foreground" />
         </div>
 
         {/* Semifinals */}
-        <div className="space-y-4">
-          <h4 className="text-sm font-semibold text-center text-muted-foreground bg-muted py-2 rounded">
-            Semifinales
-          </h4>
-          <div className="space-y-4 pt-8">
+        <div className="flex flex-col gap-4 min-w-[200px]">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">Semifinales</p>
+          <div className="flex flex-col gap-4 pt-12">
             {semifinals.map((match) => (
-              <Card key={match.id} className="overflow-hidden">
-                <div className="bg-muted/50 px-3 py-1 text-xs font-medium text-center">
-                  {match.id.toUpperCase()}
+              <div key={match.id} className="border border-border rounded-lg overflow-hidden">
+                <div className="px-3 py-1.5 border-b border-border bg-muted/30">
+                  <span className="text-xs text-muted-foreground">{match.id.toUpperCase()}</span>
                 </div>
-                <CardContent className="p-0 divide-y">
-                  <div className="flex items-center justify-between p-2 bg-muted/20">
+                <div className="divide-y divide-border">
+                  <div className="px-3 py-2">
                     <span className="text-sm text-muted-foreground">{match.team1}</span>
                   </div>
-                  <div className="flex items-center justify-between p-2 bg-muted/20">
+                  <div className="px-3 py-2">
                     <span className="text-sm text-muted-foreground">{match.team2}</span>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         </div>
 
+        {/* Arrow */}
+        <div className="hidden lg:flex items-center self-center">
+          <ArrowRight className="h-5 w-5 text-muted-foreground" />
+        </div>
+
         {/* Final */}
-        <div className="space-y-4">
-          <h4 className="text-sm font-semibold text-center text-muted-foreground bg-yellow-100 py-2 rounded">
-            Final
-          </h4>
-          <div className="pt-16">
+        <div className="flex flex-col gap-4 min-w-[200px]">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">Final</p>
+          <div className="pt-24">
             {final && (
-              <Card className="overflow-hidden border-yellow-300">
-                <div className="bg-yellow-50 px-3 py-1 text-xs font-medium text-center text-yellow-700">
-                  FINAL
+              <div className="border border-border rounded-lg overflow-hidden">
+                <div className="px-3 py-1.5 border-b border-border bg-muted/30">
+                  <span className="text-xs font-medium">FINAL</span>
                 </div>
-                <CardContent className="p-0 divide-y">
-                  <div className="flex items-center justify-between p-3 bg-muted/20">
+                <div className="divide-y divide-border">
+                  <div className="px-3 py-3">
                     <span className="text-sm text-muted-foreground">{final.team1}</span>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-muted/20">
+                  <div className="px-3 py-3">
                     <span className="text-sm text-muted-foreground">{final.team2}</span>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -260,6 +241,13 @@ function BracketView() {
     </div>
   );
 }
+
+const tabs = [
+  { id: "reglamento", label: "Reglamento" },
+  { id: "participantes", label: "Participantes" },
+  { id: "ranking", label: "Ranking" },
+  { id: "eliminatoria", label: "Eliminatoria" },
+];
 
 export default function SapoPage() {
   const [activeTab, setActiveTab] = useState("ranking");
@@ -276,31 +264,34 @@ export default function SapoPage() {
     <div className="min-h-screen bg-background">
       <DisciplineHeader name="Sapo" icon="🐸" />
 
-      <main className="max-w-6xl mx-auto p-4 md:p-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 mb-6">
-            <TabsTrigger value="reglamento">Reglamento</TabsTrigger>
-            <TabsTrigger value="participantes">Participantes</TabsTrigger>
-            <TabsTrigger value="ranking">Ranking</TabsTrigger>
-            <TabsTrigger value="eliminatoria">Eliminatoria</TabsTrigger>
-          </TabsList>
+      <main className="max-w-5xl mx-auto px-6 py-12">
+        {/* Tab Navigation */}
+        <nav className="flex gap-1 border-b border-border mb-12 overflow-x-auto">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap border-b-2 -mb-px ${
+                activeTab === tab.id
+                  ? "border-foreground text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
 
-          <TabsContent value="reglamento">
-            <Regulations sections={regulations} />
-          </TabsContent>
+        {/* Content */}
+        {activeTab === "reglamento" && <Regulations sections={regulations} />}
 
-          <TabsContent value="participantes">
-            <PairParticipantsList title="Parejas Participantes" pairs={formattedPairs} />
-          </TabsContent>
+        {activeTab === "participantes" && (
+          <PairParticipantsList title="Parejas Participantes" pairs={formattedPairs} />
+        )}
 
-          <TabsContent value="ranking">
-            <RankingTable />
-          </TabsContent>
+        {activeTab === "ranking" && <RankingTable />}
 
-          <TabsContent value="eliminatoria">
-            <BracketView />
-          </TabsContent>
-        </Tabs>
+        {activeTab === "eliminatoria" && <BracketView />}
       </main>
     </div>
   );

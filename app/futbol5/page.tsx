@@ -7,7 +7,6 @@ import { FixtureList, type FixtureMatch } from "@/components/fixture-list";
 import { Bracket, type BracketMatch } from "@/components/bracket";
 import { ParticipantsList } from "@/components/participants-list";
 import { Regulations } from "@/components/regulations";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { futbol5Teams, futbol5Groups, futbol5Matches } from "@/lib/data";
 
 // Calculate standings from matches
@@ -99,7 +98,7 @@ const regulations = [
     ],
   },
   {
-    title: "Duración de Partidos",
+    title: "Duracion de Partidos",
     items: [
       "2 tiempos de 20 minutos cada uno",
       "10 minutos de descanso entre tiempos",
@@ -128,8 +127,8 @@ const regulations = [
   {
     title: "Fase Final",
     items: [
-      "Semifinal 1: 1° Grupo A vs 2° Grupo B",
-      "Semifinal 2: 1° Grupo B vs 2° Grupo A",
+      "Semifinal 1: 1ro Grupo A vs 2do Grupo B",
+      "Semifinal 2: 1ro Grupo B vs 2do Grupo A",
       "Final y partido por el 3er puesto",
     ],
   },
@@ -137,8 +136,16 @@ const regulations = [
 
 // Mock bracket data
 const semis: BracketMatch[] = [
-  { id: "sf1", team1: "Por definir (1° A)", team2: "Por definir (2° B)", played: false },
-  { id: "sf2", team1: "Por definir (1° B)", team2: "Por definir (2° A)", played: false },
+  { id: "sf1", team1: "Por definir (1ro A)", team2: "Por definir (2do B)", played: false },
+  { id: "sf2", team1: "Por definir (1ro B)", team2: "Por definir (2do A)", played: false },
+];
+
+const tabs = [
+  { id: "reglamento", label: "Reglamento" },
+  { id: "participantes", label: "Participantes" },
+  { id: "fixture", label: "Fixture" },
+  { id: "posiciones", label: "Posiciones" },
+  { id: "fase-final", label: "Fase Final" },
 ];
 
 export default function Futbol5Page() {
@@ -151,44 +158,50 @@ export default function Futbol5Page() {
 
   return (
     <div className="min-h-screen bg-background">
-      <DisciplineHeader name="Fútbol 5" icon="⚽" />
+      <DisciplineHeader name="Futbol 5" icon="⚽" />
 
-      <main className="max-w-6xl mx-auto p-4 md:p-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 mb-6">
-            <TabsTrigger value="reglamento">Reglamento</TabsTrigger>
-            <TabsTrigger value="participantes">Participantes</TabsTrigger>
-            <TabsTrigger value="fixture">Fixture</TabsTrigger>
-            <TabsTrigger value="posiciones">Posiciones</TabsTrigger>
-            <TabsTrigger value="fase-final">Fase Final</TabsTrigger>
-          </TabsList>
+      <main className="max-w-5xl mx-auto px-6 py-12">
+        {/* Tab Navigation */}
+        <nav className="flex gap-1 border-b border-border mb-12 overflow-x-auto">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap border-b-2 -mb-px ${
+                activeTab === tab.id
+                  ? "border-foreground text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
 
-          <TabsContent value="reglamento">
-            <Regulations sections={regulations} />
-          </TabsContent>
+        {/* Content */}
+        {activeTab === "reglamento" && <Regulations sections={regulations} />}
 
-          <TabsContent value="participantes">
-            <ParticipantsList title="Equipos Participantes" teams={futbol5Teams} />
-          </TabsContent>
+        {activeTab === "participantes" && (
+          <ParticipantsList title="Equipos Participantes" teams={futbol5Teams} />
+        )}
 
-          <TabsContent value="fixture" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <FixtureList title="Grupo A" matches={fixtureA} />
-              <FixtureList title="Grupo B" matches={fixtureB} />
-            </div>
-          </TabsContent>
+        {activeTab === "fixture" && (
+          <div className="grid gap-12 lg:grid-cols-2">
+            <FixtureList title="Grupo A" matches={fixtureA} />
+            <FixtureList title="Grupo B" matches={fixtureB} />
+          </div>
+        )}
 
-          <TabsContent value="posiciones" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <StandingsTable title="Grupo A" standings={standingsA} />
-              <StandingsTable title="Grupo B" standings={standingsB} />
-            </div>
-          </TabsContent>
+        {activeTab === "posiciones" && (
+          <div className="grid gap-12 lg:grid-cols-2">
+            <StandingsTable title="Grupo A" standings={standingsA} />
+            <StandingsTable title="Grupo B" standings={standingsB} />
+          </div>
+        )}
 
-          <TabsContent value="fase-final">
-            <Bracket title="Fase Eliminatoria" semifinals={semis} thirdPlace={undefined} />
-          </TabsContent>
-        </Tabs>
+        {activeTab === "fase-final" && (
+          <Bracket title="Fase Eliminatoria" semifinals={semis} thirdPlace={undefined} />
+        )}
       </main>
     </div>
   );
