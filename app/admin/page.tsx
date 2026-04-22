@@ -19,7 +19,7 @@ async function logout() {
 export default async function AdminPage() {
   const cookieStore = await cookies()
   const token = cookieStore.get("admin_session")?.value
-  const isAdmin = isValidAdminToken(token)
+  const isAdmin = await isValidAdminToken(token)
 
   const tournaments = await prisma.tournament.findMany({
     include: {
