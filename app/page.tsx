@@ -6,6 +6,7 @@ import {
   Gamepad2,
   CircleDot,
   Users,
+  LogIn,
 } from "lucide-react"
 
 const disciplines = [
@@ -67,6 +68,16 @@ export default function Home() {
           <span className="text-primary font-semibold">Sanatorio El Carmen</span>
           <span className="text-muted-foreground"> - Edicion 2025</span>
         </p>
+      </div>
+
+      {/* Login Button */}
+      <div className="mb-8 flex justify-end">
+        <Link href="/login">
+          <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+            <LogIn className="w-4 h-4" />
+            Ingresar
+          </button>
+        </Link>
       </div>
 
       {/* Stats */}
