@@ -1,5 +1,5 @@
-import { AccessGateway } from "@/components/auth/access-gateway"
+import { LoginGateway } from "@/components/auth/login-gateway"
 
 export default function AdminLoginPage() {
-  return <AccessGateway adminRedirectTo="/admin" participantRedirectTo="/torneo" backHref="/torneo" />
+  return <LoginGateway />
 }
