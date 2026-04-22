@@ -14,7 +14,6 @@ export default async function DisciplineOperacionPage({
   const discipline = await prisma.discipline.findUnique({
     where: { slug: params.slug },
     include: {
-      tournament: { select: { name: true } },
       teams: {
         include: { players: true },
         orderBy: { createdAt: "asc" },
@@ -33,19 +32,16 @@ export default async function DisciplineOperacionPage({
 
   return (
     <div className="min-h-screen bg-background px-4 py-6 md:px-8">
-      <div className="mx-auto max-w-2xl space-y-6">
-        <header className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">{discipline.tournament.name}</p>
-            <h1 className="text-3xl font-bold text-foreground">{discipline.name}</h1>
-          </div>
+      <div className="mx-auto max-w-lg space-y-5">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-foreground">{discipline.name}</h1>
           <Button asChild variant="outline" size="sm">
-            <Link href="/admin/operacion" className="flex items-center gap-2">
+            <Link href="/admin/operacion" className="flex items-center gap-1">
               <ArrowLeft className="h-4 w-4" />
-              Deportes
+              Atrás
             </Link>
           </Button>
-        </header>
+        </div>
 
         <DisciplineOperacion
           disciplineSlug={discipline.slug}
