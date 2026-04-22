@@ -11,10 +11,12 @@ import {
   Target,
   CircleDot,
   FileText,
+  MonitorPlay,
 } from "lucide-react"
 
 const navigation = [
   { name: "Inicio", href: "/torneo", icon: Home },
+  { name: "Pantalla", href: "/pantalla", icon: MonitorPlay },
   { name: "Futbol 5", href: "/futbol5", icon: Trophy },
   { name: "Padel", href: "/padel", icon: Target },
   { name: "Loba", href: "/loba", icon: Spade },
@@ -28,21 +30,19 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-card border-r border-border flex flex-col">
-      {/* Logo */}
-      <div className="p-6 border-b border-border">
+    <aside className="fixed left-0 top-0 h-screen w-64 border-r border-border bg-card flex flex-col">
+      <div className="border-b border-border p-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-            <Trophy className="w-5 h-5 text-primary-foreground" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
+            <Trophy className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="font-serif font-semibold text-sm text-foreground">Torneo Interno</h1>
+            <h1 className="font-serif text-sm font-semibold text-foreground">Torneo Interno</h1>
             <p className="text-xs text-muted-foreground">Sanatorio El Carmen</p>
           </div>
         </div>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 p-4">
         <ul className="space-y-1">
           {navigation.map((item) => {
@@ -52,13 +52,13 @@ export function Sidebar() {
                 <Link
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                     isActive
                       ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                   )}
                 >
-                  <item.icon className="w-4 h-4" />
+                  <item.icon className="h-4 w-4" />
                   {item.name}
                 </Link>
               </li>
@@ -67,11 +67,8 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-border">
-        <p className="text-xs text-muted-foreground text-center">
-          2025 Edition
-        </p>
+      <div className="border-t border-border p-4">
+        <p className="text-center text-xs text-muted-foreground">2025 Edition</p>
       </div>
     </aside>
   )

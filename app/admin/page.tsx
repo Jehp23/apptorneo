@@ -1,10 +1,10 @@
 import Link from "next/link"
 import { cookies } from "next/headers"
-import { Activity, Calendar, LogOut, ShieldCheck, Trophy, Users } from "lucide-react"
+import { Activity, Calendar, LogOut, MonitorPlay, ShieldCheck, Trophy, Users } from "lucide-react"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { isValidAdminToken } from "@/lib/admin-auth"
 import { prisma } from "@/lib/prisma"
 
@@ -14,6 +14,21 @@ async function logout() {
   const cookieStore = await cookies()
   cookieStore.delete("admin_session")
 }
+
+const adminAreas = [
+  {
+    title: "Inscripciones",
+    description: "Próximo paso: alta de participantes, equipos y parejas desde backoffice.",
+  },
+  {
+    title: "Operación",
+    description: "Cargar resultados, mover llaves y administrar varias disciplinas al mismo tiempo.",
+  },
+  {
+    title: "Pantalla",
+    description: "Tener un modo TV separado para mostrar el torneo mientras administración opera.",
+  },
+]
 
 export default async function AdminPage() {
   const cookieStore = await cookies()
@@ -67,16 +82,19 @@ export default async function AdminPage() {
               Panel administrativo
             </div>
             <div>
-              <h1 className="font-serif text-3xl font-semibold text-foreground">Gestión del torneo</h1>
+              <h1 className="font-serif text-3xl font-semibold text-foreground">Centro de operación</h1>
               <p className="text-muted-foreground">
-                Acá ves el estado general del torneo y las disciplinas cargadas en la base. SIMPLE, claro y mantenible.
+                Este sector es SOLO para organización. Desde acá se opera el torneo, mientras participantes miran la vista pública y la TV muestra el estado general.
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <Button asChild variant="outline">
-              <Link href="/torneo">Ver vista participante</Link>
+              <Link href="/torneo">Vista participante</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/pantalla">Modo pantalla</Link>
             </Button>
             {isAdmin ? (
               <form action={logout}>
@@ -88,6 +106,17 @@ export default async function AdminPage() {
             ) : null}
           </div>
         </header>
+
+        <section className="grid gap-4 lg:grid-cols-3">
+          {adminAreas.map((area) => (
+            <Card key={area.title}>
+              <CardHeader>
+                <CardTitle className="text-xl">{area.title}</CardTitle>
+                <CardDescription>{area.description}</CardDescription>
+              </CardHeader>
+            </Card>
+          ))}
+        </section>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {[
@@ -112,10 +141,20 @@ export default async function AdminPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Disciplinas registradas</CardTitle>
-            <CardDescription>
-              Esto sale de Prisma, no humo visual. Si no hay registros, primero hay que poblar la base.
-            </CardDescription>
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <CardTitle>Disciplinas registradas</CardTitle>
+                <CardDescription>
+                  Esto sale de Prisma, no humo visual. Si no hay registros, primero hay que poblar la base.
+                </CardDescription>
+              </div>
+              <Button asChild className="gap-2">
+                <Link href="/pantalla">
+                  <MonitorPlay className="h-4 w-4" />
+                  Abrir pantalla grande
+                </Link>
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {disciplines.length === 0 ? (

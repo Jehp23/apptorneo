@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 
 function shouldHideSidebar(pathname: string) {
-  return pathname === "/login" || pathname === "/admin/login"
+  return pathname === "/login" || pathname === "/admin/login" || pathname === "/pantalla"
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {

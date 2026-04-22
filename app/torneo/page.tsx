@@ -8,6 +8,7 @@ import {
   Users,
   LogIn,
   ArrowRight,
+  MonitorPlay,
 } from "lucide-react"
 
 const disciplines = [
@@ -55,6 +56,30 @@ const disciplines = [
   },
 ]
 
+const experienceCards = [
+  {
+    title: "Participantes",
+    description: "Solo lectura para seguir fixtures, posiciones y resultados del torneo.",
+    href: "/futbol5",
+    cta: "Ver disciplinas",
+    icon: Users,
+  },
+  {
+    title: "Pantalla grande",
+    description: "Vista optimizada para TV o monitor con estado global del torneo.",
+    href: "/pantalla",
+    cta: "Abrir pantalla",
+    icon: MonitorPlay,
+  },
+  {
+    title: "Administración",
+    description: "Ingreso protegido para que organización opere el torneo en simultáneo.",
+    href: "/admin",
+    cta: "Ir al admin",
+    icon: LogIn,
+  },
+]
+
 export default function TournamentHomePage() {
   const totalParticipants = disciplines.reduce((acc, d) => acc + d.participants, 0)
 
@@ -64,9 +89,9 @@ export default function TournamentHomePage() {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-2xl space-y-3">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">Torneo interno</p>
-            <h1 className="font-serif text-3xl font-semibold text-foreground">Bienvenidos al Torneo Interno</h1>
+            <h1 className="font-serif text-3xl font-semibold text-foreground">Centro público del torneo</h1>
             <p className="text-lg text-muted-foreground">
-              Esta es la vista pública para participantes. Si querés administrar el torneo, entrás por login. Si solo querés seguir cómo va, ya estás adentro.
+              Desde acá los participantes siguen el avance del torneo. Administración opera por su lado y la pantalla grande muestra el estado general en tiempo real.
             </p>
             <p className="text-sm text-muted-foreground">
               <span className="font-semibold text-primary">Sanatorio El Carmen</span>
@@ -77,17 +102,33 @@ export default function TournamentHomePage() {
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-medium text-primary-foreground transition-colors hover:bg-primary/90">
               <LogIn className="h-4 w-4" />
-              Elegir acceso
+              Cambiar acceso
             </Link>
-            <Link href="/futbol5" className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 font-medium text-foreground transition-colors hover:bg-muted">
-              Ver torneo
+            <Link href="/pantalla" className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 font-medium text-foreground transition-colors hover:bg-muted">
+              Abrir pantalla
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 mb-10 md:grid-cols-3">
+      <section className="mb-10 grid gap-4 lg:grid-cols-3">
+        {experienceCards.map((card) => (
+          <Link key={card.title} href={card.href} className="rounded-2xl border border-border bg-card p-5 transition-colors hover:bg-muted/30">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+              <card.icon className="h-6 w-6 text-primary" />
+            </div>
+            <h2 className="text-lg font-semibold text-foreground">{card.title}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{card.description}</p>
+            <span className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary">
+              {card.cta}
+              <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
+        ))}
+      </section>
+
+      <div className="mb-10 grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
@@ -116,7 +157,7 @@ export default function TournamentHomePage() {
               <Target className="h-5 w-5 text-accent" />
             </div>
             <div>
-              <p className="text-2xl font-semibold text-foreground">En Curso</p>
+              <p className="text-2xl font-semibold text-foreground">En curso</p>
               <p className="text-sm text-muted-foreground">Estado</p>
             </div>
           </div>
