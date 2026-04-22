@@ -89,24 +89,24 @@ export function AccessGateway({
             </div>
 
             <p className="max-w-xl text-lg text-muted-foreground">
-              Elegí cómo querés entrar. Como participante solo ves el avance del torneo. Como admin gestionás disciplinas, partidos y resultados.
+              Elegí cómo querés entrar. Los participantes solo siguen el torneo. La administración es la que organiza, actualiza resultados y maneja también la pantalla institucional.
             </p>
 
             <div className="mt-8 grid gap-4">
               {[
                 {
                   title: "Participante",
-                  description: "Acceso rápido para seguir fixtures, posiciones y cruces sin fricción.",
+                  description: "Acceso simple para ver cómo viene el torneo, fixtures, posiciones y resultados.",
                   icon: Users,
                 },
                 {
                   title: "Administrador",
-                  description: "Ingreso protegido para actualizar el torneo y mantener la información al día.",
+                  description: "Ingreso protegido para operar el torneo, cargar resultados y controlar la pantalla grande.",
                   icon: Shield,
                 },
                 {
                   title: "Objetivo",
-                  description: "Una sola entrada clara para que nadie se pierda. MENOS ruido, más torneo.",
+                  description: "Una entrada clara, cada rol con su lugar. MENOS ruido, más foco en el torneo.",
                   icon: Trophy,
                 },
               ].map((item) => (
@@ -149,7 +149,7 @@ export function AccessGateway({
                     </div>
                     <div>
                       <div className="font-medium text-foreground">Entrar como participante</div>
-                      <div className="text-sm text-muted-foreground">Sin login. Solo para seguir el torneo.</div>
+                      <div className="text-sm text-muted-foreground">Solo lectura para seguir el torneo.</div>
                     </div>
                   </Button>
 
@@ -163,7 +163,7 @@ export function AccessGateway({
                     </div>
                     <div>
                       <div className="font-medium text-foreground">Entrar como administrador</div>
-                      <div className="text-sm text-muted-foreground">Requiere contraseña para gestionar el torneo.</div>
+                      <div className="text-sm text-muted-foreground">Requiere contraseña para gestionar torneo y pantalla.</div>
                     </div>
                   </Button>
                 </div>
@@ -175,8 +175,8 @@ export function AccessGateway({
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {userType === "admin"
-                        ? "Ingresá la contraseña para abrir el panel de gestión."
-                        : "No necesitás credenciales. Continuá y listo."}
+                        ? "Ingresá la contraseña para abrir el panel de gestión y la pantalla institucional."
+                        : "No necesitás credenciales. Entrás directo a seguir el torneo."}
                     </p>
                   </div>
 

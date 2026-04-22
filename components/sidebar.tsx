@@ -10,20 +10,16 @@ import {
   Spade,
   Target,
   CircleDot,
-  FileText,
-  MonitorPlay,
 } from "lucide-react"
 
 const navigation = [
   { name: "Inicio", href: "/torneo", icon: Home },
-  { name: "Pantalla", href: "/pantalla", icon: MonitorPlay },
   { name: "Futbol 5", href: "/futbol5", icon: Trophy },
   { name: "Padel", href: "/padel", icon: Target },
   { name: "Loba", href: "/loba", icon: Spade },
   { name: "Truco", href: "/truco", icon: Spade },
   { name: "Metegol", href: "/metegol", icon: Gamepad2 },
   { name: "Sapo", href: "/sapo", icon: CircleDot },
-  { name: "Reglamento General", href: "/reglamento", icon: FileText },
 ]
 
 export function Sidebar() {

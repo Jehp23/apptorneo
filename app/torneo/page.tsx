@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { unstable_noStore as noStore } from "next/cache"
-import { Activity, ArrowRight, Calendar, LogIn, MonitorPlay, Trophy, Users } from "lucide-react"
+import { Activity, ArrowRight, Calendar, LogIn, Trophy, Users } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -134,10 +134,10 @@ export default async function TournamentHomePage({
       <header className="rounded-3xl border border-border bg-card p-6">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-3xl space-y-3">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">Vista pública</p>
-            <h1 className="font-serif text-3xl font-semibold text-foreground md:text-4xl">Centro público del torneo</h1>
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">Seguimiento del torneo</p>
+            <h1 className="font-serif text-3xl font-semibold text-foreground md:text-4xl">Viví el torneo en tiempo real</h1>
             <p className="text-lg text-muted-foreground">
-              Acá los participantes siguen el torneo con datos reales. Administración opera por separado y la pantalla grande proyecta el resumen general.
+              Esta vista es para participantes y público. Acá ves disciplinas, partidos, resultados y cómo avanza todo, sin meterte en la operación del torneo.
             </p>
             {activeTournament ? (
               <p className="text-sm text-muted-foreground">
@@ -151,10 +151,6 @@ export default async function TournamentHomePage({
             <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-medium text-primary-foreground transition-colors hover:bg-primary/90">
               <LogIn className="h-4 w-4" />
               Cambiar acceso
-            </Link>
-            <Link href="/pantalla?mode=auto" className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 font-medium text-foreground transition-colors hover:bg-muted">
-              <MonitorPlay className="h-4 w-4" />
-              Abrir pantalla
             </Link>
           </div>
         </div>

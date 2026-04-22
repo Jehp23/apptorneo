@@ -5,7 +5,7 @@ import { isValidAdminToken } from "@/lib/admin-auth"
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
+  if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin") || pathname.startsWith("/pantalla")) {
     const isAuthRoute = pathname === "/admin/login" || pathname.startsWith("/api/admin/auth")
     if (isAuthRoute) {
       return NextResponse.next()
@@ -19,6 +19,7 @@ export function middleware(request: NextRequest) {
 
       const url = request.nextUrl.clone()
       url.pathname = "/admin/login"
+      url.searchParams.set("next", pathname)
       return NextResponse.redirect(url)
     }
   }
@@ -27,5 +28,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
+  matcher: ["/admin/:path*", "/api/admin/:path*", "/pantalla/:path*"],
 }
