@@ -27,6 +27,8 @@ export default async function AdminPage() {
         slug:         d.slug,
         format:       d.format,
         tournamentId: d.tournamentId,
+        teamsCount:   d.teamsCount,
+        playersCount: d.playersCount,
         teams:        d.teams.map((t) => ({ id: t.id, players: t.players })),
         matches:      d.matches,
       }))}

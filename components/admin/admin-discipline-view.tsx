@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Check, Minus, Plus, Trash2, X } from "lucide-react"
+import { ArrowLeft, Check, Minus, Pencil, Plus, Trash2, X } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 
@@ -37,9 +37,10 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
   const [toast,   setToast]   = useState<{ ok: boolean; msg: string } | null>(null)
 
   // dialogs
-  const [addOpen,   setAddOpen]   = useState(false)
-  const [matchOpen, setMatchOpen] = useState(false)
-  const [scoring,   setScoring]   = useState<Match | null>(null)
+  const [addOpen,    setAddOpen]    = useState(false)
+  const [matchOpen,  setMatchOpen]  = useState(false)
+  const [scoring,    setScoring]    = useState<Match | null>(null)
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null)
 
   function notify(ok: boolean, msg: string) {
     setToast({ ok, msg })
@@ -76,6 +77,30 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
     } catch { notify(false, "No se pudo eliminar.") }
   }
 
+  async function handleEditTeam(teamId: string, name: string, players: string[]) {
+    try {
+      const res = await fetch(`/api/admin/disciplines/${initial.slug}/teams/${teamId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, players }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setTeams((prev) => prev.map((t) => t.id === teamId ? { ...data, players: data.players ?? [] } : t))
+      notify(true, "Guardado.")
+    } catch { notify(false, "No se pudo guardar.") }
+  }
+
+  async function handleDeleteMatch(matchId: string) {
+    if (!confirm("¿Eliminar este partido?")) return
+    try {
+      const res = await fetch(`/api/admin/matches/${matchId}`, { method: "DELETE" })
+      if (!res.ok) throw new Error()
+      setMatches((prev) => prev.filter((m) => m.id !== matchId))
+      notify(true, "Partido eliminado.")
+    } catch { notify(false, "No se pudo eliminar el partido.") }
+  }
+
   async function handleCreateMatch(team1Id: string, team2Id: string, stage: string) {
     try {
       const res  = await fetch(`/api/disciplines/${initial.slug}/matches`, {
@@ -105,6 +130,10 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
 
   const pending = matches.filter((m) => !m.played)
   const played  = matches.filter((m) =>  m.played)
+  const teamCap = initial.teamsCount ?? null
+  const remainingSpots = teamCap != null && teamCap > 0 ? Math.max(teamCap - teams.length, 0) : null
+  const registrationLabel = teamCap == null || teamCap <= 0 ? "Abierto" : teams.length >= teamCap ? "Completo" : "Abierto"
+  const registrationTone = teamCap != null && teamCap > 0 && teams.length >= teamCap ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20" : "bg-primary/10 text-primary border border-primary/20"
 
   return (
     <div className="min-h-screen bg-background">
@@ -131,6 +160,18 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         </div>
       ) : null}
 
+      <div className="grid grid-cols-2 gap-3 border-b border-border bg-card px-4 py-4 sm:grid-cols-4">
+        <SummaryChip label="Cupo" value={teamCap ?? "Libre"} />
+        <SummaryChip label="Inscriptos" value={teams.length} />
+        <SummaryChip label="Faltan" value={remainingSpots ?? "—"} highlight={remainingSpots === 0 && teamCap != null ? "success" : "default"} />
+        <div className="rounded-2xl border border-border bg-background px-4 py-3">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Estado</p>
+          <div className="mt-2">
+            <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${registrationTone}`}>{registrationLabel}</span>
+          </div>
+        </div>
+      </div>
+
       {/* ── Tabs ── */}
       <div className="flex gap-1 border-b border-border bg-card px-4">
         {(["participantes", "partidos"] as const).map((t) => (
@@ -153,10 +194,15 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
           <>
             <button
               onClick={() => setAddOpen(true)}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 py-4 text-base font-semibold text-primary transition-colors hover:border-primary hover:bg-primary/10"
+              disabled={remainingSpots === 0 && teamCap != null}
+              className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 py-4 text-base font-semibold text-primary transition-colors hover:border-primary hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Plus className="h-5 w-5" /> Agregar participante / equipo
             </button>
+
+            {remainingSpots === 0 && teamCap != null ? (
+              <p className="text-center text-sm text-muted-foreground">El cupo ya está completo. Si necesitás sumar más gente, ajustá el cupo desde la home admin.</p>
+            ) : null}
 
             {teams.length === 0 ? (
               <p className="py-12 text-center text-muted-foreground">Todavía no hay participantes.</p>
@@ -177,6 +223,12 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                         {team.players.length}
                       </span>
                     )}
+                    <button
+                      onClick={() => setEditingTeam(team)}
+                      className="shrink-0 flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
                     <button
                       onClick={() => handleRemoveTeam(team.id, team.name)}
                       className="shrink-0 flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
@@ -500,5 +552,25 @@ function ScoreDialog({
         </div>
       </DialogContent>
     </Dialog>
+  )
+}
+
+
+function SummaryChip({
+  label,
+  value,
+  highlight = "default",
+}: {
+  label: string
+  value: string | number
+  highlight?: "default" | "success"
+}) {
+  const valueClass = highlight === "success" ? "text-emerald-600" : "text-foreground"
+
+  return (
+    <div className="rounded-2xl border border-border bg-background px-4 py-3">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className={`mt-2 text-2xl font-bold ${valueClass}`}>{value}</p>
+    </div>
   )
 }
