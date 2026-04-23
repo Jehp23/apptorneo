@@ -105,6 +105,22 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
     [disciplines],
   )
 
+  // Quick summary for event day
+  const pendingMatches = useMemo(
+    () => disciplines.reduce((acc, d) => acc + d.matches.filter((m) => !m.played).length, 0),
+    [disciplines],
+  )
+
+  const disciplinesWithPending = useMemo(
+    () => disciplines.filter((d) => d.matches.filter((m) => !m.played).length > 0),
+    [disciplines],
+  )
+
+  const incompleteRegistrations = useMemo(
+    () => disciplines.filter((d) => d.teamsCount && d.teams.length < d.teamsCount),
+    [disciplines],
+  )
+
   function onDisciplineCreated(discipline: Discipline) {
     setDisciplines((prev) => [discipline, ...prev])
   }
@@ -187,6 +203,29 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
             </Card>
           ))}
         </div>
+
+        {/* Quick summary alerts for event day */}
+        {(pendingMatches > 0 || incompleteRegistrations.length > 0) && (
+          <Card className="border-amber-500/30 bg-amber-500/5">
+            <CardContent className="p-4">
+              <h3 className="mb-3 text-sm font-semibold text-amber-700">Resumen rápido - Qué falta</h3>
+              <div className="space-y-2">
+                {pendingMatches > 0 && (
+                  <div className="flex items-center gap-2 text-sm text-amber-700">
+                    <Calendar className="h-4 w-4" />
+                    <span><strong>{pendingMatches}</strong> partido{pendingMatches === 1 ? "" : "s"} pendiente{pendingMatches === 1 ? "" : "s"} en total</span>
+                  </div>
+                )}
+                {incompleteRegistrations.length > 0 && (
+                  <div className="flex items-center gap-2 text-sm text-amber-700">
+                    <Users className="h-4 w-4" />
+                    <span><strong>{incompleteRegistrations.length}</strong> deporte{incompleteRegistrations.length === 1 ? "" : "s"} con inscripciones incompletas</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
