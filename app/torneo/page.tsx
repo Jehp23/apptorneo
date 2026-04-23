@@ -132,182 +132,109 @@ export default async function TournamentHomePage({
     .slice(0, 5)
 
   return (
-    <div className="space-y-8 p-8">
-      <header className="rounded-3xl border border-border bg-card p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="relative h-20 w-20 overflow-hidden rounded-3xl bg-muted">
-              <Image src="/logotipo_sanatorio.png" alt="Sanatorio El Carmen" fill className="object-contain" />
-            </div>
-            <div className="space-y-1">
-              {activeTournament ? (
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">
-                  {activeTournament.name} · {activeTournament.location} · {activeTournament.year}
-                </p>
-              ) : null}
-              <h1 className="font-serif text-3xl font-semibold text-foreground">Torneo en vivo</h1>
-            </div>
+    <div className="space-y-8 p-6">
+      <header className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="relative h-16 w-16 overflow-hidden rounded-xl bg-muted">
+            <Image src="/logotipo_sanatorio.png" alt="Sanatorio El Carmen" fill className="object-contain" />
           </div>
-
-          <AdminHeaderActions />
+          <div>
+            {activeTournament ? (
+              <p className="text-xs font-medium text-muted-foreground">
+                {activeTournament.name} · {activeTournament.year}
+              </p>
+            ) : null}
+            <h1 className="font-serif text-2xl font-semibold text-foreground">Torneo</h1>
+          </div>
         </div>
+
+        <AdminHeaderActions />
       </header>
 
-      {tournaments.length > 0 ? (
-        <section className="space-y-3">
-          <div className="flex flex-wrap gap-3">
-            {tournaments.map((tournament) => {
-              const isActive = tournament.id === activeTournament?.id
+
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        {[
+          { label: "Disciplinas", value: disciplines.length },
+          { label: "Participantes", value: totalParticipants },
+          { label: "Partidos", value: totalMatches },
+          { label: "Jugados", value: playedMatches },
+        ].map((item) => (
+          <div key={item.label} className="rounded-xl border border-border bg-card p-4">
+            <p className="text-xs text-muted-foreground">{item.label}</p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">{item.value}</p>
+          </div>
+        ))}
+      </section>
+
+      <section>
+        <h2 className="mb-4 text-lg font-semibold text-foreground">Disciplinas</h2>
+        {disciplines.length === 0 ? (
+          <p className="text-muted-foreground">No hay disciplinas cargadas.</p>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {disciplines.map((discipline) => {
+              const status = getDisciplineStatus(discipline.matches)
+              const players = discipline.teams.reduce((acc, team) => acc + team.players.length, 0)
               return (
                 <Link
-                  key={tournament.id}
-                  href={`/torneo?tournament=${tournament.id}`}
-                  className={`rounded-2xl border px-4 py-3 text-sm transition-colors ${
-                    isActive
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-foreground hover:bg-muted"
-                  }`}
+                  key={discipline.id}
+                  href={`/torneo/${discipline.slug}`}
+                  className="group rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30"
                 >
-                  <div className="font-semibold">{tournament.name}</div>
-                  <div className={`text-xs ${isActive ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                    {tournament.location} · {tournament.year}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="font-semibold text-foreground">{discipline.name}</h3>
+                      <p className="text-xs text-muted-foreground">{discipline.format || ""}</p>
+                    </div>
+                    <Badge variant={status.tone} className="text-xs">{status.label}</Badge>
+                  </div>
+
+                  <div className="mt-3 flex gap-4 text-sm">
+                    <span className="text-muted-foreground">{discipline.teams.length} equipos</span>
+                    <span className="text-muted-foreground">{players} jugadores</span>
+                    <span className="text-muted-foreground">{discipline.matches.length} partidos</span>
                   </div>
                 </Link>
               )
             })}
           </div>
-        </section>
-      ) : null}
-
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        {[
-          { label: "Disciplinas", value: disciplines.length, icon: Trophy },
-          { label: "Participantes", value: totalParticipants, icon: Users },
-          { label: "Partidos", value: totalMatches, icon: Calendar },
-          { label: "Jugados", value: playedMatches, icon: Activity },
-        ].map((item) => (
-          <Card key={item.label}>
-            <CardContent className="flex items-center justify-between p-6">
-              <div>
-                <p className="text-sm text-muted-foreground">{item.label}</p>
-                <p className="text-3xl font-semibold text-foreground">{item.value}</p>
-              </div>
-              <div className="rounded-2xl bg-primary/10 p-3">
-                <item.icon className="h-5 w-5 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        )}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Disciplinas activas</CardTitle>
-            <CardDescription>
-              Entrá a cada disciplina para ver participantes, fixture, posiciones y estado general.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {disciplines.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">
-                No hay disciplinas cargadas para este torneo todavía.
-              </div>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {disciplines.map((discipline) => {
-                  const status = getDisciplineStatus(discipline.matches)
-                  const players = discipline.teams.reduce((acc, team) => acc + team.players.length, 0)
-                  return (
-                    <Link
-                      key={discipline.id}
-                      href={`/torneo/${discipline.slug}`}
-                      className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-sm"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h2 className="text-xl font-semibold text-foreground">{discipline.name}</h2>
-                          <p className="text-sm text-muted-foreground">{discipline.format || "Formato sin definir"}</p>
-                        </div>
-                        <Badge variant={status.tone}>{status.label}</Badge>
-                      </div>
-
-                      <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-                        <div className="rounded-xl bg-muted/30 p-3">
-                          <p className="text-2xl font-semibold text-foreground">{discipline.teams.length}</p>
-                          <p className="text-xs text-muted-foreground">Inscripciones</p>
-                        </div>
-                        <div className="rounded-xl bg-muted/30 p-3">
-                          <p className="text-2xl font-semibold text-foreground">{players}</p>
-                          <p className="text-xs text-muted-foreground">Jugadores</p>
-                        </div>
-                        <div className="rounded-xl bg-muted/30 p-3">
-                          <p className="text-2xl font-semibold text-foreground">{discipline.matches.length}</p>
-                          <p className="text-xs text-muted-foreground">Partidos</p>
-                        </div>
-                      </div>
-
-                      <span className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary">
-                        Ver detalle
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </span>
-                    </Link>
-                  )
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Próximos partidos</CardTitle>
-              <CardDescription>Lo que se viene en el torneo activo.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {upcomingMatches.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-border p-6 text-muted-foreground">
-                  No hay próximos partidos cargados.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {upcomingMatches.map((match) => (
-                    <div key={match.id} className="rounded-2xl border border-border p-4">
-                      <p className="text-sm text-muted-foreground">{match.discipline}</p>
-                      <p className="text-lg font-semibold text-foreground">{match.team1} vs {match.team2}</p>
-                      <p className="text-sm text-primary">{formatDate(match.date)}</p>
-                    </div>
-                  ))}
+      <section className="grid gap-6 md:grid-cols-2">
+        <div>
+          <h2 className="mb-4 text-lg font-semibold text-foreground">Próximos partidos</h2>
+          {upcomingMatches.length === 0 ? (
+            <p className="text-muted-foreground">No hay próximos partidos.</p>
+          ) : (
+            <div className="space-y-3">
+              {upcomingMatches.map((match) => (
+                <div key={match.id} className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs text-muted-foreground">{match.discipline}</p>
+                  <p className="font-semibold text-foreground">{match.team1} vs {match.team2}</p>
+                  <p className="text-sm text-primary">{formatDate(match.date)}</p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              ))}
+            </div>
+          )}
+        </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Resultados recientes</CardTitle>
-              <CardDescription>Últimos cierres ya cargados por administración.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {recentResults.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-border p-6 text-muted-foreground">
-                  Todavía no hay resultados cerrados.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {recentResults.map((result) => (
-                    <div key={result.id} className="rounded-2xl border border-border p-4">
-                      <p className="text-sm text-muted-foreground">{result.discipline}</p>
-                      <p className="text-lg font-semibold text-foreground">
-                        {result.team1} <span className="text-primary">{result.score1} - {result.score2}</span> {result.team2}
-                      </p>
-                    </div>
-                  ))}
+        <div>
+          <h2 className="mb-4 text-lg font-semibold text-foreground">Resultados recientes</h2>
+          {recentResults.length === 0 ? (
+            <p className="text-muted-foreground">No hay resultados aún.</p>
+          ) : (
+            <div className="space-y-3">
+              {recentResults.map((result) => (
+                <div key={result.id} className="rounded-xl border border-border bg-card p-4">
+                  <p className="text-xs text-muted-foreground">{result.discipline}</p>
+                  <p className="font-semibold text-foreground">
+                    {result.team1} <span className="text-primary">{result.score1} - {result.score2}</span> {result.team2}
+                  </p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>

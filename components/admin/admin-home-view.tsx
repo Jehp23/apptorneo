@@ -145,111 +145,84 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="border-b border-border bg-card px-6 py-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary">Panel admin</p>
-            <h1 className="mt-0.5 text-2xl font-bold text-foreground">{tournament?.name ?? "Torneo"}</h1>
-            {tournament ? (
-              <p className="text-sm text-muted-foreground">
-                {tournament.location} · {tournament.year}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {tournament ? (
-              <button
-                onClick={() => setEditTournament(true)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-              >
-                <Pencil className="h-4 w-4" />
-              </button>
-            ) : null}
-            <Link
-              href="/torneo"
-              className="rounded-xl border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Ver público
-            </Link>
-            <Link
-              href="/api/admin/auth/logout"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <LogOut className="h-4 w-4" />
-            </Link>
-          </div>
+      <header className="flex items-center justify-between border-b border-border bg-card px-6 py-4">
+        <div>
+          <h1 className="font-serif text-xl font-semibold text-foreground">{tournament?.name ?? "Torneo"}</h1>
+          {tournament ? (
+            <p className="text-xs text-muted-foreground">{tournament.year}</p>
+          ) : null}
         </div>
-      </div>
 
-      <div className="space-y-6 p-4">
+        <div className="flex items-center gap-2">
+          {tournament ? (
+            <button
+              onClick={() => setEditTournament(true)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+          ) : null}
+          <Link
+            href="/torneo"
+            className="rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Ver público
+          </Link>
+          <Link
+            href="/api/admin/auth/logout"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <LogOut className="h-4 w-4" />
+          </Link>
+        </div>
+      </header>
+
+      <div className="space-y-6 p-6">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { label: "Deportes", value: disciplines.length, icon: Trophy },
-            { label: "Participantes", value: totalParticipants, icon: Users },
-            { label: "Partidos", value: totalMatches, icon: Calendar },
-            { label: "Jugados", value: playedMatches, icon: Activity },
+            { label: "Deportes", value: disciplines.length },
+            { label: "Participantes", value: totalParticipants },
+            { label: "Partidos", value: totalMatches },
+            { label: "Jugados", value: playedMatches },
           ].map((item) => (
-            <Card key={item.label}>
-              <CardContent className="flex items-center justify-between p-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">{item.label}</p>
-                  <p className="text-2xl font-bold text-foreground">{item.value}</p>
-                </div>
-                <div className="rounded-xl bg-primary/10 p-2">
-                  <item.icon className="h-4 w-4 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
+            <div key={item.label} className="rounded-xl border border-border bg-card p-4">
+              <p className="text-xs text-muted-foreground">{item.label}</p>
+              <p className="mt-1 text-2xl font-semibold text-foreground">{item.value}</p>
+            </div>
           ))}
         </div>
 
         {/* Quick summary alerts for event day */}
         {(pendingMatches > 0 || incompleteRegistrations.length > 0) && (
-          <Card className="border-amber-500/30 bg-amber-500/5">
-            <CardContent className="p-4">
-              <h3 className="mb-3 text-sm font-semibold text-amber-700">Resumen rápido - Qué falta</h3>
-              <div className="space-y-2">
-                {pendingMatches > 0 && (
-                  <div className="flex items-center gap-2 text-sm text-amber-700">
-                    <Calendar className="h-4 w-4" />
-                    <span><strong>{pendingMatches}</strong> partido{pendingMatches === 1 ? "" : "s"} pendiente{pendingMatches === 1 ? "" : "s"} en total</span>
-                  </div>
-                )}
-                {incompleteRegistrations.length > 0 && (
-                  <div className="flex items-center gap-2 text-sm text-amber-700">
-                    <Users className="h-4 w-4" />
-                    <span><strong>{incompleteRegistrations.length}</strong> deporte{incompleteRegistrations.length === 1 ? "" : "s"} con inscripciones incompletas</span>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+            <h3 className="mb-2 text-sm font-semibold text-amber-700">Qué falta</h3>
+            <div className="space-y-1 text-sm text-amber-700">
+              {pendingMatches > 0 && <p>{pendingMatches} partido{pendingMatches === 1 ? "" : "s"} pendiente{pendingMatches === 1 ? "" : "s"}</p>}
+              {incompleteRegistrations.length > 0 && <p>{incompleteRegistrations.length} deporte{incompleteRegistrations.length === 1 ? "" : "s"} incompleto{incompleteRegistrations.length === 1 ? "" : "s"}</p>}
+            </div>
+          </div>
         )}
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-foreground">Deportes</h2>
-              <p className="text-sm text-muted-foreground">Cargá participantes sin entrar a menús raros. Ese es el punto.</p>
-            </div>
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground">Deportes</h2>
             <button
               onClick={() => setNewDisciplineOpen(true)}
-              className="flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
+              className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
             >
-              <Plus className="h-4 w-4" /> Nuevo deporte
+              <Plus className="inline h-4 w-4 mr-1" /> Nuevo
             </button>
           </div>
 
           {disciplines.length === 0 ? (
             <button
               onClick={() => setNewDisciplineOpen(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 py-10 text-base font-semibold text-primary transition-colors hover:border-primary hover:bg-primary/10"
+              className="w-full rounded-xl border-2 border-dashed border-border p-8 text-muted-foreground hover:border-primary/30"
             >
-              <Plus className="h-5 w-5" /> Crear el primer deporte
+              Crear el primer deporte
             </button>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {disciplines.map((discipline) => {
                 const matchStatus = getMatchStatus(discipline.matches)
                 const registration = getRegistrationStatus(discipline)
@@ -257,68 +230,35 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
                 const pendingCount = discipline.matches.filter((match) => !match.played).length
 
                 return (
-                  <article
+                  <Link
                     key={discipline.id}
-                    className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-sm"
+                    href={`/admin/disciplines/${discipline.slug}`}
+                    className="group rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30"
                   >
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start justify-between gap-2 mb-3">
                       <div>
-                        <h3 className="text-lg font-bold text-foreground">{discipline.name}</h3>
+                        <h3 className="font-semibold text-foreground">{discipline.name}</h3>
                         {discipline.format ? (
-                          <p className="text-sm text-muted-foreground">{discipline.format}</p>
+                          <p className="text-xs text-muted-foreground">{discipline.format}</p>
                         ) : null}
                       </div>
-                      <div className="flex flex-wrap items-center justify-end gap-2">
-                        <Badge variant={registration.tone}>{registration.label}</Badge>
-                        <Badge variant={matchStatus.tone}>{matchStatus.label}</Badge>
+                      <div className="flex gap-1">
+                        <Badge variant={registration.tone} className="text-xs">{registration.label}</Badge>
+                        <Badge variant={matchStatus.tone} className="text-xs">{matchStatus.label}</Badge>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                      <StatChip label="Cupo" value={discipline.teamsCount ?? "Libre"} />
-                      <StatChip label="Inscriptos" value={registration.occupied} />
-                      <StatChip label="Faltan" value={registration.remaining ?? "—"} tone={registration.isFull ? "success" : "default"} />
-                      <StatChip label="Pendientes" value={pendingCount} tone={pendingCount > 0 ? "warning" : "default"} />
+                    <div className="flex gap-3 text-xs text-muted-foreground">
+                      <span>{registration.occupied}/{discipline.teamsCount || "∞"}</span>
+                      <span>{players} jugadores</span>
+                      <span>{pendingCount} pendientes</span>
                     </div>
-
-                    <div className="rounded-2xl bg-muted/40 p-3 text-sm">
-                      <div className="flex items-center justify-between gap-2 text-foreground">
-                        <span className="font-semibold">Carga rápida</span>
-                        <span className="text-xs text-muted-foreground">
-                          {players} jugador{players === 1 ? "" : "es"} en total
-                        </span>
-                      </div>
-                      <p className="mt-1 text-muted-foreground">{registration.helper}</p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => setQuickAddDiscipline(discipline)}
-                        disabled={registration.isFull}
-                        className="rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        Agregar inscripción
-                      </button>
-                      <button
-                        onClick={() => setCapacityDiscipline(discipline)}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-                      >
-                        <Settings2 className="h-4 w-4" /> Ajustar cupo
-                      </button>
-                      <Link
-                        href={`/admin/${discipline.slug}`}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-                      >
-                        Gestionar
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </div>
-                  </article>
+                  </Link>
                 )
               })}
             </div>
           )}
-        </div>
+        </section>
       </div>
 
       {tournament ? (
