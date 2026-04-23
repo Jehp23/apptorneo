@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
-// GET: Obtener equipos de una disciplina
-export async function GET(_request: Request, { params }: { params: { slug: string } }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+
   const discipline = await prisma.discipline.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
     select: { id: true },
   })
 
@@ -14,21 +15,18 @@ export async function GET(_request: Request, { params }: { params: { slug: strin
 
   const teams = await prisma.team.findMany({
     where: { disciplineId: discipline.id },
-    include: {
-      players: true,
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
+    include: { players: true },
+    orderBy: { createdAt: "asc" },
   })
 
   return NextResponse.json(teams)
 }
 
-// POST: Crear un equipo en una disciplina
-export async function POST(request: Request, { params }: { params: { slug: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+
   const discipline = await prisma.discipline.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
     select: { id: true },
   })
 
@@ -38,33 +36,27 @@ export async function POST(request: Request, { params }: { params: { slug: strin
 
   const body = await request.json()
 
+  if (!body.name?.trim()) {
+    return NextResponse.json({ error: "El nombre es obligatorio" }, { status: 400 })
+  }
+
   try {
     const team = await prisma.team.create({
       data: {
         disciplineId: discipline.id,
         name: body.name,
-        type: body.type || "TEAM",
+        type: body.type || "SINGLE",
         group: body.group,
         seed: body.seed,
-        players: body.players
-          ? {
-              create: body.players.map((player: any) => ({
-                name: player.name,
-                seniority: player.seniority,
-              })),
-            }
+        players: body.players?.length
+          ? { create: body.players.map((p: { name: string; seniority?: number }) => ({ name: p.name, seniority: p.seniority })) }
           : undefined,
       },
-      include: {
-        players: true,
-      },
+      include: { players: true },
     })
 
     return NextResponse.json(team, { status: 201 })
-  } catch (error) {
-    return NextResponse.json(
-      { error: "No se pudo crear el equipo" },
-      { status: 400 }
-    )
+  } catch {
+    return NextResponse.json({ error: "No se pudo crear el equipo" }, { status: 400 })
   }
 }

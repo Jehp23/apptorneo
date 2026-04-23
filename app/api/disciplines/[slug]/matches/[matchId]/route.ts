@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
-export async function PATCH(request: Request, { params }: { params: { slug: string; matchId: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ slug: string; matchId: string }> }) {
+  const { slug, matchId } = await params
+
   const discipline = await prisma.discipline.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
     select: { id: true },
   })
 
@@ -12,10 +14,7 @@ export async function PATCH(request: Request, { params }: { params: { slug: stri
   }
 
   const existingMatch = await prisma.match.findFirst({
-    where: {
-      id: params.matchId,
-      disciplineId: discipline.id,
-    },
+    where: { id: matchId, disciplineId: discipline.id },
   })
 
   if (!existingMatch) {
@@ -25,7 +24,7 @@ export async function PATCH(request: Request, { params }: { params: { slug: stri
   const body = await request.json()
 
   const updatedMatch = await prisma.match.update({
-    where: { id: params.matchId },
+    where: { id: matchId },
     data: {
       score1: body.score1,
       score2: body.score2,

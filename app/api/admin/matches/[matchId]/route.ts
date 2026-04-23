@@ -4,13 +4,14 @@ import { prisma } from "@/lib/prisma"
 // PATCH: Actualizar un partido (scores, estado, etc)
 export async function PATCH(
   request: Request,
-  { params }: { params: { matchId: string } }
+  { params }: { params: Promise<{ matchId: string }> }
 ) {
+  const { matchId } = await params
   const body = await request.json()
 
   try {
     const match = await prisma.match.update({
-      where: { id: params.matchId },
+      where: { id: matchId },
       data: {
         score1: body.score1,
         score2: body.score2,

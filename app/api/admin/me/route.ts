@@ -1,5 +1,10 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
+import { isValidAdminToken } from "@/lib/admin-auth"
 
-export function GET() {
+export function GET(request: NextRequest) {
+  const token = request.cookies.get("admin_session")?.value
+  if (!isValidAdminToken(token)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
   return NextResponse.json({ ok: true })
 }

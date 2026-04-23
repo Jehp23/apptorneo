@@ -1,30 +1,18 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
-export async function GET(_request: Request, { params }: { params: { slug: string } }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+
   const discipline = await prisma.discipline.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
     include: {
       tournament: true,
-      teams: {
-        include: {
-          players: true,
-        },
-      },
+      teams: { include: { players: true } },
       matches: {
         include: {
-          team1: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          team2: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
+          team1: { select: { id: true, name: true } },
+          team2: { select: { id: true, name: true } },
         },
       },
     },
@@ -37,28 +25,23 @@ export async function GET(_request: Request, { params }: { params: { slug: strin
   return NextResponse.json(discipline)
 }
 
-export async function PATCH(request: Request, { params }: { params: { slug: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   const body = await request.json()
 
   try {
     const discipline = await prisma.discipline.update({
-      where: {
-        slug: params.slug,
-      },
+      where: { slug },
       data: {
-        name: body.name,
-        format: body.format,
-        teamsCount: body.teamsCount,
+        name:         body.name,
+        format:       body.format,
+        teamsCount:   body.teamsCount,
         playersCount: body.playersCount,
-        details: body.details,
+        details:      body.details,
       },
     })
-
     return NextResponse.json(discipline)
-  } catch (error) {
-    return NextResponse.json(
-      { error: "No se pudo actualizar la disciplina" },
-      { status: 400 }
-    )
+  } catch {
+    return NextResponse.json({ error: "No se pudo actualizar la disciplina" }, { status: 400 })
   }
 }
