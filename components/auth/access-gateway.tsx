@@ -79,7 +79,7 @@ export function AccessGateway({
         <div className="grid w-full gap-8 lg:grid-cols-[1.15fr_0.85fr]">
           <section className="hidden rounded-3xl border border-border bg-card/50 p-8 lg:block">
             <div className="mb-8 flex items-center gap-4">
-              <div className="relative h-16 w-56 overflow-hidden rounded-2xl bg-primary/10">
+              <div className="relative h-16 w-64 overflow-hidden rounded-2xl bg-primary/10">
                 <Image src="/logosanatorio.avif" alt="Logo Sanatorio El Carmen" fill className="object-cover" />
               </div>
               <div>
