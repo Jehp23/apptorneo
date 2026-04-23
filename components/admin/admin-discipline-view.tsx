@@ -11,6 +11,7 @@ import { StandingsTable, type StandingRow } from "@/components/standings-table"
 
 interface Player { id: string; name: string; seniority?: number | null }
 interface Team   { id: string; name: string; type: string; group?: string | null; players: Player[] }
+interface RankedStandingRow extends StandingRow { teamId: string }
 interface Match  {
   id: string
   team1?: { id: string; name: string } | null
@@ -124,6 +125,44 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
     } catch { notify(false, "No se pudo crear el partido.") }
   }
 
+  async function handleGenerateSemifinals() {
+    if (!semifinalPlan.ready || semifinalPlan.crosses.length === 0) return
+
+    try {
+      const createdMatches: Match[] = []
+
+      for (const cross of semifinalPlan.crosses) {
+        const res = await fetch(`/api/disciplines/${initial.slug}/matches`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            team1Id: cross.team1.id,
+            team2Id: cross.team2.id,
+            stage: cross.stage,
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error)
+
+        createdMatches.push({
+          id: data.id,
+          score1: null,
+          score2: null,
+          played: false,
+          stage: data.stage ?? cross.stage,
+          date: null,
+          team1: { id: cross.team1.id, name: cross.team1.name },
+          team2: { id: cross.team2.id, name: cross.team2.name },
+        })
+      }
+
+      setMatches((prev) => [...prev, ...createdMatches])
+      notify(true, "Semifinales generadas.")
+    } catch {
+      notify(false, "No se pudieron generar las semifinales.")
+    }
+  }
+
   function handleScoreUpdated(updated: Match) {
     setMatches((prev) => prev.map((m) => m.id === updated.id ? updated : m))
     setScoring(null)
@@ -137,6 +176,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
   const registrationLabel = teamCap == null || teamCap <= 0 ? "Abierto" : teams.length >= teamCap ? "Completo" : "Abierto"
   const registrationTone = teamCap != null && teamCap > 0 && teams.length >= teamCap ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20" : "bg-primary/10 text-primary border border-primary/20"
   const groupedStandings = buildGroupedStandings(teams, matches)
+  const semifinalPlan = buildSemifinalPlan(groupedStandings, matches)
 
   return (
     <div className="min-h-screen bg-background">
@@ -255,6 +295,34 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         {/* ── Partidos ── */}
         {tab === "posiciones" && (
           <>
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Fase siguiente</p>
+                  <p className="text-sm text-muted-foreground">Para Fútbol 5 / Pádel: genera semifinales cuando las dos zonas estén completas.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleGenerateSemifinals}
+                  disabled={!semifinalPlan.ready}
+                  className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Generar semifinales
+                </button>
+              </div>
+              {!semifinalPlan.ready ? (
+                <p className="mt-3 text-xs text-muted-foreground">{semifinalPlan.reason}</p>
+              ) : (
+                <div className="mt-3 grid gap-2 md:grid-cols-2">
+                  {semifinalPlan.crosses.map((cross) => (
+                    <div key={cross.stage} className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground">
+                      <span className="font-semibold">{cross.stage}:</span> {cross.team1.name} vs {cross.team2.name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {groupedStandings.length === 0 ? (
               <p className="py-12 text-center text-muted-foreground">Todavía no hay participantes para calcular posiciones.</p>
             ) : (
@@ -714,17 +782,23 @@ function buildGroupedStandings(teams: Team[], matches: Match[]) {
     return acc
   }, {})
 
-  return Object.entries(groups).map(([groupName, groupTeams]) => ({
-    groupName,
-    standings: calculateStandings(groupTeams, matches),
-  }))
+  return Object.entries(groups)
+    .map(([groupName, groupTeams]) => ({
+      groupName,
+      teams: groupTeams,
+      standings: calculateStandings(groupTeams, matches),
+      playedMatches: countPlayedMatches(groupTeams, matches),
+      expectedMatches: expectedRoundRobinMatches(groupTeams.length),
+    }))
+    .sort((a, b) => a.groupName.localeCompare(b.groupName))
 }
 
-function calculateStandings(teams: Team[], matches: Match[]): StandingRow[] {
-  const stats: Record<string, StandingRow> = {}
+function calculateStandings(teams: Team[], matches: Match[]): RankedStandingRow[] {
+  const stats: Record<string, RankedStandingRow> = {}
 
   teams.forEach((team, index) => {
     stats[team.id] = {
+      teamId: team.id,
       position: index + 1,
       teamName: team.name,
       pj: 0,
@@ -775,4 +849,53 @@ function calculateStandings(teams: Team[], matches: Match[]): StandingRow[] {
   return Object.values(stats)
     .sort((a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf)
     .map((row, index) => ({ ...row, position: index + 1 }))
+}
+
+function countPlayedMatches(teams: Team[], matches: Match[]) {
+  const teamIds = new Set(teams.map((team) => team.id))
+  return matches.filter((match) => match.played && match.team1 && match.team2 && teamIds.has(match.team1.id) && teamIds.has(match.team2.id)).length
+}
+
+function expectedRoundRobinMatches(teamCount: number) {
+  return teamCount >= 2 ? (teamCount * (teamCount - 1)) / 2 : 0
+}
+
+function buildSemifinalPlan(
+  groupedStandings: Array<{ groupName: string; standings: RankedStandingRow[]; expectedMatches: number; playedMatches: number }>,
+  matches: Match[],
+) {
+  const existingSemis = matches.some((match) => match.stage?.toLowerCase().includes("semi"))
+  if (existingSemis) {
+    return { ready: false, reason: "Las semifinales ya fueron generadas.", crosses: [] as Array<{ stage: string; team1: { id: string; name: string }; team2: { id: string; name: string } }> }
+  }
+
+  if (groupedStandings.length !== 2) {
+    return { ready: false, reason: "Este generador necesita exactamente 2 zonas para armar semifinales.", crosses: [] as Array<{ stage: string; team1: { id: string; name: string }; team2: { id: string; name: string } }> }
+  }
+
+  const [groupA, groupB] = groupedStandings
+  if (groupA.standings.length < 2 || groupB.standings.length < 2) {
+    return { ready: false, reason: "Cada zona necesita al menos 2 clasificados para generar semifinales.", crosses: [] as Array<{ stage: string; team1: { id: string; name: string }; team2: { id: string; name: string } }> }
+  }
+
+  if (groupA.playedMatches < groupA.expectedMatches || groupB.playedMatches < groupB.expectedMatches) {
+    return { ready: false, reason: "Todavía faltan partidos de zona para cerrar las posiciones.", crosses: [] as Array<{ stage: string; team1: { id: string; name: string }; team2: { id: string; name: string } }> }
+  }
+
+  return {
+    ready: true,
+    reason: "Listo para generar semifinales.",
+    crosses: [
+      {
+        stage: "Semifinal 1",
+        team1: { id: groupA.standings[0].teamId, name: groupA.standings[0].teamName },
+        team2: { id: groupB.standings[1].teamId, name: groupB.standings[1].teamName },
+      },
+      {
+        stage: "Semifinal 2",
+        team1: { id: groupB.standings[0].teamId, name: groupB.standings[0].teamName },
+        team2: { id: groupA.standings[1].teamId, name: groupA.standings[1].teamName },
+      },
+    ],
+  }
 }
