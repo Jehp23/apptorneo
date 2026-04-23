@@ -18,7 +18,7 @@ export function Sidebar() {
       <div className="border-b border-border p-6">
         <div className="flex items-center gap-3">
           <div className="relative h-14 w-56 overflow-hidden rounded-xl bg-muted">
-            <Image src="/logosanatorio.avif" alt="Sanatorio El Carmen" fill className="object-cover" />
+            <Image src="/logotipo_sanatorio.png" alt="Sanatorio El Carmen" fill className="object-contain" />
           </div>
           <div>
             <h1 className="font-serif text-sm font-semibold text-foreground">Torneo Interno</h1>

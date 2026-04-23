@@ -80,7 +80,7 @@ export function AccessGateway({
           <section className="hidden rounded-3xl border border-border bg-card/50 p-8 lg:block">
             <div className="mb-8 flex items-center gap-4">
               <div className="relative h-20 w-80 overflow-hidden rounded-2xl bg-primary/10">
-                <Image src="/logosanatorio.avif" alt="Logo Sanatorio El Carmen" fill className="object-cover" />
+                <Image src="/logotipo_sanatorio.png" alt="Logo Sanatorio El Carmen" fill className="object-contain" />
               </div>
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">Sanatorio El Carmen</p>
