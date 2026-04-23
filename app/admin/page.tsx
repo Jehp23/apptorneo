@@ -1,13 +1,7 @@
-import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
-import { isValidAdminToken } from "@/lib/admin-auth"
 import { prisma } from "@/lib/prisma"
 import { AdminHomeView } from "@/components/admin/admin-home-view"
 
 export default async function AdminPage() {
-  const cookieStore = await cookies()
-  const token = cookieStore.get("admin_session")?.value
-  if (!isValidAdminToken(token)) redirect("/admin/login")
 
   const tournament = await prisma.tournament.findFirst({
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],

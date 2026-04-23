@@ -1,14 +1,8 @@
-import { notFound, redirect } from "next/navigation"
-import { cookies } from "next/headers"
-import { isValidAdminToken } from "@/lib/admin-auth"
+import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { AdminDisciplineView } from "@/components/admin/admin-discipline-view"
 
 export default async function AdminDisciplinePage({ params }: { params: Promise<{ slug: string }> }) {
-  const cookieStore = await cookies()
-  const token = cookieStore.get("admin_session")?.value
-  if (!isValidAdminToken(token)) redirect("/admin/login")
-
   const { slug } = await params
 
   const discipline = await prisma.discipline.findUnique({
