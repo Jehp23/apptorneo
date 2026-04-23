@@ -208,14 +208,14 @@ export function PublicDisciplineView({
   const scoringMatch = matches.find((m) => m.id === scoreMatchId) ?? null
 
   return (
-    <div className="p-8">
-      <Link href="/torneo" className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">
+    <div className="p-6">
+      <Link href="/torneo" className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" />
-        Volver al torneo
+        Volver
       </Link>
 
       {error ? (
-        <div className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       ) : null}
@@ -223,30 +223,30 @@ export function PublicDisciplineView({
       <DisciplineHeader
         name={discipline.name}
         Icon={Trophy}
-        description={discipline.format ?? "Seguimiento del torneo"}
+        description={discipline.format ?? ""}
       />
 
       {isAdmin && (
-        <div className="mb-6 flex flex-wrap gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
-          <p className="mr-2 self-center text-sm font-semibold text-primary">Admin</p>
+        <div className="mb-6 flex flex-wrap gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3">
+          <p className="mr-2 self-center text-xs font-semibold text-primary">Admin</p>
           <button
             onClick={() => setAddParticipantOpen(true)}
-            className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium transition-colors hover:border-primary hover:text-primary"
+            className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary"
           >
-            <UserPlus className="h-4 w-4" /> Agregar participante
+            <UserPlus className="h-4 w-4" /> Agregar
           </button>
           {teams.length >= 2 && (
             <button
               onClick={() => setAddMatchOpen(true)}
-              className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium transition-colors hover:border-primary hover:text-primary"
+              className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary"
             >
-              <Swords className="h-4 w-4" /> Nuevo partido
+              <Swords className="h-4 w-4" /> Partido
             </button>
           )}
         </div>
       )}
 
-      <div className="flex gap-8">
+      <div className="flex gap-6">
         <div className="min-w-0 flex-1">
           <PremiumTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -256,21 +256,21 @@ export function PublicDisciplineView({
               {standingsVariant === "sapo" ? (
                 <>
                   {sapoStandings.length === 0 ? (
-                    <p className="py-12 text-center text-muted-foreground">
-                      Todavía no hay participantes para calcular posiciones.
+                    <p className="py-8 text-center text-muted-foreground">
+                      No hay participantes.
                     </p>
                   ) : (
-                    <div className="rounded-2xl border border-border bg-card p-4">
-                      <h3 className="mb-4 font-serif font-semibold text-foreground">Tabla de Clasificación (Top 8 pasan a bracket)</h3>
-                      <SimpleStandingsTable title="Clasificación General" standings={sapoStandings} highlightTop={8} />
+                    <div className="rounded-xl border border-border bg-card p-4">
+                      <h3 className="mb-3 font-serif text-sm font-semibold text-foreground">Tabla de Clasificación</h3>
+                      <SimpleStandingsTable title="" standings={sapoStandings} highlightTop={8} />
                     </div>
                   )}
                 </>
               ) : standingsVariant === "loba" ? (
                 <>
                   {lobaTables.length === 0 ? (
-                    <p className="py-12 text-center text-muted-foreground">
-                      Todavía no hay mesas configuradas.
+                    <p className="py-8 text-center text-muted-foreground">
+                      No hay mesas configuradas.
                     </p>
                   ) : (
                     <LobaTableView
@@ -281,7 +281,7 @@ export function PublicDisciplineView({
                   )}
                 </>
               ) : (
-                <div className={standingsVariant === "compact" ? "grid gap-3 md:grid-cols-2 lg:grid-cols-3" : "grid gap-6 lg:grid-cols-2"}>
+                <div className={standingsVariant === "compact" ? "grid gap-3 md:grid-cols-2 lg:grid-cols-3" : "grid gap-4 lg:grid-cols-2"}>
                   {groupedStandings.map((group) => (
                     standingsVariant === "compact" ? (
                       <CompactStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={1} />
@@ -303,7 +303,7 @@ export function PublicDisciplineView({
                 <div className="flex justify-end">
                   <button
                     onClick={() => setAddMatchOpen(true)}
-                    className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+                    className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
                   >
                     <Swords className="h-4 w-4" /> Nuevo partido
                   </button>
@@ -311,12 +311,12 @@ export function PublicDisciplineView({
               )}
               {fixtureGroups.map((group) => (
                 <div key={group.groupName} className="overflow-hidden rounded-xl border border-border bg-card">
-                  <div className="border-b border-border px-5 py-4">
-                    <h3 className="font-serif font-semibold text-foreground">{group.groupName}</h3>
+                  <div className="border-b border-border px-4 py-3">
+                    <h3 className="font-serif text-sm font-semibold text-foreground">{group.groupName}</h3>
                   </div>
                   <div className="divide-y divide-border">
                     {group.matches.length === 0 ? (
-                      <p className="px-5 py-6 text-sm text-muted-foreground">Sin partidos todavía.</p>
+                      <p className="px-4 py-6 text-xs text-muted-foreground">Sin partidos.</p>
                     ) : group.matches.map((match, index) => (
                       <div
                         key={match.id}
@@ -358,35 +358,35 @@ export function PublicDisciplineView({
             <div className="space-y-4">
               {isAdmin && (
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {teams.length}{discipline.teamsCount ? ` / ${discipline.teamsCount}` : ""} inscriptos
                   </p>
                   {!isFull ? (
                     <button
                       onClick={() => setAddParticipantOpen(true)}
-                      className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium transition-colors hover:border-primary hover:text-primary"
+                      className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary"
                     >
                       <UserPlus className="h-4 w-4" /> Agregar
                     </button>
                   ) : (
-                    <span className="rounded-xl bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-600">Cupo completo</span>
+                    <span className="rounded-lg bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-600">Cupo completo</span>
                   )}
                 </div>
               )}
               {teams.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">
-                  Sin participantes todavía.
+                <div className="rounded-xl border border-dashed border-border p-6 text-center text-muted-foreground">
+                  Sin participantes.
                 </div>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                   {teams.map((team) => (
-                    <div key={team.id} className="overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-md">
+                    <div key={team.id} className="overflow-hidden rounded-lg border border-border bg-card transition-shadow hover:shadow-sm">
                       <div className="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-3">
-                        <span className="font-semibold text-foreground">{team.name}</span>
+                        <span className="font-medium text-foreground">{team.name}</span>
                         <div className="flex items-center gap-2">
                           {team.players.length > 0 && (
                             <span className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                              {team.players.length} jugadores
+                              {team.players.length}
                             </span>
                           )}
                           {isAdmin && (
@@ -400,7 +400,7 @@ export function PublicDisciplineView({
                       {team.players.length > 0 && (
                         <ul className="divide-y divide-border">
                           {team.players.map((player, i) => (
-                            <li key={player.id} className={`flex items-center justify-between px-4 py-2.5 text-sm ${i % 2 === 1 ? "bg-muted/20" : ""}`}>
+                            <li key={player.id} className={`flex items-center justify-between px-4 py-2 text-xs ${i % 2 === 1 ? "bg-muted/20" : ""}`}>
                               <span className="text-foreground">{player.name}</span>
                               {player.seniority != null && (
                                 <span className="font-mono text-xs text-muted-foreground">{player.seniority}a</span>
@@ -444,13 +444,13 @@ export function PublicDisciplineView({
         <DialogContent className="sm:max-w-xs">
           <DialogHeader><DialogTitle>Agregar participante</DialogTitle></DialogHeader>
           <div className="space-y-3 pt-1">
-            <input autoFocus className="w-full rounded-2xl border-2 border-primary bg-background px-4 py-4 text-xl outline-none placeholder:text-muted-foreground"
+            <input autoFocus className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
               placeholder="Nombre..." value={newName} onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleAddParticipant() }} />
             <div className="flex gap-2">
-              <button type="button" onClick={() => setAddParticipantOpen(false)} className="flex-1 rounded-2xl border border-border py-3 text-base font-medium">Cancelar</button>
+              <button type="button" onClick={() => setAddParticipantOpen(false)} className="flex-1 rounded-lg border border-border py-2 text-sm font-medium">Cancelar</button>
               <button type="button" disabled={savingParticipant || !newName.trim()} onClick={handleAddParticipant}
-                className="flex-1 rounded-2xl bg-primary py-3 text-base font-bold text-primary-foreground disabled:opacity-40">
+                className="flex-1 rounded-lg bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-40">
                 {savingParticipant ? "..." : "Guardar"}
               </button>
             </div>
@@ -462,22 +462,22 @@ export function PublicDisciplineView({
         <DialogContent className="sm:max-w-xs">
           <DialogHeader><DialogTitle>Nuevo partido</DialogTitle></DialogHeader>
           <div className="space-y-3 pt-1">
-            <select className="w-full rounded-2xl border-2 border-border bg-background px-4 py-3 text-lg outline-none focus:border-primary"
+            <select className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
               value={matchForm.team1Id} onChange={(e) => setMatchForm((f) => ({ ...f, team1Id: e.target.value }))}>
               <option value="">Equipo 1...</option>
               {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
-            <select className="w-full rounded-2xl border-2 border-border bg-background px-4 py-3 text-lg outline-none focus:border-primary"
+            <select className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
               value={matchForm.team2Id} onChange={(e) => setMatchForm((f) => ({ ...f, team2Id: e.target.value }))}>
               <option value="">Equipo 2...</option>
               {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
-            <input className="w-full rounded-2xl border-2 border-border bg-background px-4 py-3 text-base outline-none focus:border-primary placeholder:text-muted-foreground"
+            <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary placeholder:text-muted-foreground"
               placeholder="Fase (opcional)" value={matchForm.stage} onChange={(e) => setMatchForm((f) => ({ ...f, stage: e.target.value }))} />
             <div className="flex gap-2">
-              <button type="button" onClick={() => setAddMatchOpen(false)} className="flex-1 rounded-2xl border border-border py-3 text-base font-medium">Cancelar</button>
+              <button type="button" onClick={() => setAddMatchOpen(false)} className="flex-1 rounded-lg border border-border py-2 text-sm font-medium">Cancelar</button>
               <button type="button" disabled={savingMatch || !matchForm.team1Id || !matchForm.team2Id} onClick={handleAddMatch}
-                className="flex-1 rounded-2xl bg-primary py-3 text-base font-bold text-primary-foreground disabled:opacity-40">
+                className="flex-1 rounded-lg bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-40">
                 {savingMatch ? "..." : "Crear"}
               </button>
             </div>

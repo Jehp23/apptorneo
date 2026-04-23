@@ -75,48 +75,43 @@ export function AccessGateway({
 
   return (
     <div className="min-h-screen bg-background px-4 py-10">
-      <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-5xl items-center justify-center">
-        <div className="grid w-full gap-8 lg:grid-cols-[1.15fr_0.85fr]">
-          <section className="hidden rounded-3xl border border-border bg-card/50 p-8 lg:block">
-            <div className="mb-8 flex items-center gap-4">
-              <div className="relative h-20 w-20 overflow-hidden rounded-2xl bg-primary/10">
+      <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-4xl items-center justify-center">
+        <div className="grid w-full gap-8 lg:grid-cols-[1fr_0.8fr]">
+          <section className="hidden rounded-xl border border-border bg-card/50 p-6 lg:block">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="relative h-16 w-16 overflow-hidden rounded-xl bg-primary/10">
                 <Image src="/logotipo_sanatorio.png" alt="Logo Sanatorio El Carmen" fill className="object-contain" />
               </div>
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">Sanatorio El Carmen</p>
-                <h1 className="font-serif text-3xl font-semibold text-foreground">Torneo interno 2025</h1>
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">Sanatorio El Carmen</p>
+                <h1 className="font-serif text-xl font-semibold text-foreground">Torneo interno 2025</h1>
               </div>
             </div>
 
-            <p className="max-w-xl text-lg text-muted-foreground">
-              Elegí cómo querés entrar. Los participantes solo siguen el torneo. La administración es la que organiza, actualiza resultados y maneja también la pantalla institucional.
+            <p className="text-sm text-muted-foreground">
+              Elegí cómo querés entrar. Los participantes solo siguen el torneo. La administración organiza y actualiza resultados.
             </p>
 
-            <div className="mt-8 grid gap-4">
+            <div className="mt-6 grid gap-3">
               {[
                 {
                   title: "Participante",
-                  description: "Acceso simple para ver cómo viene el torneo, fixtures, posiciones y resultados.",
+                  description: "Acceso simple para ver el torneo, fixtures, posiciones y resultados.",
                   icon: Users,
                 },
                 {
                   title: "Administrador",
-                  description: "Ingreso protegido para operar el torneo, cargar resultados y controlar la pantalla grande.",
+                  description: "Ingreso protegido para operar el torneo y controlar la pantalla grande.",
                   icon: Shield,
                 },
-                {
-                  title: "Objetivo",
-                  description: "Una entrada clara, cada rol con su lugar. MENOS ruido, más foco en el torneo.",
-                  icon: Trophy,
-                },
               ].map((item) => (
-                <div key={item.title} className="flex items-start gap-4 rounded-2xl border border-border bg-background p-4">
-                  <div className="rounded-xl bg-primary/10 p-3">
-                    <item.icon className="h-5 w-5 text-primary" />
+                <div key={item.title} className="flex items-start gap-3 rounded-lg border border-border bg-background p-3">
+                  <div className="rounded-lg bg-primary/10 p-2">
+                    <item.icon className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <h2 className="font-medium text-foreground">{item.title}</h2>
-                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                    <h2 className="text-sm font-medium text-foreground">{item.title}</h2>
+                    <p className="text-xs text-muted-foreground">{item.description}</p>
                   </div>
                 </div>
               ))}
@@ -124,65 +119,63 @@ export function AccessGateway({
           </section>
 
           <Card className="w-full border-border shadow-sm">
-            <CardHeader className="space-y-4 text-center">
-              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 lg:hidden">
-                <Heart className="h-10 w-10 text-primary" />
+            <CardHeader className="space-y-3 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 lg:hidden">
+                <Heart className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <CardTitle className="font-serif text-2xl">Ingresar al torneo</CardTitle>
-                <CardDescription>
-                  Elegí tu perfil para continuar.
-                </CardDescription>
+                <CardTitle className="font-serif text-xl">Ingresar</CardTitle>
+                <CardDescription>Elegí tu perfil</CardDescription>
               </div>
             </CardHeader>
 
             <CardContent>
               {!userType ? (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <Button
                     onClick={() => handleUserTypeSelect("participant")}
-                    className="h-auto w-full justify-start gap-4 rounded-2xl border border-border px-4 py-4 text-left"
+                    className="h-auto w-full justify-start gap-3 rounded-lg border border-border px-4 py-3 text-left"
                     variant="outline"
                   >
-                    <div className="rounded-xl bg-primary/10 p-3">
-                      <Users className="h-5 w-5 text-primary" />
+                    <div className="rounded-lg bg-primary/10 p-2">
+                      <Users className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <div className="font-medium text-foreground">Entrar como participante</div>
-                      <div className="text-sm text-muted-foreground">Solo lectura para seguir el torneo.</div>
+                      <div className="text-sm font-medium text-foreground">Participante</div>
+                      <div className="text-xs text-muted-foreground">Solo lectura</div>
                     </div>
                   </Button>
 
                   <Button
                     onClick={() => handleUserTypeSelect("admin")}
-                    className="h-auto w-full justify-start gap-4 rounded-2xl border border-border px-4 py-4 text-left"
+                    className="h-auto w-full justify-start gap-3 rounded-lg border border-border px-4 py-3 text-left"
                     variant="outline"
                   >
-                    <div className="rounded-xl bg-primary/10 p-3">
-                      <Shield className="h-5 w-5 text-primary" />
+                    <div className="rounded-lg bg-primary/10 p-2">
+                      <Shield className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <div className="font-medium text-foreground">Entrar como administrador</div>
-                      <div className="text-sm text-muted-foreground">Requiere contraseña para gestionar torneo y pantalla.</div>
+                      <div className="text-sm font-medium text-foreground">Administrador</div>
+                      <div className="text-xs text-muted-foreground">Requiere contraseña</div>
                     </div>
                   </Button>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-1 text-center">
-                    <h3 className="text-lg font-medium text-foreground">
+                    <h3 className="text-sm font-medium text-foreground">
                       {userType === "admin" ? "Acceso administrador" : "Acceso participante"}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {userType === "admin"
-                        ? "Ingresá la contraseña para abrir el panel de gestión y la pantalla institucional."
-                        : "No necesitás credenciales. Entrás directo a seguir el torneo."}
+                        ? "Ingresá la contraseña para gestionar el torneo."
+                        : "Entrás directo a seguir el torneo."}
                     </p>
                   </div>
 
                   {userType === "admin" && (
                     <div className="space-y-2">
-                      <label htmlFor="password" className="text-sm font-medium text-foreground">
+                      <label htmlFor="password" className="text-xs font-medium text-foreground">
                         Contraseña
                       </label>
                       <input
@@ -190,7 +183,7 @@ export function AccessGateway({
                         type="password"
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
-                        className="w-full rounded-xl border border-input bg-background px-3 py-2"
+                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                         placeholder="Ingresá la contraseña"
                         required
                       />
@@ -204,11 +197,11 @@ export function AccessGateway({
                     </Alert>
                   ) : null}
 
-                  <div className="flex gap-3">
-                    <Button type="button" variant="outline" className="flex-1" onClick={handleBack}>
+                  <div className="flex gap-2">
+                    <Button type="button" variant="outline" className="flex-1 text-sm" onClick={handleBack}>
                       Atrás
                     </Button>
-                    <Button type="submit" className="flex-1" disabled={loading}>
+                    <Button type="submit" className="flex-1 text-sm" disabled={loading}>
                       {loading ? "Ingresando..." : "Continuar"}
                     </Button>
                   </div>
@@ -216,7 +209,7 @@ export function AccessGateway({
               )}
 
               {backHref ? (
-                <div className="mt-6 text-center text-sm text-muted-foreground">
+                <div className="mt-6 text-center text-xs text-muted-foreground">
                   <Link href={backHref} className="font-medium text-primary hover:underline">
                     Volver al inicio
                   </Link>
