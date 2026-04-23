@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { ArrowLeft, Check, Minus, Plus, Swords, Trash2, Trophy, UserPlus } from "lucide-react"
 
@@ -82,15 +82,18 @@ const tabs = [
 
 export function PublicDisciplineView({
   discipline,
-  isAdmin = false,
 }: {
   discipline: PublicDisciplineData
-  isAdmin?: boolean
 }) {
   const [activeTab, setActiveTab] = useState("posiciones")
   const [teams,   setTeams]   = useState(discipline.teams)
   const [matches, setMatches] = useState(discipline.matches)
   const [error,   setError]   = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    fetch("/api/admin/me").then((r) => { if (r.ok) setIsAdmin(true) })
+  }, [])
 
   // admin: add participant
   const [addParticipantOpen, setAddParticipantOpen] = useState(false)

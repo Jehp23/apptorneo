@@ -1,11 +1,10 @@
 import Link from "next/link"
 import { unstable_noStore as noStore } from "next/cache"
-import { cookies } from "next/headers"
-import { Activity, ArrowRight, Calendar, LogIn, LogOut, Trophy, Users } from "lucide-react"
+import { Activity, ArrowRight, Calendar, Trophy, Users } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { isValidAdminToken } from "@/lib/admin-auth"
+import { AdminHeaderActions } from "@/components/public/admin-header-actions"
 import { prisma } from "@/lib/prisma"
 
 function getDisciplineStatus(matches: Array<{ played: boolean }>) {
@@ -34,9 +33,6 @@ export default async function TournamentHomePage({
   searchParams?: Promise<{ tournament?: string }>
 }) {
   noStore()
-
-  const cookieStore = await cookies()
-  const isAdmin = isValidAdminToken(cookieStore.get("admin_session")?.value)
 
   const resolvedSearchParams = (await searchParams) ?? {}
   const selectedTournamentId = resolvedSearchParams.tournament
@@ -144,30 +140,10 @@ export default async function TournamentHomePage({
                 {activeTournament.name} · {activeTournament.location} · {activeTournament.year}
               </p>
             ) : null}
-            <h1 className="font-serif text-3xl font-semibold text-foreground">
-              {isAdmin ? "Operación del torneo" : "Torneo en vivo"}
-            </h1>
+            <h1 className="font-serif text-3xl font-semibold text-foreground">Torneo en vivo</h1>
           </div>
 
-          <div className="flex items-center gap-3">
-            {isAdmin ? (
-              <Link
-                href="/api/admin/auth/logout"
-                className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <LogOut className="h-4 w-4" />
-                Salir
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <LogIn className="h-4 w-4" />
-                Ingresar como admin
-              </Link>
-            )}
-          </div>
+          <AdminHeaderActions />
         </div>
       </header>
 

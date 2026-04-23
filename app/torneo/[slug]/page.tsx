@@ -1,17 +1,13 @@
 import { notFound } from "next/navigation"
 import { unstable_noStore as noStore } from "next/cache"
-import { cookies } from "next/headers"
 
 import { PublicDisciplineView } from "@/components/public/public-discipline-view"
-import { isValidAdminToken } from "@/lib/admin-auth"
 import { prisma } from "@/lib/prisma"
 
 export default async function PublicDisciplinePage({ params }: { params: Promise<{ slug: string }> }) {
   noStore()
 
   const { slug } = await params
-  const cookieStore = await cookies()
-  const isAdmin = isValidAdminToken(cookieStore.get("admin_session")?.value)
 
   const discipline = await prisma.discipline.findUnique({
     where: { slug },
@@ -44,7 +40,6 @@ export default async function PublicDisciplinePage({ params }: { params: Promise
 
   return (
     <PublicDisciplineView
-      isAdmin={isAdmin}
       discipline={{
         id: discipline.id,
         name: discipline.name,
