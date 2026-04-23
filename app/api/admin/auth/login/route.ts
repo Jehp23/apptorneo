@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server"
-import { createAdminToken, createAdminSessionCookie } from "@/lib/admin-auth"
+import { createAdminSessionCookie } from "@/lib/admin-auth"
 
 export async function POST(request: Request) {
   const body = await request.json()
   const password = String(body.password || "")
+  const adminPassword = process.env.ADMIN_PASSWORD ?? ""
 
-  if (password !== process.env.ADMIN_PASSWORD) {
-    return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 })
+  if (!adminPassword || password !== adminPassword) {
+    return NextResponse.json({ error: "Contraseña incorrecta" }, { status: 401 })
   }
 
-  const token = await createAdminToken()
   const response = NextResponse.json({ ok: true })
-  response.cookies.set(createAdminSessionCookie(token))
+  response.cookies.set(createAdminSessionCookie(password))
   return response
 }

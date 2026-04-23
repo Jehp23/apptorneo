@@ -36,7 +36,7 @@ export default async function TournamentHomePage({
   noStore()
 
   const cookieStore = await cookies()
-  const isAdmin = await isValidAdminToken(cookieStore.get("admin_session")?.value)
+  const isAdmin = isValidAdminToken(cookieStore.get("admin_session")?.value)
 
   const resolvedSearchParams = (await searchParams) ?? {}
   const selectedTournamentId = resolvedSearchParams.tournament

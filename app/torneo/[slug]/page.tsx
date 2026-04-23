@@ -11,7 +11,7 @@ export default async function PublicDisciplinePage({ params }: { params: Promise
 
   const { slug } = await params
   const cookieStore = await cookies()
-  const isAdmin = await isValidAdminToken(cookieStore.get("admin_session")?.value)
+  const isAdmin = isValidAdminToken(cookieStore.get("admin_session")?.value)
 
   const discipline = await prisma.discipline.findUnique({
     where: { slug },

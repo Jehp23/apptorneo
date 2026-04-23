@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { isValidAdminToken } from "@/lib/admin-auth"
 
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin") || pathname.startsWith("/pantalla")) {
@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
     }
 
     const token = request.cookies.get("admin_session")?.value
-    if (!(await isValidAdminToken(token))) {
+    if (!isValidAdminToken(token)) {
       if (pathname.startsWith("/api/")) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
