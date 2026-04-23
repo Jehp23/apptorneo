@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 import { unstable_noStore as noStore } from "next/cache"
 import { Activity, ArrowRight, Calendar, Trophy, Users } from "lucide-react"
@@ -134,13 +135,18 @@ export default async function TournamentHomePage({
     <div className="space-y-8 p-8">
       <header className="rounded-3xl border border-border bg-card p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-1">
-            {activeTournament ? (
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">
-                {activeTournament.name} · {activeTournament.location} · {activeTournament.year}
-              </p>
-            ) : null}
-            <h1 className="font-serif text-3xl font-semibold text-foreground">Torneo en vivo</h1>
+          <div className="flex items-center gap-4">
+            <div className="relative h-16 w-48 overflow-hidden rounded-3xl bg-muted">
+              <Image src="/logosanatorio.avif" alt="Sanatorio El Carmen" fill className="object-contain p-3" />
+            </div>
+            <div className="space-y-1">
+              {activeTournament ? (
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">
+                  {activeTournament.name} · {activeTournament.location} · {activeTournament.year}
+                </p>
+              ) : null}
+              <h1 className="font-serif text-3xl font-semibold text-foreground">Torneo en vivo</h1>
+            </div>
           </div>
 
           <AdminHeaderActions />
