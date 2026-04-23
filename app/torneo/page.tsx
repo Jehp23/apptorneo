@@ -132,7 +132,7 @@ export default async function TournamentHomePage({
     .slice(0, 5)
 
   return (
-    <div className="space-y-8 p-8">
+    <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6 lg:p-8">
       <header className="rounded-3xl border border-border bg-card p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
@@ -214,7 +214,7 @@ export default async function TournamentHomePage({
                 No hay disciplinas cargadas para este torneo todavía.
               </div>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {disciplines.map((discipline) => {
                   const status = getDisciplineStatus(discipline.matches)
                   const players = discipline.teams.reduce((acc, team) => acc + team.players.length, 0)

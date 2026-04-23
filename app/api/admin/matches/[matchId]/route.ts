@@ -1,10 +1,21 @@
+import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
+import { isValidAdminToken } from "@/lib/admin-auth"
 import { prisma } from "@/lib/prisma"
+
+async function requireAdmin() {
+  const cookieStore = await cookies()
+  const token = cookieStore.get("admin_session")?.value
+  return isValidAdminToken(token)
+}
 
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ matchId: string }> }
 ) {
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
   const { matchId } = await params
   try {
     await prisma.match.delete({ where: { id: matchId } })
@@ -18,6 +29,9 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ matchId: string }> }
 ) {
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
   const { matchId } = await params
   const body = await request.json()
 
@@ -32,20 +46,12 @@ export async function PATCH(
         stage: body.stage,
       },
       include: {
-        team1: {
-          select: { id: true, name: true },
-        },
-        team2: {
-          select: { id: true, name: true },
-        },
+        team1: { select: { id: true, name: true } },
+        team2: { select: { id: true, name: true } },
       },
     })
-
     return NextResponse.json(match)
-  } catch (error) {
-    return NextResponse.json(
-      { error: "No se pudo actualizar el partido" },
-      { status: 400 }
-    )
+  } catch {
+    return NextResponse.json({ error: "No se pudo actualizar el partido" }, { status: 400 })
   }
 }

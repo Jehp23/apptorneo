@@ -69,6 +69,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
     try {
       const res  = await fetch(`/api/admin/disciplines/${initial.slug}/teams`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
@@ -87,7 +88,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
   async function handleRemoveTeam(teamId: string, teamName: string) {
     if (!confirm(`¿Eliminar "${teamName}"?`)) return
     try {
-      const res = await fetch(`/api/admin/disciplines/${initial.slug}/teams/${teamId}`, { method: "DELETE" })
+      const res = await fetch(`/api/admin/disciplines/${initial.slug}/teams/${teamId}`, { method: "DELETE", credentials: "include" })
       if (!res.ok) throw new Error()
       setTeams((prev) => prev.filter((t) => t.id !== teamId))
       notify(true, "Eliminado.")
@@ -98,6 +99,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
     try {
       const res = await fetch(`/api/admin/disciplines/${initial.slug}/teams/${teamId}`, {
         method: "PATCH",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, players, group: group?.trim() || null }),
       })
@@ -111,7 +113,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
   async function handleDeleteMatch(matchId: string) {
     if (!confirm("¿Eliminar este partido?")) return
     try {
-      const res = await fetch(`/api/admin/matches/${matchId}`, { method: "DELETE" })
+      const res = await fetch(`/api/admin/matches/${matchId}`, { method: "DELETE", credentials: "include" })
       if (!res.ok) throw new Error()
       setMatches((prev) => prev.filter((m) => m.id !== matchId))
       notify(true, "Partido eliminado.")
@@ -262,6 +264,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         teamsInTable.map(t =>
           fetch(`/api/admin/disciplines/${initial.slug}/teams/${t.id}`, {
             method: "PATCH",
+            credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ seed: t.id === winnerId ? 1 : null })
           })
@@ -409,21 +412,14 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
 
   return (
     <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-5xl">
       {/* ── Top bar ── */}
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card px-6 py-4">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card px-4 py-4">
         <div className="flex items-center gap-3">
           <Link href="/admin" className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-foreground">
             <ArrowLeft className="h-4 w-4" />
           </Link>
-          <div>
-            <h1 className="font-serif text-lg font-semibold text-foreground">{initial.name}</h1>
-            {initial.format ? <p className="text-xs text-muted-foreground">{initial.format}</p> : null}
-          </div>
-        </div>
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span>{teams.length} equipos</span>
-          <span>·</span>
-          <span>{matches.length} partidos</span>
+          <h1 className="font-serif text-lg font-semibold text-foreground">{initial.name}</h1>
         </div>
       </header>
 
@@ -814,6 +810,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         />
       ) : null}
     </div>
+    </div>
   )
 }
 
@@ -829,40 +826,44 @@ function MatchRow({
   onDelete: () => void
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/40 hover:bg-primary/5">
-      <button
-        onClick={onTap}
-        className="flex w-full items-center gap-3 text-left"
-      >
-      {match.stage ? (
-        <Badge variant="outline" className="shrink-0 text-xs">{match.stage}</Badge>
-      ) : null}
-      <div className="flex flex-1 items-center justify-between gap-2 min-w-0">
-        <span className="truncate text-sm font-semibold text-foreground">
-          {match.team1?.name ?? "?"}
-        </span>
-        {match.played ? (
-          <span className="shrink-0 rounded-lg bg-muted px-3 py-1 font-mono text-sm font-bold">
-            {match.score1 ?? 0} – {match.score2 ?? 0}
+    <div className="rounded-2xl border border-border bg-card transition-colors hover:border-primary/40 hover:bg-primary/5">
+      {match.stage && (
+        <div className="px-4 pt-2.5">
+          <Badge variant="outline" className="text-xs">{match.stage}</Badge>
+        </div>
+      )}
+      <div className="flex items-center gap-2 px-3 py-2.5">
+        <button
+          onClick={onTap}
+          className="flex flex-1 items-center gap-2 min-w-0 min-h-[44px]"
+        >
+          <span className="flex-1 truncate text-sm font-semibold text-foreground text-right">
+            {match.team1?.name ?? "?"}
           </span>
-        ) : (
-          <span className="shrink-0 rounded-lg bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-600">
-            Cargar
+          <div className="shrink-0 min-w-[80px] text-center">
+            {match.played ? (
+              <span className="rounded-xl bg-muted px-3 py-1.5 font-mono text-base font-bold tabular-nums">
+                {match.score1 ?? 0} – {match.score2 ?? 0}
+              </span>
+            ) : (
+              <span className="rounded-xl bg-amber-500/10 px-3 py-1.5 text-sm font-semibold text-amber-600">
+                Cargar
+              </span>
+            )}
+          </div>
+          <span className="flex-1 truncate text-sm font-semibold text-foreground">
+            {match.team2?.name ?? "?"}
           </span>
-        )}
-        <span className="truncate text-sm font-semibold text-foreground text-right">
-          {match.team2?.name ?? "?"}
-        </span>
+        </button>
+        <button
+          type="button"
+          onClick={onDelete}
+          className="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+          aria-label="Eliminar partido"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
       </div>
-      </button>
-      <button
-        type="button"
-        onClick={onDelete}
-        className="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-        aria-label="Eliminar partido"
-      >
-        <Trash2 className="h-4 w-4" />
-      </button>
     </div>
   )
 }
@@ -913,7 +914,7 @@ function AddTeamDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose() } }}>
-      <DialogContent className="sm:max-w-md" onOpenAutoFocus={reset}>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto" onOpenAutoFocus={reset}>
         <DialogHeader><DialogTitle className="text-2xl">Agregar participante</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-5 pt-2">
           <div>
@@ -1027,7 +1028,7 @@ function EditTeamDialog({
 
   return (
     <Dialog open onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle className="text-2xl">Editar participante</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-5 pt-2">
           <div>
@@ -1135,7 +1136,7 @@ function CreateMatchDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose() } }}>
-      <DialogContent className="sm:max-w-xs" onOpenAutoFocus={reset}>
+      <DialogContent className="sm:max-w-xs max-h-[90vh] overflow-y-auto" onOpenAutoFocus={reset}>
         <DialogHeader><DialogTitle>Nuevo partido</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3 pt-1">
           <select required
@@ -1196,11 +1197,12 @@ function ScoreDialog({
     try {
       const res = await fetch(`/api/admin/matches/${match.id}`, {
         method: "PATCH",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ score1, score2, played }),
       })
       if (res.status === 401) {
-        window.location.href = "/admin/login"
+        setError("Sesión expirada. Cerrá el dialog, hacé logout y volvé a loguearte.")
         return
       }
       if (!res.ok) { setError("No se pudo guardar. Intentá de nuevo."); return }
@@ -1216,7 +1218,7 @@ function ScoreDialog({
   if (confirming) {
     return (
       <Dialog open onOpenChange={(o) => { if (!o) setConfirming(false) }}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-sm max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-center">¿Finalizar el partido?</DialogTitle>
           </DialogHeader>
@@ -1244,7 +1246,7 @@ function ScoreDialog({
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-sm max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-center text-sm font-semibold text-muted-foreground">
             {match.stage ? <span className="block text-xs text-primary mb-1">{match.stage}</span> : null}
