@@ -5,22 +5,14 @@ import { isValidAdminToken } from "@/lib/admin-auth"
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin") || pathname.startsWith("/pantalla")) {
-    const isAuthRoute = pathname === "/admin/login" || pathname.startsWith("/api/admin/auth")
-    if (isAuthRoute) {
+  if (pathname.startsWith("/api/admin")) {
+    if (pathname.startsWith("/api/admin/auth")) {
       return NextResponse.next()
     }
 
     const token = request.cookies.get("admin_session")?.value
     if (!isValidAdminToken(token)) {
-      if (pathname.startsWith("/api/")) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-      }
-
-      const url = request.nextUrl.clone()
-      url.pathname = "/admin/login"
-      url.searchParams.set("next", pathname)
-      return NextResponse.redirect(url)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
   }
 
@@ -28,5 +20,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*", "/pantalla/:path*"],
+  matcher: ["/api/admin/:path*"],
 }
