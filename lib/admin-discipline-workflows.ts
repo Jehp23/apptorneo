@@ -1,4 +1,5 @@
 import type { StandingRow } from "@/components/standings-table"
+import type { SimpleStandingRow } from "@/components/simple-standings-table"
 
 export interface AdminDisciplineTeam {
   id: string
@@ -19,14 +20,20 @@ export interface AdminDisciplineMatch {
   date?: string | null
 }
 
+export type StandingsVariant = "classic" | "simple"
+
 export interface RankedStandingRow extends StandingRow {
   teamId: string
 }
 
-export interface GroupedStanding {
+export interface RankedSimpleStandingRow extends SimpleStandingRow {
+  teamId: string
+}
+
+export interface GroupedStanding<TStanding = RankedStandingRow> {
   groupName: string
   teams: AdminDisciplineTeam[]
-  standings: RankedStandingRow[]
+  standings: TStanding[]
   playedMatches: number
   expectedMatches: number
 }
@@ -49,10 +56,22 @@ export interface SemifinalPlan {
   crosses: MatchCross[]
 }
 
+export function detectStandingsVariant(slug: string, format?: string | null): StandingsVariant {
+  const normalizedSlug = slug.toLowerCase()
+  const normalizedFormat = format?.toLowerCase() ?? ""
+
+  if (normalizedSlug.includes("truco") || normalizedFormat.includes("truco")) {
+    return "simple"
+  }
+
+  return "classic"
+}
+
 export function buildGroupedStandings(
   teams: AdminDisciplineTeam[],
   matches: AdminDisciplineMatch[],
-): GroupedStanding[] {
+  variant: StandingsVariant = "classic",
+): GroupedStanding[] | GroupedStanding<RankedSimpleStandingRow>[] {
   const groups = teams.reduce<Record<string, AdminDisciplineTeam[]>>((acc, team) => {
     const key = team.group?.trim() || "General"
     acc[key] = acc[key] ?? []
@@ -64,7 +83,7 @@ export function buildGroupedStandings(
     .map(([groupName, groupTeams]) => ({
       groupName,
       teams: groupTeams,
-      standings: calculateStandings(groupTeams, matches),
+      standings: variant === "simple" ? calculateSimpleStandings(groupTeams, matches) : calculateStandings(groupTeams, matches),
       playedMatches: countPlayedMatches(groupTeams, matches),
       expectedMatches: expectedRoundRobinMatches(groupTeams.length),
     }))
@@ -132,8 +151,53 @@ export function calculateStandings(
     .map((row, index) => ({ ...row, position: index + 1 }))
 }
 
+export function calculateSimpleStandings(
+  teams: AdminDisciplineTeam[],
+  matches: AdminDisciplineMatch[],
+): RankedSimpleStandingRow[] {
+  const stats: Record<string, RankedSimpleStandingRow> = {}
+
+  teams.forEach((team, index) => {
+    stats[team.id] = {
+      teamId: team.id,
+      position: index + 1,
+      teamName: team.name,
+      pj: 0,
+      pg: 0,
+      pp: 0,
+      pts: 0,
+    }
+  })
+
+  matches
+    .filter((match) => match.played && match.team1 && match.team2 && stats[match.team1.id] && stats[match.team2.id])
+    .forEach((match) => {
+      const team1 = stats[match.team1!.id]
+      const team2 = stats[match.team2!.id]
+      const score1 = match.score1 ?? 0
+      const score2 = match.score2 ?? 0
+
+      team1.pj += 1
+      team2.pj += 1
+
+      if (score1 > score2) {
+        team1.pg += 1
+        team1.pts += 1
+        team2.pp += 1
+      } else if (score2 > score1) {
+        team2.pg += 1
+        team2.pts += 1
+        team1.pp += 1
+      }
+    })
+
+  return Object.values(stats)
+    .sort((a, b) => b.pts - a.pts || b.pg - a.pg || a.pp - b.pp)
+    .map((row, index) => ({ ...row, position: index + 1 }))
+}
+
 export function buildSemifinalPlan(
-  groupedStandings: GroupedStanding[],
+  groupedStandings: Array<GroupedStanding<{ teamId: string; teamName: string }>>,
   matches: AdminDisciplineMatch[],
 ): SemifinalPlan {
   const existingSemis = matches.some((match) => match.stage?.toLowerCase().includes("semi"))

@@ -6,12 +6,16 @@ import { ArrowLeft, Check, Minus, Pencil, Plus, Trash2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { StandingsTable } from "@/components/standings-table"
+import { SimpleStandingsTable } from "@/components/simple-standings-table"
 import {
   buildFinalPlan,
   buildGroupedStandings,
   buildSemifinalPlan,
+  detectStandingsVariant,
   type AdminDisciplineMatch as Match,
   type AdminDisciplineTeam as Team,
+  type RankedSimpleStandingRow,
+  type RankedStandingRow,
 } from "@/lib/admin-discipline-workflows"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -201,7 +205,8 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
   const remainingSpots = teamCap != null && teamCap > 0 ? Math.max(teamCap - teams.length, 0) : null
   const registrationLabel = teamCap == null || teamCap <= 0 ? "Abierto" : teams.length >= teamCap ? "Completo" : "Abierto"
   const registrationTone = teamCap != null && teamCap > 0 && teams.length >= teamCap ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20" : "bg-primary/10 text-primary border border-primary/20"
-  const groupedStandings = buildGroupedStandings(teams, matches)
+  const standingsVariant = detectStandingsVariant(initial.slug, initial.format)
+  const groupedStandings = buildGroupedStandings(teams, matches, standingsVariant)
   const semifinalPlan = buildSemifinalPlan(groupedStandings, matches)
   const finalPlan = buildFinalPlan(matches)
 
@@ -381,7 +386,11 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
             ) : (
               <div className="grid gap-4 lg:grid-cols-2">
                 {groupedStandings.map((group) => (
-                  <StandingsTable key={group.groupName} title={group.groupName} standings={group.standings} highlightTop={2} />
+                  standingsVariant === "simple" ? (
+                    <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} />
+                  ) : (
+                    <StandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedStandingRow[]} highlightTop={2} />
+                  )
                 ))}
               </div>
             )}
