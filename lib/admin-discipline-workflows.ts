@@ -20,7 +20,7 @@ export interface AdminDisciplineMatch {
   date?: string | null
 }
 
-export type StandingsVariant = "classic" | "simple"
+export type StandingsVariant = "classic" | "simple" | "compact" | "loba" | "sapo"
 
 export interface RankedStandingRow extends StandingRow {
   teamId: string
@@ -56,12 +56,36 @@ export interface SemifinalPlan {
   crosses: MatchCross[]
 }
 
+export interface HexagonalPlan {
+  ready: boolean
+  reason: string
+  crosses: MatchCross[]
+}
+
+export interface BracketPlan {
+  ready: boolean
+  reason: string
+  crosses: MatchCross[]
+}
+
 export function detectStandingsVariant(slug: string, format?: string | null): StandingsVariant {
   const normalizedSlug = slug.toLowerCase()
   const normalizedFormat = format?.toLowerCase() ?? ""
 
   if (normalizedSlug.includes("truco") || normalizedFormat.includes("truco")) {
     return "simple"
+  }
+
+  if (normalizedSlug.includes("metegol") || normalizedFormat.includes("metegol")) {
+    return "compact"
+  }
+
+  if (normalizedSlug.includes("loba") || normalizedFormat.includes("loba")) {
+    return "loba"
+  }
+
+  if (normalizedSlug.includes("sapo") || normalizedFormat.includes("sapo")) {
+    return "sapo"
   }
 
   return "classic"
@@ -83,7 +107,7 @@ export function buildGroupedStandings(
     .map(([groupName, groupTeams]) => ({
       groupName,
       teams: groupTeams,
-      standings: variant === "simple" ? calculateSimpleStandings(groupTeams, matches) : calculateStandings(groupTeams, matches),
+      standings: variant === "simple" ? calculateSimpleStandings(groupTeams, matches) : variant === "compact" ? calculateCompactStandings(groupTeams, matches) : variant === "sapo" ? calculateSapoStandings(groupTeams, matches) : calculateStandings(groupTeams, matches),
       playedMatches: countPlayedMatches(groupTeams, matches),
       expectedMatches: expectedRoundRobinMatches(groupTeams.length),
     }))
@@ -196,6 +220,98 @@ export function calculateSimpleStandings(
     .map((row, index) => ({ ...row, position: index + 1 }))
 }
 
+export function calculateCompactStandings(
+  teams: AdminDisciplineTeam[],
+  matches: AdminDisciplineMatch[],
+): RankedSimpleStandingRow[] {
+  const stats: Record<string, RankedSimpleStandingRow> = {}
+
+  teams.forEach((team, index) => {
+    stats[team.id] = {
+      teamId: team.id,
+      position: index + 1,
+      teamName: team.name,
+      pj: 0,
+      pg: 0,
+      pp: 0,
+      pts: 0,
+    }
+  })
+
+  matches
+    .filter((match) => match.played && match.team1 && match.team2 && stats[match.team1.id] && stats[match.team2.id])
+    .forEach((match) => {
+      const team1 = stats[match.team1!.id]
+      const team2 = stats[match.team2!.id]
+      const score1 = match.score1 ?? 0
+      const score2 = match.score2 ?? 0
+
+      team1.pj += 1
+      team2.pj += 1
+
+      if (score1 > score2) {
+        team1.pg += 1
+        team1.pts += 1
+        team2.pp += 1
+      } else if (score2 > score1) {
+        team2.pg += 1
+        team2.pts += 1
+        team1.pp += 1
+      }
+    })
+
+  return Object.values(stats)
+    .sort((a, b) => b.pts - a.pts || b.pg - a.pg || a.pp - b.pp)
+    .map((row, index) => ({ ...row, position: index + 1 }))
+}
+
+export function calculateSapoStandings(
+  teams: AdminDisciplineTeam[],
+  matches: AdminDisciplineMatch[],
+): RankedSimpleStandingRow[] {
+  const stats: Record<string, RankedSimpleStandingRow> = {}
+
+  teams.forEach((team, index) => {
+    stats[team.id] = {
+      teamId: team.id,
+      position: index + 1,
+      teamName: team.name,
+      pj: 0,
+      pg: 0,
+      pp: 0,
+      pts: 0,
+    }
+  })
+
+  matches
+    .filter((match) => match.played && match.team1 && match.team2 && stats[match.team1.id] && stats[match.team2.id])
+    .forEach((match) => {
+      const team1 = stats[match.team1!.id]
+      const team2 = stats[match.team2!.id]
+      const score1 = match.score1 ?? 0
+      const score2 = match.score2 ?? 0
+
+      team1.pj += 1
+      team2.pj += 1
+
+      // For Sapo, pts = accumulated score
+      team1.pts += score1
+      team2.pts += score2
+
+      if (score1 > score2) {
+        team1.pg += 1
+        team2.pp += 1
+      } else if (score2 > score1) {
+        team2.pg += 1
+        team1.pp += 1
+      }
+    })
+
+  return Object.values(stats)
+    .sort((a, b) => b.pts - a.pts || b.pg - a.pg || a.pp - b.pp)
+    .map((row, index) => ({ ...row, position: index + 1 }))
+}
+
 export function buildSemifinalPlan(
   groupedStandings: Array<GroupedStanding<{ teamId: string; teamName: string }>>,
   matches: AdminDisciplineMatch[],
@@ -275,6 +391,83 @@ export function buildFinalPlan(matches: AdminDisciplineMatch[]): PhasePlan {
       team1: { id: winners[0].id, name: winners[0].name },
       team2: { id: winners[1].id, name: winners[1].name },
     },
+  }
+}
+
+export function buildHexagonalFinalPlan(
+  groupedStandings: Array<GroupedStanding<{ teamId: string; teamName: string }>>,
+  matches: AdminDisciplineMatch[],
+): HexagonalPlan {
+  const existingHexagonal = matches.some((match) => match.stage?.toLowerCase().includes("hexagonal"))
+  if (existingHexagonal) {
+    return { ready: false, reason: "El hexagonal final ya fue generado.", crosses: [] }
+  }
+
+  if (groupedStandings.length < 6) {
+    return { ready: false, reason: "Necesitás 6 zonas para generar el hexagonal final.", crosses: [] }
+  }
+
+  const groupWinners = groupedStandings
+    .map((group) => group.standings[0])
+    .filter((winner) => winner !== undefined)
+
+  if (groupWinners.length < 6) {
+    return { ready: false, reason: "Todavía faltan ganadores de zona definidos.", crosses: [] }
+  }
+
+  const allGroupsComplete = groupedStandings.every(
+    (group) => group.playedMatches >= group.expectedMatches
+  )
+
+  if (!allGroupsComplete) {
+    return { ready: false, reason: "Todavía faltan partidos de zona para cerrar.", crosses: [] }
+  }
+
+  const crosses: MatchCross[] = []
+  for (let i = 0; i < groupWinners.length; i++) {
+    for (let j = i + 1; j < groupWinners.length; j++) {
+      crosses.push({
+        stage: "Hexagonal Final",
+        team1: { id: groupWinners[i].teamId, name: groupWinners[i].teamName },
+        team2: { id: groupWinners[j].teamId, name: groupWinners[j].teamName },
+      })
+    }
+  }
+
+  return {
+    ready: true,
+    reason: "Listo para generar el hexagonal final (15 partidos).",
+    crosses,
+  }
+}
+
+export function buildBracketPlan(
+  standings: RankedSimpleStandingRow[],
+  matches: AdminDisciplineMatch[],
+): BracketPlan {
+  const existingBracket = matches.some((match) => match.stage?.toLowerCase().includes("cuartos") || match.stage?.toLowerCase().includes("bracket"))
+  if (existingBracket) {
+    return { ready: false, reason: "El bracket eliminatorio ya fue generado.", crosses: [] }
+  }
+
+  if (standings.length < 8) {
+    return { ready: false, reason: "Necesitás al menos 8 clasificados para generar el bracket.", crosses: [] }
+  }
+
+  const top8 = standings.slice(0, 8)
+
+  const crosses: MatchCross[] = [
+    // Cuartos de final
+    { stage: "Cuartos 1", team1: { id: top8[0].teamId, name: top8[0].teamName }, team2: { id: top8[7].teamId, name: top8[7].teamName } },
+    { stage: "Cuartos 2", team1: { id: top8[3].teamId, name: top8[3].teamName }, team2: { id: top8[4].teamId, name: top8[4].teamName } },
+    { stage: "Cuartos 3", team1: { id: top8[1].teamId, name: top8[1].teamName }, team2: { id: top8[6].teamId, name: top8[6].teamName } },
+    { stage: "Cuartos 4", team1: { id: top8[2].teamId, name: top8[2].teamName }, team2: { id: top8[5].teamId, name: top8[5].teamName } },
+  ]
+
+  return {
+    ready: true,
+    reason: "Listo para generar el bracket eliminatorio (4tos, semis, final).",
+    crosses,
   }
 }
 

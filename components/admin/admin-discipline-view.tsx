@@ -7,13 +7,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge"
 import { StandingsTable } from "@/components/standings-table"
 import { SimpleStandingsTable } from "@/components/simple-standings-table"
+import { CompactStandingsTable } from "@/components/compact-standings-table"
+import { LobaTableView, type LobaTable } from "@/components/loba-table-view"
 import {
+  buildBracketPlan,
   buildFinalPlan,
   buildGroupedStandings,
+  buildHexagonalFinalPlan,
   buildSemifinalPlan,
   detectStandingsVariant,
   type AdminDisciplineMatch as Match,
   type AdminDisciplineTeam as Team,
+  type BracketPlan,
+  type HexagonalPlan,
   type RankedSimpleStandingRow,
   type RankedStandingRow,
 } from "@/lib/admin-discipline-workflows"
@@ -34,6 +40,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
   const [matches, setMatches] = useState(initial.matches)
   const [tab,     setTab]     = useState<"participantes" | "partidos" | "posiciones">("participantes")
   const [toast,   setToast]   = useState<{ ok: boolean; msg: string } | null>(null)
+  const [tableWinners, setTableWinners] = useState<Record<string, string>>({})
 
   // dialogs
   const [addOpen,    setAddOpen]    = useState(false)
@@ -193,10 +200,91 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
     }
   }
 
+  async function handleGenerateHexagonal() {
+    if (!hexagonalPlan.ready || hexagonalPlan.crosses.length === 0) return
+
+    try {
+      const createdMatches: Match[] = []
+
+      for (const cross of hexagonalPlan.crosses) {
+        const res = await fetch(`/api/disciplines/${initial.slug}/matches`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            team1Id: cross.team1.id,
+            team2Id: cross.team2.id,
+            stage: cross.stage,
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error)
+
+        createdMatches.push({
+          id: data.id,
+          score1: null,
+          score2: null,
+          played: false,
+          stage: data.stage ?? cross.stage,
+          date: null,
+          team1: { id: cross.team1.id, name: cross.team1.name },
+          team2: { id: cross.team2.id, name: cross.team2.name },
+        })
+      }
+
+      setMatches((prev) => [...prev, ...createdMatches])
+      notify(true, "Hexagonal final generado (15 partidos).")
+    } catch {
+      notify(false, "No se pudo generar el hexagonal final.")
+    }
+  }
+
   function handleScoreUpdated(updated: Match) {
     setMatches((prev) => prev.map((m) => m.id === updated.id ? updated : m))
     setScoring(null)
     notify(true, updated.played ? "Partido cerrado." : "Score guardado.")
+  }
+
+  function handleLobaWinnerSelect(tableId: string, winnerId: string) {
+    setTableWinners((prev) => ({ ...prev, [tableId]: winnerId }))
+    notify(true, "Ganador de mesa seleccionado.")
+  }
+
+  async function handleGenerateBracket() {
+    if (!bracketPlan.ready || bracketPlan.crosses.length === 0) return
+
+    try {
+      const createdMatches: Match[] = []
+
+      for (const cross of bracketPlan.crosses) {
+        const res = await fetch(`/api/disciplines/${initial.slug}/matches`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            team1Id: cross.team1.id,
+            team2Id: cross.team2.id,
+            stage: cross.stage,
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error)
+
+        createdMatches.push({
+          id: data.id,
+          score1: null,
+          score2: null,
+          played: false,
+          stage: data.stage ?? cross.stage,
+          date: null,
+          team1: { id: cross.team1.id, name: cross.team1.name },
+          team2: { id: cross.team2.id, name: cross.team2.name },
+        })
+      }
+
+      setMatches((prev) => [...prev, ...createdMatches])
+      notify(true, "Bracket eliminatorio generado (4tos de final).")
+    } catch {
+      notify(false, "No se pudo generar el bracket.")
+    }
   }
 
   const pending = matches.filter((m) => !m.played)
@@ -209,6 +297,31 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
   const groupedStandings = buildGroupedStandings(teams, matches, standingsVariant)
   const semifinalPlan = buildSemifinalPlan(groupedStandings, matches)
   const finalPlan = buildFinalPlan(matches)
+  const hexagonalPlan = buildHexagonalFinalPlan(groupedStandings, matches)
+
+  // For Sapo, get overall standings (not grouped) for bracket generation
+  const sapoStandings = standingsVariant === "sapo" ? groupedStandings.flatMap((g) => g.standings as RankedSimpleStandingRow[]) : []
+  const bracketPlan = buildBracketPlan(sapoStandings, matches)
+
+  // Build Loba tables from teams (using group field)
+  const lobaTables = standingsVariant === "loba" ? (() => {
+    const groups = teams.reduce<Record<string, Team[]>>((acc, team) => {
+      const key = team.group?.trim() || "General"
+      acc[key] = acc[key] ?? []
+      acc[key].push(team)
+      return acc
+    }, {})
+
+    return Object.entries(groups)
+      .filter(([_, groupTeams]) => groupTeams.length > 0)
+      .map(([groupName, groupTeams], index) => ({
+        id: groupName,
+        name: groupName === "General" ? `Mesa ${index + 1}` : groupName,
+        teams: groupTeams.map((t) => ({ id: t.id, name: t.name })),
+        winnerId: tableWinners[groupName] || null,
+        isFinal: groupName.toLowerCase().includes("final"),
+      }))
+  })() : []
 
   return (
     <div className="min-h-screen bg-background">
@@ -327,72 +440,155 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         {/* ── Partidos ── */}
         {tab === "posiciones" && (
           <>
-            <div className="rounded-2xl border border-border bg-card p-4 space-y-4">
-              <div>
+            {standingsVariant === "sapo" ? (
+              <div className="rounded-2xl border border-border bg-card p-4 space-y-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Fase siguiente</p>
-                    <p className="text-sm text-muted-foreground">Para Fútbol 5 / Pádel: genera semifinales cuando las dos zonas estén completas.</p>
+                    <p className="text-sm font-semibold text-foreground">Bracket Eliminatorio</p>
+                    <p className="text-sm text-muted-foreground">Genera el bracket cuando haya al menos 8 parejas clasificadas.</p>
                   </div>
                   <button
                     type="button"
-                    onClick={handleGenerateSemifinals}
-                    disabled={!semifinalPlan.ready}
+                    onClick={handleGenerateBracket}
+                    disabled={!bracketPlan.ready}
                     className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Generar semifinales
+                    Generar bracket
                   </button>
                 </div>
-                {!semifinalPlan.ready ? (
-                  <p className="mt-3 text-xs text-muted-foreground">{semifinalPlan.reason}</p>
+                {!bracketPlan.ready ? (
+                  <p className="mt-3 text-xs text-muted-foreground">{bracketPlan.reason}</p>
                 ) : (
-                  <div className="mt-3 grid gap-2 md:grid-cols-2">
-                    {semifinalPlan.crosses.map((cross) => (
-                      <div key={cross.stage} className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground">
-                        <span className="font-semibold">{cross.stage}:</span> {cross.team1.name} vs {cross.team2.name}
-                      </div>
-                    ))}
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    Se generarán {bracketPlan.crosses.length} partidos de cuartos de final.
                   </div>
                 )}
               </div>
-
-              <div className="border-t border-border pt-4">
+            ) : standingsVariant === "loba" ? (
+              <>
+                {lobaTables.length === 0 ? (
+                  <p className="py-12 text-center text-muted-foreground">
+                    Para Loba, asigná los equipos a mesas usando el campo "Zona/grupo" al editar cada participante.
+                  </p>
+                ) : (
+                  <LobaTableView
+                    tables={lobaTables}
+                    onWinnerSelect={handleLobaWinnerSelect}
+                    isEditable={true}
+                  />
+                )}
+              </>
+            ) : standingsVariant === "compact" ? (
+              <div className="rounded-2xl border border-border bg-card p-4 space-y-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Cierre de torneo</p>
-                    <p className="text-sm text-muted-foreground">Genera la final cuando las dos semifinales ya tienen ganador.</p>
+                    <p className="text-sm font-semibold text-foreground">Hexagonal Final</p>
+                    <p className="text-sm text-muted-foreground">Genera el hexagonal cuando las 6 zonas estén completas.</p>
                   </div>
                   <button
                     type="button"
-                    onClick={handleGenerateFinal}
-                    disabled={!finalPlan.ready}
+                    onClick={handleGenerateHexagonal}
+                    disabled={!hexagonalPlan.ready}
                     className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Generar final
+                    Generar hexagonal
                   </button>
                 </div>
-                {!finalPlan.ready ? (
-                  <p className="mt-3 text-xs text-muted-foreground">{finalPlan.reason}</p>
-                ) : finalPlan.cross ? (
-                  <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground">
-                    <span className="font-semibold">{finalPlan.cross.stage}:</span> {finalPlan.cross.team1.name} vs {finalPlan.cross.team2.name}
+                {!hexagonalPlan.ready ? (
+                  <p className="mt-3 text-xs text-muted-foreground">{hexagonalPlan.reason}</p>
+                ) : (
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    Se generarán {hexagonalPlan.crosses.length} partidos entre los 6 ganadores de zona.
                   </div>
-                ) : null}
+                )}
               </div>
-            </div>
-
-            {groupedStandings.length === 0 ? (
-              <p className="py-12 text-center text-muted-foreground">Todavía no hay participantes para calcular posiciones.</p>
             ) : (
-              <div className="grid gap-4 lg:grid-cols-2">
-                {groupedStandings.map((group) => (
-                  standingsVariant === "simple" ? (
-                    <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} />
+              <>
+                <div className="rounded-2xl border border-border bg-card p-4 space-y-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Fase siguiente</p>
+                      <p className="text-sm text-muted-foreground">Para Fútbol 5 / Pádel: genera semifinales cuando las dos zonas estén completas.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleGenerateSemifinals}
+                      disabled={!semifinalPlan.ready}
+                      className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Generar semifinales
+                    </button>
+                  </div>
+                  {!semifinalPlan.ready ? (
+                    <p className="mt-3 text-xs text-muted-foreground">{semifinalPlan.reason}</p>
                   ) : (
-                    <StandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedStandingRow[]} highlightTop={2} />
-                  )
-                ))}
-              </div>
+                    <div className="mt-3 grid gap-2 md:grid-cols-2">
+                      {semifinalPlan.crosses.map((cross) => (
+                        <div key={cross.stage} className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground">
+                          <span className="font-semibold">{cross.stage}:</span> {cross.team1.name} vs {cross.team2.name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-border bg-card p-4 space-y-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Cierre de torneo</p>
+                      <p className="text-sm text-muted-foreground">Genera la final cuando las dos semifinales ya tienen ganador.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleGenerateFinal}
+                      disabled={!finalPlan.ready}
+                      className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Generar final
+                    </button>
+                  </div>
+                  {!finalPlan.ready ? (
+                    <p className="mt-3 text-xs text-muted-foreground">{finalPlan.reason}</p>
+                  ) : finalPlan.cross ? (
+                    <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground">
+                      <span className="font-semibold">{finalPlan.cross.stage}:</span> {finalPlan.cross.team1.name} vs {finalPlan.cross.team2.name}
+                    </div>
+                  ) : null}
+                </div>
+              </>
+            )}
+
+            {standingsVariant !== "loba" && standingsVariant !== "sapo" && (
+              <>
+                {groupedStandings.length === 0 ? (
+                  <p className="py-12 text-center text-muted-foreground">Todavía no hay participantes para calcular posiciones.</p>
+                ) : (
+                  <div className={standingsVariant === "compact" ? "grid gap-3 md:grid-cols-2 lg:grid-cols-3" : "grid gap-4 lg:grid-cols-2"}>
+                    {groupedStandings.map((group) => (
+                      standingsVariant === "compact" ? (
+                        <CompactStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={1} />
+                      ) : standingsVariant === "simple" ? (
+                        <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} />
+                      ) : (
+                        <StandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedStandingRow[]} highlightTop={2} />
+                      )
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {standingsVariant === "sapo" && (
+              <>
+                {sapoStandings.length === 0 ? (
+                  <p className="py-12 text-center text-muted-foreground">Todavía no hay participantes para calcular posiciones.</p>
+                ) : (
+                  <div className="rounded-2xl border border-border bg-card p-4">
+                    <h3 className="mb-4 font-serif font-semibold text-foreground">Tabla de Clasificación (Top 8 pasan a bracket)</h3>
+                    <SimpleStandingsTable title="Clasificación General" standings={sapoStandings} highlightTop={8} />
+                  </div>
+                )}
+              </>
             )}
           </>
         )}

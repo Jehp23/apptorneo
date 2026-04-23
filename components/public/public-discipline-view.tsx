@@ -9,8 +9,11 @@ import { InfoPanel } from "@/components/info-panel"
 import { PremiumTabs } from "@/components/premium-tabs"
 import { StandingsTable } from "@/components/standings-table"
 import { SimpleStandingsTable } from "@/components/simple-standings-table"
+import { CompactStandingsTable } from "@/components/compact-standings-table"
+import { LobaTableView, type LobaTable } from "@/components/loba-table-view"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
+  buildBracketPlan,
   buildGroupedStandings,
   detectStandingsVariant,
   type AdminDisciplineMatch as Match,
@@ -54,6 +57,7 @@ export function PublicDisciplineView({
   const [matches, setMatches] = useState(discipline.matches)
   const [error,   setError]   = useState<string | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [tableWinners, setTableWinners] = useState<Record<string, string>>({})
 
   useEffect(() => {
     fetch("/api/admin/me").then((r) => { if (r.ok) setIsAdmin(true) })
@@ -135,6 +139,10 @@ export function PublicDisciplineView({
     setMatches((m) => m.map((x) => x.id === matchId ? { ...x, ...updates } : x))
   }
 
+  function handleLobaWinnerSelect(tableId: string, winnerId: string) {
+    setTableWinners((prev) => ({ ...prev, [tableId]: winnerId }))
+  }
+
   // ── derived ──
 
   const isFull = discipline.teamsCount !== null && teams.length >= (discipline.teamsCount ?? Infinity)
@@ -145,6 +153,34 @@ export function PublicDisciplineView({
     () => buildGroupedStandings(teams, matches, standingsVariant),
     [teams, matches, standingsVariant]
   )
+
+  // Build Loba tables from teams (using group field)
+  const lobaTables = useMemo(() => {
+    if (standingsVariant !== "loba") return []
+
+    const groups = teams.reduce<Record<string, Team[]>>((acc, team) => {
+      const key = team.group?.trim() || "General"
+      acc[key] = acc[key] ?? []
+      acc[key].push(team)
+      return acc
+    }, {})
+
+    return Object.entries(groups)
+      .filter(([_, groupTeams]) => groupTeams.length > 0)
+      .map(([groupName, groupTeams], index) => ({
+        id: groupName,
+        name: groupName === "General" ? `Mesa ${index + 1}` : groupName,
+        teams: groupTeams.map((t) => ({ id: t.id, name: t.name })),
+        winnerId: tableWinners[groupName] || null,
+        isFinal: groupName.toLowerCase().includes("final"),
+      }))
+  }, [teams, standingsVariant, tableWinners])
+
+  // For Sapo, get overall standings (not grouped)
+  const sapoStandings = useMemo(() => {
+    if (standingsVariant !== "sapo") return []
+    return groupedStandings.flatMap((g) => g.standings as RankedSimpleStandingRow[])
+  }, [groupedStandings, standingsVariant])
 
   const fixtureGroups = useMemo(
     () => groupedStandings.map((group) => ({
@@ -216,15 +252,48 @@ export function PublicDisciplineView({
 
           {/* ── Posiciones ── */}
           {activeTab === "posiciones" && (
-            <div className="grid gap-6 lg:grid-cols-2">
-              {groupedStandings.map((group) => (
-                standingsVariant === "simple" ? (
-                  <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} />
-                ) : (
-                  <StandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedStandingRow[]} highlightTop={2} />
-                )
-              ))}
-            </div>
+            <>
+              {standingsVariant === "sapo" ? (
+                <>
+                  {sapoStandings.length === 0 ? (
+                    <p className="py-12 text-center text-muted-foreground">
+                      Todavía no hay participantes para calcular posiciones.
+                    </p>
+                  ) : (
+                    <div className="rounded-2xl border border-border bg-card p-4">
+                      <h3 className="mb-4 font-serif font-semibold text-foreground">Tabla de Clasificación (Top 8 pasan a bracket)</h3>
+                      <SimpleStandingsTable title="Clasificación General" standings={sapoStandings} highlightTop={8} />
+                    </div>
+                  )}
+                </>
+              ) : standingsVariant === "loba" ? (
+                <>
+                  {lobaTables.length === 0 ? (
+                    <p className="py-12 text-center text-muted-foreground">
+                      Todavía no hay mesas configuradas.
+                    </p>
+                  ) : (
+                    <LobaTableView
+                      tables={lobaTables}
+                      onWinnerSelect={handleLobaWinnerSelect}
+                      isEditable={isAdmin}
+                    />
+                  )}
+                </>
+              ) : (
+                <div className={standingsVariant === "compact" ? "grid gap-3 md:grid-cols-2 lg:grid-cols-3" : "grid gap-6 lg:grid-cols-2"}>
+                  {groupedStandings.map((group) => (
+                    standingsVariant === "compact" ? (
+                      <CompactStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={1} />
+                    ) : standingsVariant === "simple" ? (
+                      <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} />
+                    ) : (
+                      <StandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedStandingRow[]} highlightTop={2} />
+                    )
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
           {/* ── Fixture ── */}
