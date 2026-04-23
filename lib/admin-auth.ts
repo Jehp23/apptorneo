@@ -1,10 +1,33 @@
 const COOKIE_NAME = "admin_session"
 const COOKIE_MAX_AGE = 60 * 60 * 24
+// Mensaje fijo que se firma con el password. No contiene el password.
+const SESSION_MESSAGE = "fanta-admin-session-v1"
 
-export function isValidAdminToken(token: string | undefined): boolean {
+async function computeHmac(password: string): Promise<string> {
+  const enc = new TextEncoder()
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(password),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  )
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(SESSION_MESSAGE))
+  return Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
+}
+
+export async function generateAdminToken(): Promise<string> {
+  const password = process.env.ADMIN_PASSWORD ?? ""
+  return computeHmac(password)
+}
+
+export async function isValidAdminToken(token: string | undefined): Promise<boolean> {
   const password = process.env.ADMIN_PASSWORD
   if (!token || !password) return false
-  return token === password
+  const expected = await computeHmac(password)
+  return token === expected
 }
 
 export function createAdminSessionCookie(token: string) {
