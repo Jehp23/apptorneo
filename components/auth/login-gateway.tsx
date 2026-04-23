@@ -35,7 +35,7 @@ export function LoginGateway() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 py-12">
       <div className="w-full max-w-xs space-y-8">
         <div className="flex flex-col items-center gap-4 text-center">
-          <div className="relative h-24 w-64 overflow-hidden rounded-3xl bg-muted">
+          <div className="relative h-28 w-72 overflow-hidden rounded-3xl bg-muted">
             <Image src="/logosanatorio.avif" alt="Sanatorio El Carmen" fill className="object-cover" />
           </div>
           <div>
