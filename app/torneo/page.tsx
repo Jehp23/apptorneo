@@ -1,9 +1,11 @@
 import Link from "next/link"
 import { unstable_noStore as noStore } from "next/cache"
-import { Activity, ArrowRight, Calendar, LogIn, Trophy, Users } from "lucide-react"
+import { cookies } from "next/headers"
+import { Activity, ArrowRight, Calendar, LogIn, LogOut, Settings, Trophy, Users } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { isValidAdminToken } from "@/lib/admin-auth"
 import { prisma } from "@/lib/prisma"
 
 function getDisciplineStatus(matches: Array<{ played: boolean }>) {
@@ -32,6 +34,9 @@ export default async function TournamentHomePage({
   searchParams?: Promise<{ tournament?: string }>
 }) {
   noStore()
+
+  const cookieStore = await cookies()
+  const isAdmin = await isValidAdminToken(cookieStore.get("admin_session")?.value)
 
   const resolvedSearchParams = (await searchParams) ?? {}
   const selectedTournamentId = resolvedSearchParams.tournament
@@ -132,26 +137,45 @@ export default async function TournamentHomePage({
   return (
     <div className="space-y-8 p-8">
       <header className="rounded-3xl border border-border bg-card p-6">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="max-w-3xl space-y-3">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">Seguimiento del torneo</p>
-            <h1 className="font-serif text-3xl font-semibold text-foreground md:text-4xl">Viví el torneo en tiempo real</h1>
-            <p className="text-lg text-muted-foreground">
-              Esta vista es para participantes y público. Acá ves disciplinas, partidos, resultados y cómo avanza todo, sin meterte en la operación del torneo.
-            </p>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-1">
             {activeTournament ? (
-              <p className="text-sm text-muted-foreground">
-                <span className="font-semibold text-primary">{activeTournament.name}</span>
-                <span> · {activeTournament.location} · {activeTournament.year}</span>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">
+                {activeTournament.name} · {activeTournament.location} · {activeTournament.year}
               </p>
             ) : null}
+            <h1 className="font-serif text-3xl font-semibold text-foreground">
+              {isAdmin ? "Operación del torneo" : "Torneo en vivo"}
+            </h1>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-medium text-primary-foreground transition-colors hover:bg-primary/90">
-              <LogIn className="h-4 w-4" />
-              Cambiar acceso
-            </Link>
+          <div className="flex items-center gap-3">
+            {isAdmin ? (
+              <>
+                <Link
+                  href="/admin"
+                  className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <Settings className="h-4 w-4" />
+                  Configuración
+                </Link>
+                <Link
+                  href="/api/admin/auth/logout"
+                  className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Salir
+                </Link>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <LogIn className="h-4 w-4" />
+                Ingresar como admin
+              </Link>
+            )}
           </div>
         </div>
       </header>
