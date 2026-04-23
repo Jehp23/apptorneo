@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Check, Minus, Pencil, Plus, Trash2, X } from "lucide-react"
+import { ArrowLeft, Check, Minus, Pencil, Plus, Trash2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 
@@ -262,7 +262,12 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">Pendientes</p>
                 <div className="space-y-2">
                   {pending.map((match) => (
-                    <MatchRow key={match.id} match={match} onTap={() => setScoring(match)} />
+                    <MatchRow
+                      key={match.id}
+                      match={match}
+                      onTap={() => setScoring(match)}
+                      onDelete={() => handleDeleteMatch(match.id)}
+                    />
                   ))}
                 </div>
               </div>
@@ -273,7 +278,12 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">Jugados</p>
                 <div className="space-y-2">
                   {played.map((match) => (
-                    <MatchRow key={match.id} match={match} onTap={() => setScoring(match)} />
+                    <MatchRow
+                      key={match.id}
+                      match={match}
+                      onTap={() => setScoring(match)}
+                      onDelete={() => handleDeleteMatch(match.id)}
+                    />
                   ))}
                 </div>
               </div>
@@ -301,6 +311,18 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         onCreate={handleCreateMatch}
       />
 
+      {editingTeam ? (
+        <EditTeamDialog
+          team={editingTeam}
+          onClose={() => setEditingTeam(null)}
+          onSave={async (name, players) => {
+            const currentTeamId = editingTeam.id
+            await handleEditTeam(currentTeamId, name, players)
+            setEditingTeam(null)
+          }}
+        />
+      ) : null}
+
       {scoring ? (
         <ScoreDialog
           match={scoring}
@@ -314,12 +336,21 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
 
 // ─── Match row ────────────────────────────────────────────────────────────────
 
-function MatchRow({ match, onTap }: { match: Match; onTap: () => void }) {
+function MatchRow({
+  match,
+  onTap,
+  onDelete,
+}: {
+  match: Match
+  onTap: () => void
+  onDelete: () => void
+}) {
   return (
-    <button
-      onClick={onTap}
-      className="w-full flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
-    >
+    <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/40 hover:bg-primary/5">
+      <button
+        onClick={onTap}
+        className="flex w-full items-center gap-3 text-left"
+      >
       {match.stage ? (
         <Badge variant="outline" className="shrink-0 text-xs">{match.stage}</Badge>
       ) : null}
@@ -340,7 +371,16 @@ function MatchRow({ match, onTap }: { match: Match; onTap: () => void }) {
           {match.team2?.name ?? "?"}
         </span>
       </div>
-    </button>
+      </button>
+      <button
+        type="button"
+        onClick={onDelete}
+        className="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+        aria-label="Eliminar partido"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </div>
   )
 }
 
@@ -395,6 +435,58 @@ function AddTeamDialog({
             </button>
             <button type="submit" disabled={saving || !name.trim()} className="flex-1 rounded-2xl bg-primary py-3.5 text-base font-bold text-primary-foreground disabled:opacity-40">
               {saving ? "..." : "Agregar"}
+            </button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function EditTeamDialog({
+  team, onClose, onSave,
+}: {
+  team: Team
+  onClose: () => void
+  onSave: (name: string, players: string[]) => Promise<void>
+}) {
+  const [name, setName] = useState(team.name)
+  const [players, setPlayers] = useState(team.players.map((player) => player.name).join("\n"))
+  const [saving, setSaving] = useState(false)
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault()
+    if (!name.trim()) return
+    setSaving(true)
+    await onSave(name.trim(), players.split("\n").map((player) => player.trim()).filter(Boolean))
+    setSaving(false)
+  }
+
+  return (
+    <Dialog open onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
+      <DialogContent className="sm:max-w-xs">
+        <DialogHeader><DialogTitle>Editar participante</DialogTitle></DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-3 pt-1">
+          <input
+            autoFocus
+            required
+            className="w-full rounded-2xl border-2 border-border bg-background px-4 py-4 text-xl outline-none focus:border-primary placeholder:text-muted-foreground"
+            placeholder="Nombre del equipo / jugador"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+          <textarea
+            className="min-h-24 w-full rounded-2xl border-2 border-border bg-background px-4 py-3 text-base outline-none focus:border-primary placeholder:text-muted-foreground font-mono"
+            placeholder={"Jugadores (opcional)\nuno por línea"}
+            value={players}
+            onChange={(event) => setPlayers(event.target.value)}
+          />
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose} className="flex-1 rounded-2xl border border-border py-3.5 text-base font-medium">
+              Cancelar
+            </button>
+            <button type="submit" disabled={saving || !name.trim()} className="flex-1 rounded-2xl bg-primary py-3.5 text-base font-bold text-primary-foreground disabled:opacity-40">
+              {saving ? "..." : "Guardar"}
             </button>
           </div>
         </form>
