@@ -15,6 +15,11 @@ interface Team {
 interface Match {
   id: string
   played: boolean
+  stage?: string | null
+  score1?: number | null
+  score2?: number | null
+  team1?: { id: string; name: string } | null
+  team2?: { id: string; name: string } | null
 }
 
 interface Discipline {
@@ -201,6 +206,34 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
               {incompleteRegistrations.length > 0 && <p>{incompleteRegistrations.length} deporte{incompleteRegistrations.length === 1 ? "" : "s"} incompleto{incompleteRegistrations.length === 1 ? "" : "s"}</p>}
             </div>
           </div>
+        )}
+
+        {/* Partidos pendientes — acceso rápido para cargar resultados */}
+        {disciplinesWithPending.length > 0 && (
+          <section>
+            <h2 className="mb-3 text-lg font-semibold text-foreground">Partidos pendientes</h2>
+            <div className="space-y-2">
+              {disciplinesWithPending.map((discipline) =>
+                discipline.matches
+                  .filter((m) => !m.played)
+                  .map((match) => (
+                    <Link
+                      key={match.id}
+                      href={`/admin/${discipline.slug}?tab=partidos`}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/40 hover:bg-primary/5"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-primary mb-0.5">{discipline.name}{match.stage ? ` · ${match.stage}` : ""}</p>
+                        <p className="truncate text-sm font-semibold text-foreground">
+                          {match.team1?.name ?? "?"} <span className="text-muted-foreground font-normal">vs</span> {match.team2?.name ?? "?"}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    </Link>
+                  ))
+              )}
+            </div>
+          </section>
         )}
 
         <section>

@@ -12,7 +12,17 @@ export default async function AdminPage() {
         where: { tournamentId: tournament.id },
         include: {
           teams: { include: { players: { select: { id: true } } } },
-          matches: { select: { id: true, played: true } },
+          matches: {
+            select: {
+              id: true,
+              played: true,
+              stage: true,
+              score1: true,
+              score2: true,
+              team1: { select: { id: true, name: true } },
+              team2: { select: { id: true, name: true } },
+            },
+          },
         },
         orderBy: { createdAt: "asc" },
       })
@@ -30,7 +40,15 @@ export default async function AdminPage() {
         teamsCount:   d.teamsCount,
         playersCount: d.playersCount,
         teams:        d.teams.map((t) => ({ id: t.id, players: t.players })),
-        matches:      d.matches,
+        matches:      d.matches.map((m) => ({
+          id:     m.id,
+          played: m.played,
+          stage:  m.stage,
+          score1: m.score1,
+          score2: m.score2,
+          team1:  m.team1,
+          team2:  m.team2,
+        })),
       }))}
     />
   )

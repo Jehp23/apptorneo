@@ -1183,23 +1183,63 @@ function ScoreDialog({
   const [score1, setScore1] = useState(match.score1 ?? 0)
   const [score2, setScore2] = useState(match.score2 ?? 0)
   const [saving, setSaving] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const isTruco = disciplineSlug === "truco"
   const isTie = score1 === score2
-  const canClose = !isTruco || !isTie
+  const canFinish = !isTruco || !isTie
 
   async function save(played: boolean) {
     setSaving(true)
+    setError(null)
     try {
-      const res  = await fetch(`/api/admin/matches/${match.id}`, {
+      const res = await fetch(`/api/admin/matches/${match.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ score1, score2, played }),
       })
+      if (res.status === 401) {
+        window.location.href = "/admin/login"
+        return
+      }
+      if (!res.ok) { setError("No se pudo guardar. Intentá de nuevo."); return }
       const data = await res.json()
-      if (!res.ok) throw new Error()
       onUpdate({ ...match, score1: data.score1, score2: data.score2, played: data.played })
-    } finally { setSaving(false) }
+      if (played) onClose()
+    } finally {
+      setSaving(false)
+      setConfirming(false)
+    }
+  }
+
+  if (confirming) {
+    return (
+      <Dialog open onOpenChange={(o) => { if (!o) setConfirming(false) }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center">¿Finalizar el partido?</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 text-center">
+            <p className="text-4xl font-black tabular-nums mb-2">{score1} – {score2}</p>
+            <p className="text-sm text-muted-foreground">
+              {match.team1?.name ?? "?"} vs {match.team2?.name ?? "?"}
+            </p>
+            <p className="mt-4 text-sm text-muted-foreground">El resultado quedará cerrado. No vas a poder editarlo después sin abrirlo de nuevo.</p>
+          </div>
+          <div className="flex gap-2 mt-2">
+            <button type="button" disabled={saving} onClick={() => setConfirming(false)}
+              className="flex-1 rounded-2xl border-2 border-border py-4 text-base font-semibold disabled:opacity-40">
+              Volver
+            </button>
+            <button type="button" disabled={saving} onClick={() => save(true)}
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white hover:bg-emerald-700 disabled:opacity-40">
+              <Check className="h-5 w-5" /> {saving ? "Guardando..." : "Confirmar"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
   }
 
   return (
@@ -1245,22 +1285,23 @@ function ScoreDialog({
           )}
         </div>
 
-        <div className="flex gap-2">
-          <button type="button" disabled={saving} onClick={() => save(false)}
-            className="flex-1 rounded-2xl border-2 border-border py-4 text-base font-semibold disabled:opacity-40">
-            Guardar
-          </button>
-          <button type="button" disabled={saving || !canClose} onClick={() => save(true)}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white hover:bg-emerald-700 disabled:opacity-40">
-            <Check className="h-5 w-5" /> Cerrar
-          </button>
-        </div>
-
+        {error && <p className="text-sm text-destructive text-center -mt-2">{error}</p>}
         {isTruco && isTie && (
-          <p className="text-sm text-destructive text-center mt-2">
+          <p className="text-sm text-destructive text-center -mt-2">
             En Truco no puede haber empate. Revisá los puntajes.
           </p>
         )}
+
+        <div className="flex gap-2">
+          <button type="button" disabled={saving} onClick={() => save(false)}
+            className="flex-1 rounded-2xl border-2 border-border py-4 text-base font-semibold disabled:opacity-40">
+            {saving ? "Guardando..." : "Guardar"}
+          </button>
+          <button type="button" disabled={saving || !canFinish} onClick={() => setConfirming(true)}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white hover:bg-emerald-700 disabled:opacity-40">
+            <Check className="h-5 w-5" /> Finalizar partido
+          </button>
+        </div>
       </DialogContent>
     </Dialog>
   )
