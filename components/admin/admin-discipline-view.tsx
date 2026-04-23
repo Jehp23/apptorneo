@@ -826,32 +826,37 @@ function MatchRow({
   onDelete: () => void
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card transition-colors hover:border-primary/40 hover:bg-primary/5">
+    <div className={`rounded-2xl border transition-all ${match.played ? "border-border bg-card" : "border-primary/30 bg-[#0D1117]"}`}>
       {match.stage && (
-        <div className="px-4 pt-2.5">
-          <Badge variant="outline" className="text-xs">{match.stage}</Badge>
+        <div className="flex items-center gap-2 px-4 pt-3">
+          {!match.played && (
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+            </span>
+          )}
+          <span className={`text-xs font-semibold uppercase tracking-wider ${match.played ? "text-muted-foreground" : "text-primary"}`}>
+            {match.stage}
+          </span>
         </div>
       )}
-      <div className="flex items-center gap-2 px-3 py-2.5">
-        <button
-          onClick={onTap}
-          className="flex flex-1 items-center gap-2 min-w-0 min-h-[44px]"
-        >
-          <span className="flex-1 truncate text-sm font-semibold text-foreground text-right">
+      <div className="flex items-center gap-2 px-3 py-3">
+        <button onClick={onTap} className="flex flex-1 items-center gap-3 min-w-0 min-h-[48px]">
+          <span className={`flex-1 truncate text-sm font-bold text-right ${match.played ? "text-foreground" : "text-white"}`}>
             {match.team1?.name ?? "?"}
           </span>
-          <div className="shrink-0 min-w-[80px] text-center">
+          <div className="shrink-0 min-w-[90px] text-center">
             {match.played ? (
-              <span className="rounded-xl bg-muted px-3 py-1.5 font-mono text-base font-bold tabular-nums">
+              <span className="inline-block rounded-xl bg-muted px-3 py-2 font-mono text-lg font-black tabular-nums text-foreground">
                 {match.score1 ?? 0} – {match.score2 ?? 0}
               </span>
             ) : (
-              <span className="rounded-xl bg-amber-500/10 px-3 py-1.5 text-sm font-semibold text-amber-600">
+              <span className="inline-block rounded-xl bg-primary px-3 py-2 text-sm font-bold text-white">
                 Cargar
               </span>
             )}
           </div>
-          <span className="flex-1 truncate text-sm font-semibold text-foreground">
+          <span className={`flex-1 truncate text-sm font-bold ${match.played ? "text-foreground" : "text-white"}`}>
             {match.team2?.name ?? "?"}
           </span>
         </button>
@@ -1218,24 +1223,22 @@ function ScoreDialog({
   if (confirming) {
     return (
       <Dialog open onOpenChange={(o) => { if (!o) setConfirming(false) }}>
-        <DialogContent className="sm:max-w-sm max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-center">¿Finalizar el partido?</DialogTitle>
-          </DialogHeader>
-          <div className="py-2 text-center">
-            <p className="text-4xl font-black tabular-nums mb-2">{score1} – {score2}</p>
-            <p className="text-sm text-muted-foreground">
-              {match.team1?.name ?? "?"} vs {match.team2?.name ?? "?"}
-            </p>
-            <p className="mt-4 text-sm text-muted-foreground">El resultado quedará cerrado. No vas a poder editarlo después sin abrirlo de nuevo.</p>
+        <DialogContent className="sm:max-w-sm border-0 bg-[#0D1117] p-0 overflow-hidden">
+          <div className="bg-[#161B22] px-6 py-5 text-center border-b border-white/10">
+            <p className="text-xs font-bold uppercase tracking-widest text-primary mb-1">Cerrar partido</p>
+            <p className="text-sm text-gray-400">{match.team1?.name ?? "?"} vs {match.team2?.name ?? "?"}</p>
           </div>
-          <div className="flex gap-2 mt-2">
+          <div className="px-6 py-6 text-center">
+            <p className="text-6xl font-black tabular-nums text-white mb-1">{score1} <span className="text-primary">–</span> {score2}</p>
+            <p className="text-xs text-gray-500 mt-3">Este resultado quedará guardado como final.</p>
+          </div>
+          <div className="flex gap-3 px-6 pb-6">
             <button type="button" disabled={saving} onClick={() => setConfirming(false)}
-              className="flex-1 rounded-2xl border-2 border-border py-4 text-base font-semibold disabled:opacity-40">
+              className="flex-1 rounded-2xl border border-white/20 py-4 text-base font-semibold text-white disabled:opacity-40 active:scale-95 transition-transform">
               Volver
             </button>
             <button type="button" disabled={saving} onClick={() => save(true)}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white hover:bg-emerald-700 disabled:opacity-40">
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-bold text-white disabled:opacity-40 active:scale-95 transition-transform">
               <Check className="h-5 w-5" /> {saving ? "Guardando..." : "Confirmar"}
             </button>
           </div>
@@ -1246,62 +1249,67 @@ function ScoreDialog({
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="sm:max-w-sm max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-center text-sm font-semibold text-muted-foreground">
-            {match.stage ? <span className="block text-xs text-primary mb-1">{match.stage}</span> : null}
+      <DialogContent className="sm:max-w-sm border-0 bg-[#0D1117] p-0 overflow-hidden">
+        {/* Header */}
+        <div className="bg-[#161B22] px-5 py-4 border-b border-white/10 text-center">
+          {match.stage && (
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+              </span>
+              <span className="text-xs font-bold uppercase tracking-widest text-primary">{match.stage}</span>
+            </div>
+          )}
+          <p className="text-sm text-gray-400 truncate">
             {match.team1?.name ?? "—"} vs {match.team2?.name ?? "—"}
-          </DialogTitle>
-        </DialogHeader>
+          </p>
+        </div>
 
-        <div className="grid grid-cols-3 items-center gap-2 py-4">
-          {[
-            { score: score1, set: setScore1, name: match.team1?.name ?? "?" },
-            null,
-            { score: score2, set: setScore2, name: match.team2?.name ?? "?" },
-          ].map((side, i) =>
-            !side ? (
-              <div key={i} className="text-center text-3xl font-black text-muted-foreground">vs</div>
-            ) : (
-              <div key={i} className="flex flex-col items-center gap-3">
-                <p className="w-full truncate text-center text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                  {side.name}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => side.set((s) => s + 1)}
-                  className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-primary bg-primary/10 text-primary active:scale-95 transition-transform"
-                >
-                  <Plus className="h-8 w-8" />
-                </button>
-                <span className="text-7xl font-black tabular-nums leading-none">{side.score}</span>
-                <button
-                  type="button"
-                  onClick={() => side.set((s) => Math.max(0, s - 1))}
-                  className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-border bg-background text-foreground active:scale-95 transition-transform"
-                >
-                  <Minus className="h-8 w-8" />
-                </button>
-              </div>
-            )
+        {/* Scoreboard */}
+        <div className="px-4 py-5">
+          <div className="grid grid-cols-3 items-center gap-2">
+            {[
+              { score: score1, set: setScore1, name: match.team1?.name ?? "?" },
+              null,
+              { score: score2, set: setScore2, name: match.team2?.name ?? "?" },
+            ].map((side, i) =>
+              !side ? (
+                <div key={i} className="text-center text-2xl font-black text-white/20">–</div>
+              ) : (
+                <div key={i} className="flex flex-col items-center gap-3">
+                  <p className="w-full truncate text-center text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                    {side.name}
+                  </p>
+                  <button type="button" onClick={() => side.set((s) => s + 1)}
+                    className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/20 border border-primary/40 text-primary active:scale-95 active:bg-primary/30 transition-all">
+                    <Plus className="h-8 w-8" />
+                  </button>
+                  <span className="text-7xl font-black tabular-nums leading-none text-white">{side.score}</span>
+                  <button type="button" onClick={() => side.set((s) => Math.max(0, s - 1))}
+                    className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/5 border border-white/10 text-white/60 active:scale-95 transition-all">
+                    <Minus className="h-8 w-8" />
+                  </button>
+                </div>
+              )
+            )}
+          </div>
+
+          {error && <p className="mt-4 text-sm text-red-400 text-center">{error}</p>}
+          {isTruco && isTie && (
+            <p className="mt-4 text-sm text-red-400 text-center">En Truco no puede haber empate.</p>
           )}
         </div>
 
-        {error && <p className="text-sm text-destructive text-center -mt-2">{error}</p>}
-        {isTruco && isTie && (
-          <p className="text-sm text-destructive text-center -mt-2">
-            En Truco no puede haber empate. Revisá los puntajes.
-          </p>
-        )}
-
-        <div className="flex gap-2">
+        {/* Acciones */}
+        <div className="flex gap-3 px-4 pb-5">
           <button type="button" disabled={saving} onClick={() => save(false)}
-            className="flex-1 rounded-2xl border-2 border-border py-4 text-base font-semibold disabled:opacity-40">
+            className="flex-1 rounded-2xl border border-white/20 py-4 text-base font-semibold text-white disabled:opacity-40 active:scale-95 transition-transform">
             {saving ? "Guardando..." : "Guardar"}
           </button>
           <button type="button" disabled={saving || !canFinish} onClick={() => setConfirming(true)}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white hover:bg-emerald-700 disabled:opacity-40">
-            <Check className="h-5 w-5" /> Finalizar partido
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-bold text-white disabled:opacity-40 active:scale-95 transition-transform">
+            <Check className="h-5 w-5" /> Finalizar
           </button>
         </div>
       </DialogContent>

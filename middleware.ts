@@ -9,7 +9,7 @@ const PUBLIC_WRITE_PREFIXES = [
   "/api/disciplines",
 ]
 
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Proteger /api/admin/* excepto /api/admin/auth
@@ -18,7 +18,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next()
     }
     const token = request.cookies.get("admin_session")?.value
-    if (!(await isValidAdminToken(token))) {
+    if (!isValidAdminToken(token)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
     return NextResponse.next()
@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
     )
     if (isPublicWriteRoute) {
       const token = request.cookies.get("admin_session")?.value
-      if (!(await isValidAdminToken(token))) {
+      if (!isValidAdminToken(token)) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
     }

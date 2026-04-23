@@ -9,6 +9,7 @@ async function requireAdmin() {
   return isValidAdminToken(token)
 }
 
+
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ matchId: string }> }

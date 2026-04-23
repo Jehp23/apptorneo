@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Contraseña incorrecta" }, { status: 401 })
   }
 
-  const token = await generateAdminToken()
+  const token = generateAdminToken()
   const response = NextResponse.json({ ok: true })
   response.cookies.set(createAdminSessionCookie(token))
   return response
