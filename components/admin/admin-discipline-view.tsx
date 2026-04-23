@@ -16,6 +16,7 @@ import {
   buildHexagonalFinalPlan,
   buildSemifinalPlan,
   detectStandingsVariant,
+  getZoneOptions,
   type AdminDisciplineMatch as Match,
   type AdminDisciplineTeam as Team,
   type BracketPlan,
@@ -652,6 +653,8 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         open={addOpen}
         onClose={() => setAddOpen(false)}
         onAdd={handleAddTeam}
+        slug={initial.slug}
+        format={initial.format}
       />
 
       <CreateMatchDialog
@@ -665,11 +668,9 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         <EditTeamDialog
           team={editingTeam}
           onClose={() => setEditingTeam(null)}
-          onSave={async (name, players, group) => {
-            const currentTeamId = editingTeam.id
-            await handleEditTeam(currentTeamId, name, players, group)
-            setEditingTeam(null)
-          }}
+          onSave={handleEditTeam}
+          slug={initial.slug}
+          format={initial.format}
         />
       ) : null}
 
@@ -737,16 +738,21 @@ function MatchRow({
 // ─── Add team dialog ──────────────────────────────────────────────────────────
 
 function AddTeamDialog({
-  open, onClose, onAdd,
+  open, onClose, onAdd, slug, format,
 }: {
   open: boolean
   onClose: () => void
   onAdd: (name: string, players: string[], group?: string) => Promise<void>
+  slug: string
+  format?: string | null
 }) {
   const [name,    setName]    = useState("")
   const [players, setPlayers] = useState("")
   const [group,   setGroup]   = useState("")
   const [saving,  setSaving]  = useState(false)
+
+  const zoneOptions = getZoneOptions(slug, format)
+  const showZone = zoneOptions.length > 0
 
   function reset() { setName(""); setPlayers(""); setGroup(""); }
 
@@ -754,7 +760,7 @@ function AddTeamDialog({
     e.preventDefault()
     if (!name.trim()) return
     setSaving(true)
-    const playerList = players.split("\n").map((p) => p.trim()).filter(Boolean)
+    const playerList = players.split(",").map((p) => p.trim()).filter(Boolean)
     await onAdd(name.trim(), playerList, group)
     reset()
     onClose()
@@ -763,35 +769,53 @@ function AddTeamDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose() } }}>
-      <DialogContent className="sm:max-w-xs" onOpenAutoFocus={reset}>
-        <DialogHeader><DialogTitle>Agregar participante</DialogTitle></DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3 pt-1">
-          <input
-            autoFocus required
-            className="w-full rounded-2xl border-2 border-border bg-background px-4 py-4 text-xl outline-none focus:border-primary placeholder:text-muted-foreground"
-            placeholder="Nombre del equipo / jugador"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <input
-            className="w-full rounded-2xl border-2 border-border bg-background px-4 py-3 text-base outline-none focus:border-primary placeholder:text-muted-foreground"
-            placeholder="Zona / grupo (opcional, ej: A)"
-            value={group}
-            onChange={(e) => setGroup(e.target.value)}
-          />
-          <textarea
-            className="w-full rounded-2xl border-2 border-border bg-background px-4 py-3 text-base outline-none focus:border-primary placeholder:text-muted-foreground min-h-24 font-mono"
-            placeholder={"Jugadores (opcional)\nuno por línea"}
-            value={players}
-            onChange={(e) => setPlayers(e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground px-1">Si es individual, dejá los jugadores vacío.</p>
-          <div className="flex gap-2">
-            <button type="button" onClick={() => { reset(); onClose() }} className="flex-1 rounded-2xl border border-border py-3.5 text-base font-medium">
+      <DialogContent className="sm:max-w-md" onOpenAutoFocus={reset}>
+        <DialogHeader><DialogTitle className="text-2xl">Agregar participante</DialogTitle></DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-5 pt-2">
+          <div>
+            <label className="block text-sm font-semibold text-foreground mb-2">Nombre del equipo o jugador</label>
+            <input
+              autoFocus required
+              className="w-full rounded-2xl border-2 border-border bg-background px-5 py-4 text-lg outline-none focus:border-primary placeholder:text-muted-foreground"
+              placeholder="Ej: Los Goleadores"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+
+          {showZone && (
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-2">Zona o Mesa</label>
+              <select
+                className="w-full rounded-2xl border-2 border-border bg-background px-5 py-4 text-lg outline-none focus:border-primary text-foreground"
+                value={group}
+                onChange={(e) => setGroup(e.target.value)}
+              >
+                <option value="">Seleccionar zona...</option>
+                {zoneOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-semibold text-foreground mb-2">Jugadores (opcional)</label>
+            <input
+              className="w-full rounded-2xl border-2 border-border bg-background px-5 py-4 text-lg outline-none focus:border-primary placeholder:text-muted-foreground"
+              placeholder="Separados por coma: Juan, Pedro"
+              value={players}
+              onChange={(e) => setPlayers(e.target.value)}
+            />
+            <p className="text-sm text-muted-foreground mt-2">Si es individual, dejá este campo vacío</p>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={() => { reset(); onClose() }} className="flex-1 rounded-2xl border-2 border-border py-4 text-lg font-semibold text-foreground hover:bg-muted">
               Cancelar
             </button>
-            <button type="submit" disabled={saving || !name.trim()} className="flex-1 rounded-2xl bg-primary py-3.5 text-base font-bold text-primary-foreground disabled:opacity-40">
-              {saving ? "..." : "Agregar"}
+            <button type="submit" disabled={saving || !name.trim()} className="flex-1 rounded-2xl bg-primary py-4 text-lg font-bold text-primary-foreground disabled:opacity-40">
+              {saving ? "Guardando..." : "Agregar"}
             </button>
           </div>
         </form>
@@ -801,56 +825,80 @@ function AddTeamDialog({
 }
 
 function EditTeamDialog({
-  team, onClose, onSave,
+  team, onClose, onSave, slug, format,
 }: {
   team: Team
   onClose: () => void
-  onSave: (name: string, players: string[], group?: string) => Promise<void>
+  onSave: (teamId: string, name: string, players: string[], group?: string) => Promise<void>
+  slug: string
+  format?: string | null
 }) {
   const [name, setName] = useState(team.name)
   const [group, setGroup] = useState(team.group ?? "")
-  const [players, setPlayers] = useState(team.players.map((player) => player.name).join("\n"))
+  const [players, setPlayers] = useState(team.players.map((player) => player.name).join(", "))
   const [saving, setSaving] = useState(false)
+
+  const zoneOptions = getZoneOptions(slug, format)
+  const showZone = zoneOptions.length > 0
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     if (!name.trim()) return
     setSaving(true)
-    await onSave(name.trim(), players.split("\n").map((player) => player.trim()).filter(Boolean), group)
+    await onSave(team.id, name.trim(), players.split(",").map((player) => player.trim()).filter(Boolean), group)
     setSaving(false)
   }
 
   return (
     <Dialog open onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
-      <DialogContent className="sm:max-w-xs">
-        <DialogHeader><DialogTitle>Editar participante</DialogTitle></DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3 pt-1">
-          <input
-            autoFocus
-            required
-            className="w-full rounded-2xl border-2 border-border bg-background px-4 py-4 text-xl outline-none focus:border-primary placeholder:text-muted-foreground"
-            placeholder="Nombre del equipo / jugador"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
-          <input
-            className="w-full rounded-2xl border-2 border-border bg-background px-4 py-3 text-base outline-none focus:border-primary placeholder:text-muted-foreground"
-            placeholder="Zona / grupo (opcional, ej: A)"
-            value={group}
-            onChange={(event) => setGroup(event.target.value)}
-          />
-          <textarea
-            className="min-h-24 w-full rounded-2xl border-2 border-border bg-background px-4 py-3 text-base outline-none focus:border-primary placeholder:text-muted-foreground font-mono"
-            placeholder={"Jugadores (opcional)\nuno por línea"}
-            value={players}
-            onChange={(event) => setPlayers(event.target.value)}
-          />
-          <div className="flex gap-2">
-            <button type="button" onClick={onClose} className="flex-1 rounded-2xl border border-border py-3.5 text-base font-medium">
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader><DialogTitle className="text-2xl">Editar participante</DialogTitle></DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-5 pt-2">
+          <div>
+            <label className="block text-sm font-semibold text-foreground mb-2">Nombre del equipo o jugador</label>
+            <input
+              autoFocus
+              required
+              className="w-full rounded-2xl border-2 border-border bg-background px-5 py-4 text-lg outline-none focus:border-primary placeholder:text-muted-foreground"
+              placeholder="Ej: Los Goleadores"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </div>
+
+          {showZone && (
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-2">Zona o Mesa</label>
+              <select
+                className="w-full rounded-2xl border-2 border-border bg-background px-5 py-4 text-lg outline-none focus:border-primary text-foreground"
+                value={group}
+                onChange={(event) => setGroup(event.target.value)}
+              >
+                <option value="">Seleccionar zona...</option>
+                {zoneOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-semibold text-foreground mb-2">Jugadores (opcional)</label>
+            <input
+              className="w-full rounded-2xl border-2 border-border bg-background px-5 py-4 text-lg outline-none focus:border-primary placeholder:text-muted-foreground"
+              placeholder="Separados por coma: Juan, Pedro"
+              value={players}
+              onChange={(event) => setPlayers(event.target.value)}
+            />
+            <p className="text-sm text-muted-foreground mt-2">Si es individual, dejá este campo vacío</p>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 rounded-2xl border-2 border-border py-4 text-lg font-semibold text-foreground hover:bg-muted">
               Cancelar
             </button>
-            <button type="submit" disabled={saving || !name.trim()} className="flex-1 rounded-2xl bg-primary py-3.5 text-base font-bold text-primary-foreground disabled:opacity-40">
-              {saving ? "..." : "Guardar"}
+            <button type="submit" disabled={saving || !name.trim()} className="flex-1 rounded-2xl bg-primary py-4 text-lg font-bold text-primary-foreground disabled:opacity-40">
+              {saving ? "Guardando..." : "Guardar"}
             </button>
           </div>
         </form>

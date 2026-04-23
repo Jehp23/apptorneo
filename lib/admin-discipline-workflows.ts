@@ -91,6 +91,47 @@ export function detectStandingsVariant(slug: string, format?: string | null): St
   return "classic"
 }
 
+export function getZoneOptions(slug: string, format?: string | null): Array<{ value: string; label: string }> {
+  const normalizedSlug = slug.toLowerCase()
+  const normalizedFormat = format?.toLowerCase() ?? ""
+
+  if (normalizedSlug.includes("metegol") || normalizedFormat.includes("metegol")) {
+    return [
+      { value: "Zona 1", label: "Zona 1" },
+      { value: "Zona 2", label: "Zona 2" },
+      { value: "Zona 3", label: "Zona 3" },
+      { value: "Zona 4", label: "Zona 4" },
+      { value: "Zona 5", label: "Zona 5" },
+      { value: "Zona 6", label: "Zona 6" },
+    ]
+  }
+
+  if (normalizedSlug.includes("loba") || normalizedFormat.includes("loba")) {
+    return [
+      { value: "Mesa 1", label: "Mesa 1" },
+      { value: "Mesa 2", label: "Mesa 2" },
+      { value: "Mesa 3", label: "Mesa 3" },
+      { value: "Mesa 4", label: "Mesa 4" },
+      { value: "Mesa 5", label: "Mesa 5" },
+      { value: "Mesa 6", label: "Mesa 6" },
+      { value: "Mesa Final", label: "Mesa Final" },
+    ]
+  }
+
+  if (normalizedSlug.includes("truco") || normalizedFormat.includes("truco")) {
+    return [
+      { value: "Zona 1", label: "Zona 1" },
+      { value: "Zona 2", label: "Zona 2" },
+    ]
+  }
+
+  // Fútbol 5, Pádel, etc.
+  return [
+    { value: "Zona A", label: "Zona A" },
+    { value: "Zona B", label: "Zona B" },
+  ]
+}
+
 export function buildGroupedStandings(
   teams: AdminDisciplineTeam[],
   matches: AdminDisciplineMatch[],
