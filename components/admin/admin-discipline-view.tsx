@@ -1207,7 +1207,7 @@ function ScoreDialog({
         body: JSON.stringify({ score1, score2, played }),
       })
       if (res.status === 401) {
-        window.location.href = "/api/admin/auth/logout"
+        setError("Sesión expirada. Volvé a iniciar sesión.")
         return
       }
       const data = await res.json()
