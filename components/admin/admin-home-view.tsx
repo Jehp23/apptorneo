@@ -232,7 +232,7 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
                 return (
                   <Link
                     key={discipline.id}
-                    href={`/admin/disciplines/${discipline.slug}`}
+                    href={`/admin/${discipline.slug}`}
                     className="group rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30"
                   >
                     <div className="flex items-start justify-between gap-2 mb-3">
