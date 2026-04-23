@@ -1253,7 +1253,11 @@ function ScoreDialog({
         <DialogHeader>
           <DialogTitle className="text-center text-base">
             {match.stage && <span className="block text-xs font-semibold uppercase tracking-wider text-primary mb-1">{match.stage}</span>}
-            <span className="text-sm font-semibold text-foreground">{match.team1?.name ?? "—"} vs {match.team2?.name ?? "—"}</span>
+            <span className="flex items-center justify-center gap-2 text-sm font-semibold text-foreground">
+              <span className="truncate max-w-[100px]">{match.team1?.name ?? "—"}</span>
+              <span className="shrink-0 tabular-nums text-base font-black text-primary">{score1} – {score2}</span>
+              <span className="truncate max-w-[100px]">{match.team2?.name ?? "—"}</span>
+            </span>
           </DialogTitle>
         </DialogHeader>
 

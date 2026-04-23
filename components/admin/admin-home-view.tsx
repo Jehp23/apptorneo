@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { Activity, ArrowRight, Calendar, LogOut, Pencil, Plus, Settings2, Trophy, Users } from "lucide-react"
+import { Activity, Calendar, LogOut, Pencil, Plus, Settings2, Trophy, Users } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -110,17 +110,6 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
     [disciplines],
   )
 
-  // Quick summary for event day
-  const pendingMatches = useMemo(
-    () => disciplines.reduce((acc, d) => acc + d.matches.filter((m) => !m.played).length, 0),
-    [disciplines],
-  )
-
-  const disciplinesWithPending = useMemo(
-    () => disciplines.filter((d) => d.matches.filter((m) => !m.played).length > 0),
-    [disciplines],
-  )
-
   const incompleteRegistrations = useMemo(
     () => disciplines.filter((d) => d.teamsCount && d.teams.length < d.teamsCount),
     [disciplines],
@@ -150,34 +139,36 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="flex items-center justify-between border-b border-border bg-card px-6 py-4">
-        <div>
-          <h1 className="font-serif text-xl font-semibold text-foreground">{tournament?.name ?? "Torneo"}</h1>
-          {tournament ? (
-            <p className="text-xs text-muted-foreground">{tournament.year}</p>
-          ) : null}
-        </div>
-
-        <div className="flex items-center gap-2">
-          {tournament ? (
-            <button
-              onClick={() => setEditTournament(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-            >
-              <Pencil className="h-4 w-4" />
-            </button>
-          ) : null}
-          <Link
-            href="/torneo"
-            className="rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Ver público
-          </Link>
+      <div className="mx-auto max-w-5xl">
+      <header className="flex flex-col gap-3 border-b border-border bg-card px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-serif text-xl font-semibold text-foreground">{tournament?.name ?? "Torneo"}</h1>
+            {tournament ? (
+              <p className="text-xs text-muted-foreground">{tournament.year}</p>
+            ) : null}
+          </div>
           <Link
             href="/api/admin/auth/logout"
             className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-foreground"
           >
             <LogOut className="h-4 w-4" />
+          </Link>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
+          {tournament ? (
+            <button
+              onClick={() => setEditTournament(true)}
+              className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+            >
+              <Pencil className="h-4 w-4" /> Editar
+            </button>
+          ) : null}
+          <Link
+            href="/torneo"
+            className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Ver público
           </Link>
         </div>
       </header>
@@ -190,50 +181,20 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
             { label: "Partidos", value: totalMatches },
             { label: "Jugados", value: playedMatches },
           ].map((item) => (
-            <div key={item.label} className="rounded-xl border border-border bg-card p-4">
+            <div key={item.label} className="rounded-xl border border-border bg-card p-3 sm:p-4">
               <p className="text-xs text-muted-foreground">{item.label}</p>
               <p className="mt-1 text-2xl font-semibold text-foreground">{item.value}</p>
             </div>
           ))}
         </div>
 
-        {/* Quick summary alerts for event day */}
-        {(pendingMatches > 0 || incompleteRegistrations.length > 0) && (
+        {incompleteRegistrations.length > 0 && (
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
             <h3 className="mb-2 text-sm font-semibold text-amber-700">Qué falta</h3>
             <div className="space-y-1 text-sm text-amber-700">
-              {pendingMatches > 0 && <p>{pendingMatches} partido{pendingMatches === 1 ? "" : "s"} pendiente{pendingMatches === 1 ? "" : "s"}</p>}
-              {incompleteRegistrations.length > 0 && <p>{incompleteRegistrations.length} deporte{incompleteRegistrations.length === 1 ? "" : "s"} incompleto{incompleteRegistrations.length === 1 ? "" : "s"}</p>}
+              <p>{incompleteRegistrations.length} deporte{incompleteRegistrations.length === 1 ? "" : "s"} incompleto{incompleteRegistrations.length === 1 ? "" : "s"}</p>
             </div>
           </div>
-        )}
-
-        {/* Partidos pendientes — acceso rápido para cargar resultados */}
-        {disciplinesWithPending.length > 0 && (
-          <section>
-            <h2 className="mb-3 text-lg font-semibold text-foreground">Partidos pendientes</h2>
-            <div className="space-y-2">
-              {disciplinesWithPending.map((discipline) =>
-                discipline.matches
-                  .filter((m) => !m.played)
-                  .map((match) => (
-                    <Link
-                      key={match.id}
-                      href={`/admin/${discipline.slug}?tab=partidos`}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/40 hover:bg-primary/5"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-primary mb-0.5">{discipline.name}{match.stage ? ` · ${match.stage}` : ""}</p>
-                        <p className="truncate text-sm font-semibold text-foreground">
-                          {match.team1?.name ?? "?"} <span className="text-muted-foreground font-normal">vs</span> {match.team2?.name ?? "?"}
-                        </p>
-                      </div>
-                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    </Link>
-                  ))
-              )}
-            </div>
-          </section>
         )}
 
         <section>
@@ -266,7 +227,7 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
                   <Link
                     key={discipline.id}
                     href={`/admin/${discipline.slug}`}
-                    className="group rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30"
+                    className="group rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30 active:scale-[0.98] transition-transform"
                   >
                     <div className="flex items-start justify-between gap-2 mb-3">
                       <div>
@@ -325,6 +286,7 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
           onSaved={onDisciplinePatched}
         />
       ) : null}
+    </div>
     </div>
   )
 }
@@ -396,7 +358,7 @@ function EditTournamentDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
-      <DialogContent className="sm:max-w-xs">
+      <DialogContent className="sm:max-w-xs max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Editar torneo</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3 pt-1">
           <input
@@ -593,6 +555,7 @@ function QuickRegistrationDialog({
     try {
       const response = await fetch(`/api/admin/disciplines/${discipline.slug}/teams`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
@@ -618,7 +581,7 @@ function QuickRegistrationDialog({
 
   return (
     <Dialog open onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-sm max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Carga rápida · {discipline.name}</DialogTitle>
         </DialogHeader>
@@ -700,7 +663,7 @@ function CapacityDialog({
 
   return (
     <Dialog open onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
-      <DialogContent className="sm:max-w-xs">
+      <DialogContent className="sm:max-w-xs max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Ajustar cupo · {discipline.name}</DialogTitle>
         </DialogHeader>
