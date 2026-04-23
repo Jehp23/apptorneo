@@ -7,23 +7,21 @@ import { ArrowLeft, Check, Minus, Plus, Swords, Trash2, Trophy, UserPlus } from 
 import { DisciplineHeader } from "@/components/discipline-header"
 import { InfoPanel } from "@/components/info-panel"
 import { PremiumTabs } from "@/components/premium-tabs"
-import { StandingsTable, type StandingRow } from "@/components/standings-table"
+import { StandingsTable } from "@/components/standings-table"
+import { SimpleStandingsTable } from "@/components/simple-standings-table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  buildGroupedStandings,
+  detectStandingsVariant,
+  type AdminDisciplineMatch as Match,
+  type AdminDisciplineTeam as Team,
+  type RankedSimpleStandingRow,
+  type RankedStandingRow,
+} from "@/lib/admin-discipline-workflows"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Player { id: string; name: string; seniority?: number | null }
-interface Team   { id: string; name: string; group?: string | null; players: Player[] }
-interface Match  {
-  id: string
-  team1?: { id: string; name: string } | null
-  team2?: { id: string; name: string } | null
-  score1?: number | null
-  score2?: number | null
-  played: boolean
-  stage?: string | null
-  date?:  string | null
-}
 
 export interface PublicDisciplineData {
   id: string
@@ -35,40 +33,6 @@ export interface PublicDisciplineData {
   details?: string | null
   teams: Team[]
   matches: Match[]
-}
-
-// ─── Standings ────────────────────────────────────────────────────────────────
-
-function calculateStandings(teamIds: string[], matches: Match[], teams: Team[]): StandingRow[] {
-  const stats: Record<string, StandingRow> = {}
-  teamIds.forEach((id, i) => {
-    const team = teams.find((t) => t.id === id)
-    stats[id] = { position: i + 1, teamName: team?.name ?? id, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dg: 0, pts: 0 }
-  })
-  matches
-    .filter((m) => m.played && m.team1 && m.team2 && teamIds.includes(m.team1.id) && teamIds.includes(m.team2.id))
-    .forEach((m) => {
-      const t1 = stats[m.team1!.id], t2 = stats[m.team2!.id]
-      const s1 = m.score1 ?? 0, s2 = m.score2 ?? 0
-      t1.pj++; t2.pj++; t1.gf += s1; t1.gc += s2; t2.gf += s2; t2.gc += s1
-      if      (s1 > s2) { t1.pg++; t1.pts += 3; t2.pp++ }
-      else if (s1 < s2) { t2.pg++; t2.pts += 3; t1.pp++ }
-      else              { t1.pe++; t2.pe++; t1.pts++; t2.pts++ }
-      t1.dg = t1.gf - t1.gc; t2.dg = t2.gf - t2.gc
-    })
-  return Object.values(stats)
-    .sort((a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf)
-    .map((row, i) => ({ ...row, position: i + 1 }))
-}
-
-function groupTeams(teams: Team[]) {
-  const groups = teams.reduce<Record<string, string[]>>((acc, t) => {
-    const key = t.group ?? "General"
-    acc[key] = acc[key] ?? []
-    acc[key].push(t.id)
-    return acc
-  }, {})
-  return Object.entries(groups)
 }
 
 const tabs = [
@@ -175,22 +139,25 @@ export function PublicDisciplineView({
 
   const isFull = discipline.teamsCount !== null && teams.length >= (discipline.teamsCount ?? Infinity)
 
+  const standingsVariant = useMemo(() => detectStandingsVariant(discipline.slug, discipline.format), [discipline.format, discipline.slug])
+
   const groupedStandings = useMemo(
-    () => groupTeams(teams).map(([groupName, teamIds]) => ({
-      groupName,
-      standings: calculateStandings(teamIds, matches, teams),
-    })),
-    [teams, matches]
+    () => buildGroupedStandings(teams, matches, standingsVariant),
+    [teams, matches, standingsVariant]
   )
 
   const fixtureGroups = useMemo(
-    () => groupTeams(teams).map(([groupName, teamIds]) => ({
-      groupName,
+    () => groupedStandings.map((group) => ({
+      groupName: group.groupName,
       matches: matches
-        .filter((m) => m.team1 && m.team2 && teamIds.includes(m.team1.id) && teamIds.includes(m.team2.id))
+        .filter((m) => {
+          if (!m.team1 || !m.team2) return false
+          const teamIds = group.teams.map((team) => team.id)
+          return teamIds.includes(m.team1.id) && teamIds.includes(m.team2.id)
+        })
         .map((m, i) => ({ ...m, matchNumber: i + 1 })),
     })),
-    [teams, matches]
+    [groupedStandings, matches]
   )
 
   const upcomingMatches = useMemo(
@@ -251,7 +218,11 @@ export function PublicDisciplineView({
           {activeTab === "posiciones" && (
             <div className="grid gap-6 lg:grid-cols-2">
               {groupedStandings.map((group) => (
-                <StandingsTable key={group.groupName} title={group.groupName} standings={group.standings} highlightTop={2} />
+                standingsVariant === "simple" ? (
+                  <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} />
+                ) : (
+                  <StandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedStandingRow[]} highlightTop={2} />
+                )
               ))}
             </div>
           )}
