@@ -327,47 +327,56 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
   return (
     <div className="min-h-screen bg-background">
       {/* ── Top bar ── */}
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-card px-4 py-4">
-        <Link href="/admin" className="flex h-9 w-9 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
-        <div className="flex-1 min-w-0">
-          <h1 className="truncate text-lg font-bold text-foreground">{initial.name}</h1>
-          {initial.format ? <p className="truncate text-xs text-muted-foreground">{initial.format}</p> : null}
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Link href="/admin" className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <div>
+            <h1 className="font-serif text-lg font-semibold text-foreground">{initial.name}</h1>
+            {initial.format ? <p className="text-xs text-muted-foreground">{initial.format}</p> : null}
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>{teams.length} equip{teams.length === 1 ? "o" : "os"}</span>
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <span>{teams.length} equipos</span>
           <span>·</span>
-          <span>{matches.length} partido{matches.length === 1 ? "" : "s"}</span>
+          <span>{matches.length} partidos</span>
         </div>
-      </div>
+      </header>
 
       {/* ── Toast ── */}
       {toast ? (
-        <div className={`mx-4 mt-4 rounded-2xl px-4 py-3 text-sm font-medium ${toast.ok ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20" : "bg-destructive/10 text-destructive border border-destructive/20"}`}>
+        <div className={`mx-6 mt-4 rounded-xl px-4 py-3 text-sm font-medium ${toast.ok ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20" : "bg-destructive/10 text-destructive border border-destructive/20"}`}>
           {toast.msg}
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3 border-b border-border bg-card px-4 py-4 sm:grid-cols-4">
-        <SummaryChip label="Cupo" value={teamCap ?? "Libre"} />
-        <SummaryChip label="Inscriptos" value={teams.length} />
-        <SummaryChip label="Faltan" value={remainingSpots ?? "—"} highlight={remainingSpots === 0 && teamCap != null ? "success" : "default"} />
-        <div className="rounded-2xl border border-border bg-background px-4 py-3">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Estado</p>
-          <div className="mt-2">
-            <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${registrationTone}`}>{registrationLabel}</span>
-          </div>
+      <div className="grid grid-cols-2 gap-3 border-b border-border bg-card px-6 py-4 sm:grid-cols-4">
+        <div className="rounded-xl border border-border bg-background px-4 py-3">
+          <p className="text-xs text-muted-foreground">Cupo</p>
+          <p className="mt-1 text-lg font-semibold text-foreground">{teamCap ?? "Libre"}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-background px-4 py-3">
+          <p className="text-xs text-muted-foreground">Inscriptos</p>
+          <p className="mt-1 text-lg font-semibold text-foreground">{teams.length}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-background px-4 py-3">
+          <p className="text-xs text-muted-foreground">Faltan</p>
+          <p className={`mt-1 text-lg font-semibold ${remainingSpots === 0 && teamCap != null ? "text-emerald-600" : "text-foreground"}`}>{remainingSpots ?? "—"}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-background px-4 py-3">
+          <p className="text-xs text-muted-foreground">Estado</p>
+          <p className={`mt-1 text-sm font-semibold ${registrationTone}`}>{registrationLabel}</p>
         </div>
       </div>
 
       {/* ── Tabs ── */}
-      <div className="flex gap-1 border-b border-border bg-card px-4">
+      <div className="flex gap-1 border-b border-border bg-card px-6">
         {(["participantes", "partidos", "posiciones"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-3 text-sm font-semibold capitalize transition-colors border-b-2 -mb-px ${
+            className={`px-4 py-3 text-sm font-medium capitalize transition-colors border-b-2 -mb-px ${
               tab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -376,7 +385,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         ))}
       </div>
 
-      <div className="p-4 space-y-4">
+      <div className="p-6 space-y-4">
 
         {/* ── Participantes ── */}
         {tab === "participantes" && (
@@ -384,53 +393,48 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
             <button
               onClick={() => setAddOpen(true)}
               disabled={remainingSpots === 0 && teamCap != null}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 py-4 text-base font-semibold text-primary transition-colors hover:border-primary hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40"
+              className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
             >
-              <Plus className="h-5 w-5" /> Agregar participante / equipo
+              <Plus className="h-4 w-4" /> Agregar participante
             </button>
 
             {remainingSpots === 0 && teamCap != null ? (
-              <p className="text-center text-sm text-muted-foreground">El cupo ya está completo. Si necesitás sumar más gente, ajustá el cupo desde la home admin.</p>
+              <p className="text-center text-sm text-muted-foreground">Cupo completo.</p>
             ) : null}
 
             {teams.length === 0 ? (
-              <p className="py-12 text-center text-muted-foreground">Todavía no hay participantes.</p>
+              <p className="py-8 text-center text-muted-foreground">No hay participantes.</p>
             ) : (
               <div className="space-y-2">
                 {teams.map((team) => (
-                  <div key={team.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3">
+                  <div key={team.id} className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground truncate">{team.name}</p>
-                      <div className="flex items-center gap-2">
+                      <p className="font-medium text-foreground truncate">{team.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
                         {team.group ? (
-                          <span className="shrink-0 rounded-lg bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                            Zona {team.group}
+                          <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                            {team.group}
                           </span>
                         ) : null}
-                        {team.players.length > 0 && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            {team.players.map((p) => p.name).join(", ")}
-                          </p>
-                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {team.players.length} jugador{team.players.length === 1 ? "" : "es"}
+                        </span>
                       </div>
                     </div>
-                    {team.players.length > 0 && (
-                      <span className="shrink-0 rounded-lg bg-muted px-2 py-1 text-xs text-muted-foreground">
-                        {team.players.length}
-                      </span>
-                    )}
-                    <button
-                      onClick={() => setEditingTeam(team)}
-                      className="shrink-0 flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleRemoveTeam(team.id, team.name)}
-                      className="shrink-0 flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setEditingTeam(team)}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleRemoveTeam(team.id, team.name)}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -442,28 +446,24 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         {tab === "posiciones" && (
           <>
             {standingsVariant === "sapo" ? (
-              <div className="rounded-2xl border border-border bg-card p-4 space-y-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Bracket Eliminatorio</p>
-                    <p className="text-sm text-muted-foreground">Genera el bracket cuando haya al menos 8 parejas clasificadas.</p>
+                    <p className="text-sm font-medium text-foreground">Bracket Eliminatorio</p>
+                    <p className="text-xs text-muted-foreground">Genera el bracket con al menos 8 clasificados.</p>
                   </div>
                   <button
                     type="button"
                     onClick={handleGenerateBracket}
                     disabled={!bracketPlan.ready}
-                    className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Generar bracket
+                    Generar
                   </button>
                 </div>
                 {!bracketPlan.ready ? (
-                  <p className="mt-3 text-xs text-muted-foreground">{bracketPlan.reason}</p>
-                ) : (
-                  <div className="mt-3 text-xs text-muted-foreground">
-                    Se generarán {bracketPlan.crosses.length} partidos de cuartos de final.
-                  </div>
-                )}
+                  <p className="text-xs text-muted-foreground">{bracketPlan.reason}</p>
+                ) : null}
               </div>
             ) : standingsVariant === "loba" ? (
               <>
@@ -480,79 +480,67 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                 )}
               </>
             ) : standingsVariant === "compact" ? (
-              <div className="rounded-2xl border border-border bg-card p-4 space-y-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Hexagonal Final</p>
-                    <p className="text-sm text-muted-foreground">Genera el hexagonal cuando las 6 zonas estén completas.</p>
+                    <p className="text-sm font-medium text-foreground">Hexagonal Final</p>
+                    <p className="text-xs text-muted-foreground">Genera el hexagonal con 6 zonas completas.</p>
                   </div>
                   <button
                     type="button"
                     onClick={handleGenerateHexagonal}
                     disabled={!hexagonalPlan.ready}
-                    className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Generar hexagonal
+                    Generar
                   </button>
                 </div>
                 {!hexagonalPlan.ready ? (
-                  <p className="mt-3 text-xs text-muted-foreground">{hexagonalPlan.reason}</p>
-                ) : (
-                  <div className="mt-3 text-xs text-muted-foreground">
-                    Se generarán {hexagonalPlan.crosses.length} partidos entre los 6 ganadores de zona.
-                  </div>
-                )}
+                  <p className="text-xs text-muted-foreground">{hexagonalPlan.reason}</p>
+                ) : null}
               </div>
             ) : (
               <>
-                <div className="rounded-2xl border border-border bg-card p-4 space-y-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-foreground">Fase siguiente</p>
-                      <p className="text-sm text-muted-foreground">Para Fútbol 5 / Pádel: genera semifinales cuando las dos zonas estén completas.</p>
+                      <p className="text-sm font-medium text-foreground">Fase siguiente</p>
+                      <p className="text-xs text-muted-foreground">Genera semifinales cuando las 2 zonas estén completas.</p>
                     </div>
                     <button
                       type="button"
                       onClick={handleGenerateSemifinals}
                       disabled={!semifinalPlan.ready}
-                      className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      Generar semifinales
+                      Generar
                     </button>
                   </div>
                   {!semifinalPlan.ready ? (
-                    <p className="mt-3 text-xs text-muted-foreground">{semifinalPlan.reason}</p>
-                  ) : (
-                    <div className="mt-3 grid gap-2 md:grid-cols-2">
-                      {semifinalPlan.crosses.map((cross) => (
-                        <div key={cross.stage} className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground">
-                          <span className="font-semibold">{cross.stage}:</span> {cross.team1.name} vs {cross.team2.name}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                    <p className="text-xs text-muted-foreground">{semifinalPlan.reason}</p>
+                  ) : null}
                 </div>
 
-                <div className="rounded-2xl border border-border bg-card p-4 space-y-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-foreground">Cierre de torneo</p>
-                      <p className="text-sm text-muted-foreground">Genera la final cuando las dos semifinales ya tienen ganador.</p>
+                      <p className="text-sm font-medium text-foreground">Final</p>
+                      <p className="text-xs text-muted-foreground">Genera la final cuando las semifinales tengan ganador.</p>
                     </div>
                     <button
                       type="button"
                       onClick={handleGenerateFinal}
                       disabled={!finalPlan.ready}
-                      className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      Generar final
+                      Generar
                     </button>
                   </div>
                   {!finalPlan.ready ? (
-                    <p className="mt-3 text-xs text-muted-foreground">{finalPlan.reason}</p>
+                    <p className="text-xs text-muted-foreground">{finalPlan.reason}</p>
                   ) : finalPlan.cross ? (
-                    <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground">
-                      <span className="font-semibold">{finalPlan.cross.stage}:</span> {finalPlan.cross.team1.name} vs {finalPlan.cross.team2.name}
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground">
+                      <span className="font-medium">{finalPlan.cross.stage}:</span> {finalPlan.cross.team1.name} vs {finalPlan.cross.team2.name}
                     </div>
                   ) : null}
                 </div>
