@@ -1,7 +1,19 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
-// PATCH: Actualizar un partido (scores, estado, etc)
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ matchId: string }> }
+) {
+  const { matchId } = await params
+  try {
+    await prisma.match.delete({ where: { id: matchId } })
+    return NextResponse.json({ ok: true })
+  } catch {
+    return NextResponse.json({ error: "No se pudo eliminar el partido" }, { status: 400 })
+  }
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ matchId: string }> }

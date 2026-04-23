@@ -46,7 +46,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
         disciplineId: discipline.id,
         name: body.name,
         type: body.type || "SINGLE",
-        group: body.group,
+        group: body.group || undefined,
         seed: body.seed,
         players: body.players?.length
           ? { create: body.players.map((p: { name: string; seniority?: number }) => ({ name: p.name, seniority: p.seniority })) }

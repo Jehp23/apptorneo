@@ -1,6 +1,43 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ slug: string; teamId: string }> }
+) {
+  const { teamId } = await params
+  const body = await request.json()
+
+  try {
+    if (body.name !== undefined || body.group !== undefined) {
+      await prisma.team.update({
+        where: { id: teamId },
+        data: {
+          name: body.name ?? undefined,
+          group: body.group === null ? null : body.group ?? undefined,
+        },
+      })
+    }
+
+    if (Array.isArray(body.players)) {
+      await prisma.player.deleteMany({ where: { teamId } })
+      if (body.players.length > 0) {
+        await prisma.player.createMany({
+          data: body.players.map((name: string) => ({ name: name.trim(), teamId })),
+        })
+      }
+    }
+
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: { players: true },
+    })
+    return NextResponse.json(team)
+  } catch {
+    return NextResponse.json({ error: "No se pudo actualizar el participante" }, { status: 400 })
+  }
+}
+
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ slug: string; teamId: string }> }

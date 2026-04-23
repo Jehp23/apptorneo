@@ -5,11 +5,12 @@ import Link from "next/link"
 import { ArrowLeft, Check, Minus, Pencil, Plus, Trash2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
+import { StandingsTable, type StandingRow } from "@/components/standings-table"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Player { id: string; name: string; seniority?: number | null }
-interface Team   { id: string; name: string; type: string; players: Player[] }
+interface Team   { id: string; name: string; type: string; group?: string | null; players: Player[] }
 interface Match  {
   id: string
   team1?: { id: string; name: string } | null
@@ -33,7 +34,7 @@ interface Discipline {
 export function AdminDisciplineView({ discipline: initial }: { discipline: Discipline }) {
   const [teams,   setTeams]   = useState(initial.teams)
   const [matches, setMatches] = useState(initial.matches)
-  const [tab,     setTab]     = useState<"participantes" | "partidos">("participantes")
+  const [tab,     setTab]     = useState<"participantes" | "partidos" | "posiciones">("participantes")
   const [toast,   setToast]   = useState<{ ok: boolean; msg: string } | null>(null)
 
   // dialogs
@@ -49,7 +50,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
 
   // ── handlers ──
 
-  async function handleAddTeam(name: string, players: string[]) {
+  async function handleAddTeam(name: string, players: string[], group?: string) {
     try {
       const res  = await fetch(`/api/admin/disciplines/${initial.slug}/teams`, {
         method: "POST",
@@ -58,6 +59,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
           name,
           type: players.length > 0 ? "TEAM" : "SINGLE",
           players: players.map((p) => ({ name: p.trim() })).filter((p) => p.name),
+          group: group?.trim() || undefined,
         }),
       })
       const data = await res.json()
@@ -77,12 +79,12 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
     } catch { notify(false, "No se pudo eliminar.") }
   }
 
-  async function handleEditTeam(teamId: string, name: string, players: string[]) {
+  async function handleEditTeam(teamId: string, name: string, players: string[], group?: string) {
     try {
       const res = await fetch(`/api/admin/disciplines/${initial.slug}/teams/${teamId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, players }),
+        body: JSON.stringify({ name, players, group: group?.trim() || null }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
@@ -134,6 +136,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
   const remainingSpots = teamCap != null && teamCap > 0 ? Math.max(teamCap - teams.length, 0) : null
   const registrationLabel = teamCap == null || teamCap <= 0 ? "Abierto" : teams.length >= teamCap ? "Completo" : "Abierto"
   const registrationTone = teamCap != null && teamCap > 0 && teams.length >= teamCap ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20" : "bg-primary/10 text-primary border border-primary/20"
+  const groupedStandings = buildGroupedStandings(teams, matches)
 
   return (
     <div className="min-h-screen bg-background">
@@ -174,7 +177,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
 
       {/* ── Tabs ── */}
       <div className="flex gap-1 border-b border-border bg-card px-4">
-        {(["participantes", "partidos"] as const).map((t) => (
+        {(["participantes", "partidos", "posiciones"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -182,7 +185,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
               tab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            {t === "participantes" ? `Participantes (${teams.length})` : `Partidos (${matches.length})`}
+            {t === "participantes" ? `Participantes (${teams.length})` : t === "partidos" ? `Partidos (${matches.length})` : `Posiciones (${groupedStandings.length})`}
           </button>
         ))}
       </div>
@@ -212,11 +215,18 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                   <div key={team.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3">
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-foreground truncate">{team.name}</p>
-                      {team.players.length > 0 && (
-                        <p className="text-xs text-muted-foreground truncate">
-                          {team.players.map((p) => p.name).join(", ")}
-                        </p>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {team.group ? (
+                          <span className="shrink-0 rounded-lg bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                            Zona {team.group}
+                          </span>
+                        ) : null}
+                        {team.players.length > 0 && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            {team.players.map((p) => p.name).join(", ")}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     {team.players.length > 0 && (
                       <span className="shrink-0 rounded-lg bg-muted px-2 py-1 text-xs text-muted-foreground">
@@ -243,6 +253,20 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         )}
 
         {/* ── Partidos ── */}
+        {tab === "posiciones" && (
+          <>
+            {groupedStandings.length === 0 ? (
+              <p className="py-12 text-center text-muted-foreground">Todavía no hay participantes para calcular posiciones.</p>
+            ) : (
+              <div className="grid gap-4 lg:grid-cols-2">
+                {groupedStandings.map((group) => (
+                  <StandingsTable key={group.groupName} title={group.groupName} standings={group.standings} highlightTop={2} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
         {tab === "partidos" && (
           <>
             <button
@@ -315,9 +339,9 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         <EditTeamDialog
           team={editingTeam}
           onClose={() => setEditingTeam(null)}
-          onSave={async (name, players) => {
+          onSave={async (name, players, group) => {
             const currentTeamId = editingTeam.id
-            await handleEditTeam(currentTeamId, name, players)
+            await handleEditTeam(currentTeamId, name, players, group)
             setEditingTeam(null)
           }}
         />
@@ -391,20 +415,21 @@ function AddTeamDialog({
 }: {
   open: boolean
   onClose: () => void
-  onAdd: (name: string, players: string[]) => Promise<void>
+  onAdd: (name: string, players: string[], group?: string) => Promise<void>
 }) {
   const [name,    setName]    = useState("")
   const [players, setPlayers] = useState("")
+  const [group,   setGroup]   = useState("")
   const [saving,  setSaving]  = useState(false)
 
-  function reset() { setName(""); setPlayers(""); }
+  function reset() { setName(""); setPlayers(""); setGroup(""); }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim()) return
     setSaving(true)
     const playerList = players.split("\n").map((p) => p.trim()).filter(Boolean)
-    await onAdd(name.trim(), playerList)
+    await onAdd(name.trim(), playerList, group)
     reset()
     onClose()
     setSaving(false)
@@ -421,6 +446,12 @@ function AddTeamDialog({
             placeholder="Nombre del equipo / jugador"
             value={name}
             onChange={(e) => setName(e.target.value)}
+          />
+          <input
+            className="w-full rounded-2xl border-2 border-border bg-background px-4 py-3 text-base outline-none focus:border-primary placeholder:text-muted-foreground"
+            placeholder="Zona / grupo (opcional, ej: A)"
+            value={group}
+            onChange={(e) => setGroup(e.target.value)}
           />
           <textarea
             className="w-full rounded-2xl border-2 border-border bg-background px-4 py-3 text-base outline-none focus:border-primary placeholder:text-muted-foreground min-h-24 font-mono"
@@ -448,9 +479,10 @@ function EditTeamDialog({
 }: {
   team: Team
   onClose: () => void
-  onSave: (name: string, players: string[]) => Promise<void>
+  onSave: (name: string, players: string[], group?: string) => Promise<void>
 }) {
   const [name, setName] = useState(team.name)
+  const [group, setGroup] = useState(team.group ?? "")
   const [players, setPlayers] = useState(team.players.map((player) => player.name).join("\n"))
   const [saving, setSaving] = useState(false)
 
@@ -458,7 +490,7 @@ function EditTeamDialog({
     event.preventDefault()
     if (!name.trim()) return
     setSaving(true)
-    await onSave(name.trim(), players.split("\n").map((player) => player.trim()).filter(Boolean))
+    await onSave(name.trim(), players.split("\n").map((player) => player.trim()).filter(Boolean), group)
     setSaving(false)
   }
 
@@ -474,6 +506,12 @@ function EditTeamDialog({
             placeholder="Nombre del equipo / jugador"
             value={name}
             onChange={(event) => setName(event.target.value)}
+          />
+          <input
+            className="w-full rounded-2xl border-2 border-border bg-background px-4 py-3 text-base outline-none focus:border-primary placeholder:text-muted-foreground"
+            placeholder="Zona / grupo (opcional, ej: A)"
+            value={group}
+            onChange={(event) => setGroup(event.target.value)}
           />
           <textarea
             className="min-h-24 w-full rounded-2xl border-2 border-border bg-background px-4 py-3 text-base outline-none focus:border-primary placeholder:text-muted-foreground font-mono"
@@ -665,4 +703,76 @@ function SummaryChip({
       <p className={`mt-2 text-2xl font-bold ${valueClass}`}>{value}</p>
     </div>
   )
+}
+
+
+function buildGroupedStandings(teams: Team[], matches: Match[]) {
+  const groups = teams.reduce<Record<string, Team[]>>((acc, team) => {
+    const key = team.group?.trim() || "General"
+    acc[key] = acc[key] ?? []
+    acc[key].push(team)
+    return acc
+  }, {})
+
+  return Object.entries(groups).map(([groupName, groupTeams]) => ({
+    groupName,
+    standings: calculateStandings(groupTeams, matches),
+  }))
+}
+
+function calculateStandings(teams: Team[], matches: Match[]): StandingRow[] {
+  const stats: Record<string, StandingRow> = {}
+
+  teams.forEach((team, index) => {
+    stats[team.id] = {
+      position: index + 1,
+      teamName: team.name,
+      pj: 0,
+      pg: 0,
+      pe: 0,
+      pp: 0,
+      gf: 0,
+      gc: 0,
+      dg: 0,
+      pts: 0,
+    }
+  })
+
+  matches
+    .filter((match) => match.played && match.team1 && match.team2 && stats[match.team1.id] && stats[match.team2.id])
+    .forEach((match) => {
+      const team1 = stats[match.team1!.id]
+      const team2 = stats[match.team2!.id]
+      const score1 = match.score1 ?? 0
+      const score2 = match.score2 ?? 0
+
+      team1.pj += 1
+      team2.pj += 1
+      team1.gf += score1
+      team1.gc += score2
+      team2.gf += score2
+      team2.gc += score1
+
+      if (score1 > score2) {
+        team1.pg += 1
+        team1.pts += 3
+        team2.pp += 1
+      } else if (score2 > score1) {
+        team2.pg += 1
+        team2.pts += 3
+        team1.pp += 1
+      } else {
+        team1.pe += 1
+        team2.pe += 1
+        team1.pts += 1
+        team2.pts += 1
+      }
+
+      team1.dg = team1.gf - team1.gc
+      team2.dg = team2.gf - team2.gc
+    })
+
+  return Object.values(stats)
+    .sort((a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf)
+    .map((row, index) => ({ ...row, position: index + 1 }))
 }
