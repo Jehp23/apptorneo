@@ -10,12 +10,15 @@ import { SimpleStandingsTable } from "@/components/simple-standings-table"
 import { CompactStandingsTable } from "@/components/compact-standings-table"
 import { LobaTableView, type LobaTable } from "@/components/loba-table-view"
 import {
+  buildBracketFinalPlan,
   buildBracketPlan,
+  buildBracketSemifinalPlan,
   buildFinalPlan,
   buildGroupedStandings,
   buildHexagonalFinalPlan,
   buildSemifinalPlan,
   detectStandingsVariant,
+  getCurrentPhase,
   getZoneOptions,
   type AdminDisciplineMatch as Match,
   type AdminDisciplineTeam as Team,
@@ -41,7 +44,13 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
   const [matches, setMatches] = useState(initial.matches)
   const [tab,     setTab]     = useState<"participantes" | "partidos" | "posiciones">("participantes")
   const [toast,   setToast]   = useState<{ ok: boolean; msg: string } | null>(null)
-  const [tableWinners, setTableWinners] = useState<Record<string, string>>({})
+  const [tableWinners, setTableWinners] = useState<Record<string, string>>(() => {
+    const winners: Record<string, string> = {}
+    teams.forEach(t => {
+      if (t.seed === 1 && t.group) winners[t.group] = t.id
+    })
+    return winners
+  })
 
   // dialogs
   const [addOpen,    setAddOpen]    = useState(false)
@@ -245,9 +254,32 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
     notify(true, updated.played ? "Partido cerrado." : "Score guardado.")
   }
 
-  function handleLobaWinnerSelect(tableId: string, winnerId: string) {
-    setTableWinners((prev) => ({ ...prev, [tableId]: winnerId }))
-    notify(true, "Ganador de mesa seleccionado.")
+  async function handleLobaWinnerSelect(tableId: string, winnerId: string) {
+    const teamsInTable = teams.filter(t => t.group === tableId)
+
+    try {
+      await Promise.all(
+        teamsInTable.map(t =>
+          fetch(`/api/admin/disciplines/${initial.slug}/teams/${t.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ seed: t.id === winnerId ? 1 : null })
+          })
+        )
+      )
+
+      setTeams(prev =>
+        prev.map(t =>
+          t.group === tableId
+            ? { ...t, seed: t.id === winnerId ? 1 : null }
+            : t
+        )
+      )
+      setTableWinners((prev) => ({ ...prev, [tableId]: winnerId }))
+      notify(true, "Ganador de mesa guardado.")
+    } catch {
+      notify(false, "No se pudo guardar el ganador.")
+    }
   }
 
   async function handleGenerateBracket() {
@@ -288,6 +320,56 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
     }
   }
 
+  async function handleGenerateBracketSemifinals() {
+    const plan = buildBracketSemifinalPlan(matches)
+    if (!plan.ready) return
+
+    try {
+      const created = await Promise.all(
+        plan.crosses.map(cross =>
+          fetch(`/api/disciplines/${initial.slug}/matches`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              team1Id: cross.team1.id,
+              team2Id: cross.team2.id,
+              stage: cross.stage,
+            }),
+          }).then(r => r.json())
+        )
+      )
+      setMatches(prev => [...prev, ...created])
+      notify(true, "Semifinales generadas.")
+    } catch {
+      notify(false, "No se pudieron generar las semifinales.")
+    }
+  }
+
+  async function handleGenerateBracketFinal() {
+    const plan = buildBracketFinalPlan(matches)
+    if (!plan.ready) return
+
+    try {
+      const created = await Promise.all(
+        plan.crosses.map(cross =>
+          fetch(`/api/disciplines/${initial.slug}/matches`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              team1Id: cross.team1.id,
+              team2Id: cross.team2.id,
+              stage: cross.stage,
+            }),
+          }).then(r => r.json())
+        )
+      )
+      setMatches(prev => [...prev, ...created])
+      notify(true, "Final y 3er Puesto generados.")
+    } catch {
+      notify(false, "No se pudieron generar la final.")
+    }
+  }
+
   const pending = matches.filter((m) => !m.played)
   const played  = matches.filter((m) =>  m.played)
   const teamCap = initial.teamsCount ?? null
@@ -299,6 +381,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
   const semifinalPlan = buildSemifinalPlan(groupedStandings, matches)
   const finalPlan = buildFinalPlan(matches)
   const hexagonalPlan = buildHexagonalFinalPlan(groupedStandings, matches)
+  const currentPhase = getCurrentPhase(initial.slug, matches, teams)
 
   // For Sapo, get overall standings (not grouped) for bracket generation
   const sapoStandings = standingsVariant === "sapo" ? groupedStandings.flatMap((g) => g.standings as RankedSimpleStandingRow[]) : []
@@ -318,8 +401,8 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
       .map(([groupName, groupTeams], index) => ({
         id: groupName,
         name: groupName === "General" ? `Mesa ${index + 1}` : groupName,
-        teams: groupTeams.map((t) => ({ id: t.id, name: t.name })),
-        winnerId: tableWinners[groupName] || null,
+        teams: groupTeams.map((t) => ({ id: t.id, name: t.name, seed: t.seed })),
+        winnerId: groupTeams.find(t => t.seed === 1)?.id ?? null,
         isFinal: groupName.toLowerCase().includes("final"),
       }))
   })() : []
@@ -369,6 +452,14 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
           <p className={`mt-1 text-sm font-semibold ${registrationTone}`}>{registrationLabel}</p>
         </div>
       </div>
+
+      {currentPhase.nextAction && (
+        <div className="mx-6 mt-4 rounded-xl bg-primary/10 border border-primary/20 px-4 py-3">
+          <p className="text-sm font-semibold text-primary">{currentPhase.label}</p>
+          <p className="text-xs text-muted-foreground">{currentPhase.description}</p>
+          <p className="mt-2 text-sm font-medium text-foreground">¿Qué sigue? → {currentPhase.nextAction}</p>
+        </div>
+      )}
 
       {/* ── Tabs ── */}
       <div className="flex gap-1 border-b border-border bg-card px-6">
@@ -446,25 +537,77 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         {tab === "posiciones" && (
           <>
             {standingsVariant === "sapo" ? (
-              <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Bracket Eliminatorio</p>
-                    <p className="text-xs text-muted-foreground">Genera el bracket con al menos 8 clasificados.</p>
+              <>
+                <div className="rounded-xl border border-border bg-card p-6 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Cuartos de Final</p>
+                      <p className="text-xs text-muted-foreground">Genera el bracket con al menos 8 clasificados.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleGenerateBracket}
+                      disabled={!bracketPlan.ready}
+                      className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Generar Cuartos
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleGenerateBracket}
-                    disabled={!bracketPlan.ready}
-                    className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    Generar
-                  </button>
+                  {!bracketPlan.ready ? (
+                    <p className="text-xs text-muted-foreground">{bracketPlan.reason}</p>
+                  ) : null}
                 </div>
-                {!bracketPlan.ready ? (
-                  <p className="text-xs text-muted-foreground">{bracketPlan.reason}</p>
-                ) : null}
-              </div>
+
+                {(() => {
+                  const semiPlan = buildBracketSemifinalPlan(matches)
+                  return (
+                    <div className="rounded-xl border border-border bg-card p-6 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Semifinales</p>
+                          <p className="text-xs text-muted-foreground">Genera las semifinales después de los cuartos.</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleGenerateBracketSemifinals}
+                          disabled={!semiPlan.ready}
+                          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Generar Semifinales
+                        </button>
+                      </div>
+                      {!semiPlan.ready ? (
+                        <p className="text-xs text-muted-foreground">{semiPlan.reason}</p>
+                      ) : null}
+                    </div>
+                  )
+                })()}
+
+                {(() => {
+                  const finalPlan = buildBracketFinalPlan(matches)
+                  return (
+                    <div className="rounded-xl border border-border bg-card p-6 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Final y 3er Puesto</p>
+                          <p className="text-xs text-muted-foreground">Genera la final después de las semifinales.</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleGenerateBracketFinal}
+                          disabled={!finalPlan.ready}
+                          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Generar Final
+                        </button>
+                      </div>
+                      {!finalPlan.ready ? (
+                        <p className="text-xs text-muted-foreground">{finalPlan.reason}</p>
+                      ) : null}
+                    </div>
+                  )
+                })()}
+              </>
             ) : standingsVariant === "loba" ? (
               <>
                 {lobaTables.length === 0 ? (
@@ -480,7 +623,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                 )}
               </>
             ) : standingsVariant === "compact" ? (
-              <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+              <div className="rounded-xl border border-border bg-card p-6 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-foreground">Hexagonal Final</p>
@@ -501,7 +644,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
               </div>
             ) : (
               <>
-                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                <div className="rounded-xl border border-border bg-card p-6 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-foreground">Fase siguiente</p>
@@ -511,7 +654,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                       type="button"
                       onClick={handleGenerateSemifinals}
                       disabled={!semifinalPlan.ready}
-                      className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       Generar
                     </button>
@@ -521,7 +664,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                   ) : null}
                 </div>
 
-                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                <div className="rounded-xl border border-border bg-card p-6 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-foreground">Final</p>
@@ -531,7 +674,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                       type="button"
                       onClick={handleGenerateFinal}
                       disabled={!finalPlan.ready}
-                      className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       Generar
                     </button>
@@ -667,6 +810,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
           match={scoring}
           onClose={() => setScoring(null)}
           onUpdate={handleScoreUpdated}
+          disciplineSlug={initial.slug}
         />
       ) : null}
     </div>
@@ -735,20 +879,32 @@ function AddTeamDialog({
   format?: string | null
 }) {
   const [name,    setName]    = useState("")
-  const [players, setPlayers] = useState("")
+  const [players, setPlayers] = useState<string[]>([])
   const [group,   setGroup]   = useState("")
   const [saving,  setSaving]  = useState(false)
 
   const zoneOptions = getZoneOptions(slug, format)
   const showZone = zoneOptions.length > 0
 
-  function reset() { setName(""); setPlayers(""); setGroup(""); }
+  function reset() { setName(""); setPlayers([]); setGroup(""); }
+
+  function addPlayer() {
+    setPlayers([...players, ""])
+  }
+
+  function removePlayer(index: number) {
+    setPlayers(players.filter((_, i) => i !== index))
+  }
+
+  function updatePlayer(index: number, value: string) {
+    setPlayers(players.map((p, i) => i === index ? value : p))
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim()) return
     setSaving(true)
-    const playerList = players.split(",").map((p) => p.trim()).filter(Boolean)
+    const playerList = players.map((p) => p.trim()).filter(Boolean)
     await onAdd(name.trim(), playerList, group)
     reset()
     onClose()
@@ -789,13 +945,33 @@ function AddTeamDialog({
 
           <div>
             <label className="block text-sm font-semibold text-foreground mb-2">Jugadores (opcional)</label>
-            <input
-              className="w-full rounded-2xl border-2 border-border bg-background px-5 py-4 text-lg outline-none focus:border-primary placeholder:text-muted-foreground"
-              placeholder="Separados por coma: Juan, Pedro"
-              value={players}
-              onChange={(e) => setPlayers(e.target.value)}
-            />
-            <p className="text-sm text-muted-foreground mt-2">Si es individual, dejá este campo vacío</p>
+            <div className="space-y-2">
+              {players.map((player, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    className="flex-1 rounded-2xl border-2 border-border bg-background px-4 py-3 text-base outline-none focus:border-primary placeholder:text-muted-foreground"
+                    placeholder={`Jugador ${index + 1}`}
+                    value={player}
+                    onChange={(event) => updatePlayer(index, event.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removePlayer(index)}
+                    className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-border text-muted-foreground hover:border-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addPlayer}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border py-3 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary"
+              >
+                <Plus className="h-4 w-4" /> Agregar jugador
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2">Si es individual, dejá sin jugadores</p>
           </div>
 
           <div className="flex gap-3 pt-2">
@@ -823,17 +999,29 @@ function EditTeamDialog({
 }) {
   const [name, setName] = useState(team.name)
   const [group, setGroup] = useState(team.group ?? "")
-  const [players, setPlayers] = useState(team.players.map((player) => player.name).join(", "))
+  const [players, setPlayers] = useState<string[]>(team.players.map((player) => player.name))
   const [saving, setSaving] = useState(false)
 
   const zoneOptions = getZoneOptions(slug, format)
   const showZone = zoneOptions.length > 0
 
+  function addPlayer() {
+    setPlayers([...players, ""])
+  }
+
+  function removePlayer(index: number) {
+    setPlayers(players.filter((_, i) => i !== index))
+  }
+
+  function updatePlayer(index: number, value: string) {
+    setPlayers(players.map((p, i) => i === index ? value : p))
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     if (!name.trim()) return
     setSaving(true)
-    await onSave(team.id, name.trim(), players.split(",").map((player) => player.trim()).filter(Boolean), group)
+    await onSave(team.id, name.trim(), players.map((p) => p.trim()).filter(Boolean), group)
     setSaving(false)
   }
 
@@ -872,13 +1060,33 @@ function EditTeamDialog({
 
           <div>
             <label className="block text-sm font-semibold text-foreground mb-2">Jugadores (opcional)</label>
-            <input
-              className="w-full rounded-2xl border-2 border-border bg-background px-5 py-4 text-lg outline-none focus:border-primary placeholder:text-muted-foreground"
-              placeholder="Separados por coma: Juan, Pedro"
-              value={players}
-              onChange={(event) => setPlayers(event.target.value)}
-            />
-            <p className="text-sm text-muted-foreground mt-2">Si es individual, dejá este campo vacío</p>
+            <div className="space-y-2">
+              {players.map((player, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    className="flex-1 rounded-2xl border-2 border-border bg-background px-4 py-3 text-base outline-none focus:border-primary placeholder:text-muted-foreground"
+                    placeholder={`Jugador ${index + 1}`}
+                    value={player}
+                    onChange={(event) => updatePlayer(index, event.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removePlayer(index)}
+                    className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-border text-muted-foreground hover:border-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addPlayer}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border py-3 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary"
+              >
+                <Plus className="h-4 w-4" /> Agregar jugador
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2">Si es individual, dejá sin jugadores</p>
           </div>
 
           <div className="flex gap-3 pt-2">
@@ -965,15 +1173,20 @@ function CreateMatchDialog({
 // ─── Score dialog ─────────────────────────────────────────────────────────────
 
 function ScoreDialog({
-  match, onClose, onUpdate,
+  match, onClose, onUpdate, disciplineSlug,
 }: {
   match: Match
   onClose: () => void
   onUpdate: (updated: Match) => void
+  disciplineSlug: string
 }) {
   const [score1, setScore1] = useState(match.score1 ?? 0)
   const [score2, setScore2] = useState(match.score2 ?? 0)
   const [saving, setSaving] = useState(false)
+
+  const isTruco = disciplineSlug === "truco"
+  const isTie = score1 === score2
+  const canClose = !isTruco || !isTie
 
   async function save(played: boolean) {
     setSaving(true)
@@ -1037,11 +1250,17 @@ function ScoreDialog({
             className="flex-1 rounded-2xl border-2 border-border py-4 text-base font-semibold disabled:opacity-40">
             Guardar
           </button>
-          <button type="button" disabled={saving} onClick={() => save(true)}
+          <button type="button" disabled={saving || !canClose} onClick={() => save(true)}
             className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white hover:bg-emerald-700 disabled:opacity-40">
             <Check className="h-5 w-5" /> Cerrar
           </button>
         </div>
+
+        {isTruco && isTie && (
+          <p className="text-sm text-destructive text-center mt-2">
+            En Truco no puede haber empate. Revisá los puntajes.
+          </p>
+        )}
       </DialogContent>
     </Dialog>
   )

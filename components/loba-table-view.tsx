@@ -6,7 +6,7 @@ import { Trophy } from "lucide-react"
 export interface LobaTable {
   id: string
   name: string
-  teams: Array<{ id: string; name: string }>
+  teams: Array<{ id: string; name: string; seed?: number | null }>
   winnerId?: string | null
   isFinal?: boolean
 }

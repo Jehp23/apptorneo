@@ -6,6 +6,7 @@ export interface AdminDisciplineTeam {
   name: string
   type: string
   group?: string | null
+  seed?: number | null
   players: Array<{ id: string; name: string; seniority?: number | null }>
 }
 
@@ -468,7 +469,7 @@ export function buildHexagonalFinalPlan(
   for (let i = 0; i < groupWinners.length; i++) {
     for (let j = i + 1; j < groupWinners.length; j++) {
       crosses.push({
-        stage: "Hexagonal Final",
+        stage: "Final · Hexagonal",
         team1: { id: groupWinners[i].teamId, name: groupWinners[i].teamName },
         team2: { id: groupWinners[j].teamId, name: groupWinners[j].teamName },
       })
@@ -522,4 +523,116 @@ function countPlayedMatches(
 
 function expectedRoundRobinMatches(teamCount: number) {
   return teamCount >= 2 ? (teamCount * (teamCount - 1)) / 2 : 0
+}
+
+export function getCurrentPhase(slug: string, matches: AdminDisciplineMatch[], teams: AdminDisciplineTeam[]): {
+  label: string
+  description: string
+  nextAction: string | null
+} {
+  if (slug === "loba") {
+    const winnersDefined = teams.filter(t => t.seed === 1).length
+    const totalTables = new Set(teams.map(t => t.group)).size
+    if (winnersDefined < totalTables) {
+      return {
+        label: "Jugando mesas",
+        description: `${winnersDefined} de ${totalTables} mesas con ganador definido`,
+        nextAction: "Marcá el ganador de cada mesa en la pestaña Posiciones",
+      }
+    }
+    return { label: "Mesas completas", description: "Todos los ganadores definidos", nextAction: null }
+  }
+
+  const hasMatches = matches.length > 0
+  const allGroupPlayed = matches.filter(m => !m.stage?.toLowerCase().includes("semi") && !m.stage?.toLowerCase().includes("final")).every(m => m.played)
+  const hasSemis = matches.some(m => m.stage?.toLowerCase().startsWith("semi"))
+  const hasFinal = matches.some(m => m.stage === "Final")
+
+  if (!hasMatches) return { label: "Sin fixture", description: "No hay partidos creados aún", nextAction: "Creá los partidos en la pestaña Partidos" }
+  if (!allGroupPlayed) return { label: "Fase de grupos", description: "Jugando partidos de zona", nextAction: "Cargá los resultados a medida que terminan" }
+  if (!hasSemis) return { label: "Grupos completados", description: "Todos los partidos de zona jugados", nextAction: "Generá las Semifinales desde la pestaña Posiciones" }
+  if (hasSemis && !hasFinal) return { label: "Semifinales", description: "Jugando semifinales", nextAction: "Cargá los resultados y luego generá la Final" }
+  if (hasFinal) return { label: "Final", description: "Jugando la final", nextAction: "Cargá el resultado de la final" }
+
+  return { label: "En curso", description: "", nextAction: null }
+}
+
+export function buildBracketSemifinalPlan(matches: AdminDisciplineMatch[]): BracketPlan {
+  const cuartos = matches.filter(m => m.stage?.toLowerCase().startsWith("cuarto"))
+
+  if (cuartos.length < 4) {
+    return { ready: false, reason: "Primero generá los Cuartos de Final", crosses: [] }
+  }
+
+  if (cuartos.some(m => !m.played)) {
+    return { ready: false, reason: "Faltan resultados en Cuartos de Final", crosses: [] }
+  }
+
+  const semisExistentes = matches.filter(m => m.stage?.toLowerCase().startsWith("semifinal"))
+  if (semisExistentes.length > 0) {
+    return { ready: false, reason: "Las Semifinales ya fueron generadas", crosses: [] }
+  }
+
+  const sorted = [...cuartos].sort((a, b) => (a.stage ?? "").localeCompare(b.stage ?? ""))
+
+  const getWinner = (m: AdminDisciplineMatch) => {
+    if (m.score1 === undefined || m.score2 === undefined) return null
+    return (m.score1 ?? 0) >= (m.score2 ?? 0) ? m.team1 : m.team2
+  }
+
+  const w1 = getWinner(sorted[0])
+  const w2 = getWinner(sorted[1])
+  const w3 = getWinner(sorted[2])
+  const w4 = getWinner(sorted[3])
+
+  if (!w1 || !w2 || !w3 || !w4) {
+    return { ready: false, reason: "No se pueden determinar los ganadores de Cuartos", crosses: [] }
+  }
+
+  return {
+    ready: true,
+    reason: "Listo para generar Semifinales",
+    crosses: [
+      { team1: w1, team2: w3, stage: "Semifinal 1" },
+      { team1: w2, team2: w4, stage: "Semifinal 2" },
+    ]
+  }
+}
+
+export function buildBracketFinalPlan(matches: AdminDisciplineMatch[]): BracketPlan {
+  const semis = matches.filter(m => m.stage?.toLowerCase().startsWith("semifinal"))
+
+  if (semis.length < 2) {
+    return { ready: false, reason: "Primero generá las Semifinales", crosses: [] }
+  }
+
+  if (semis.some(m => !m.played)) {
+    return { ready: false, reason: "Faltan resultados en Semifinales", crosses: [] }
+  }
+
+  if (matches.some(m => m.stage === "Final")) {
+    return { ready: false, reason: "La Final ya fue generada", crosses: [] }
+  }
+
+  const getWinner = (m: AdminDisciplineMatch) => {
+    const winner = (m.score1 ?? 0) >= (m.score2 ?? 0) ? m.team1 : m.team2
+    if (!winner) throw new Error("No winner determined")
+    return winner
+  }
+  const getLoser = (m: AdminDisciplineMatch) => {
+    const loser = (m.score1 ?? 0) >= (m.score2 ?? 0) ? m.team2 : m.team1
+    if (!loser) throw new Error("No loser determined")
+    return loser
+  }
+
+  const sorted = [...semis].sort((a, b) => (a.stage ?? "").localeCompare(b.stage ?? ""))
+
+  return {
+    ready: true,
+    reason: "Listo para generar Final y 3er Puesto",
+    crosses: [
+      { team1: getWinner(sorted[0]), team2: getWinner(sorted[1]), stage: "Final" },
+      { team1: getLoser(sorted[0]),  team2: getLoser(sorted[1]),  stage: "3er Puesto" },
+    ]
+  }
 }

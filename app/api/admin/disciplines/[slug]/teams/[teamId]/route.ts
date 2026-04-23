@@ -9,12 +9,13 @@ export async function PATCH(
   const body = await request.json()
 
   try {
-    if (body.name !== undefined || body.group !== undefined) {
+    if (body.name !== undefined || body.group !== undefined || body.seed !== undefined) {
       await prisma.team.update({
         where: { id: teamId },
         data: {
           name: body.name ?? undefined,
           group: body.group === null ? null : body.group ?? undefined,
+          seed: body.seed !== undefined ? body.seed : undefined,
         },
       })
     }
