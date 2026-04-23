@@ -41,15 +41,15 @@ export function SimpleStandingsTable({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
-              <TableHead className="w-12 text-center text-xs font-medium text-muted-foreground">#</TableHead>
-              <TableHead className="text-xs font-medium text-muted-foreground">Pareja</TableHead>
-              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">PJ</TableHead>
-              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">G</TableHead>
-              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">P</TableHead>
+              <TableHead className="w-12 text-center text-sm font-medium text-muted-foreground">#</TableHead>
+              <TableHead className="text-sm font-medium text-muted-foreground">Pareja</TableHead>
+              <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">PJ</TableHead>
+              <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">G</TableHead>
+              <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">P</TableHead>
               {showBonus && (
-                <TableHead className="w-14 text-center text-xs font-medium text-muted-foreground">Bonus</TableHead>
+                <TableHead className="w-14 text-center text-sm font-medium text-muted-foreground">Bonus</TableHead>
               )}
-              <TableHead className="w-12 text-center text-xs font-semibold text-foreground">Pts</TableHead>
+              <TableHead className="w-12 text-center text-sm font-semibold text-foreground">Pts</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

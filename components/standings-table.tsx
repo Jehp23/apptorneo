@@ -38,16 +38,16 @@ export function StandingsTable({ title, standings, highlightTop = 2 }: Standings
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
-              <TableHead className="w-12 text-center text-xs font-medium text-muted-foreground">#</TableHead>
-              <TableHead className="text-xs font-medium text-muted-foreground">Equipo</TableHead>
-              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">PJ</TableHead>
-              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">G</TableHead>
-              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">E</TableHead>
-              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">P</TableHead>
-              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">GF</TableHead>
-              <TableHead className="w-10 text-center text-xs font-medium text-muted-foreground">GC</TableHead>
-              <TableHead className="w-12 text-center text-xs font-medium text-muted-foreground">DG</TableHead>
-              <TableHead className="w-12 text-center text-xs font-semibold text-foreground">Pts</TableHead>
+              <TableHead className="w-12 text-center text-sm font-medium text-muted-foreground">#</TableHead>
+              <TableHead className="text-sm font-medium text-muted-foreground">Equipo</TableHead>
+              <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">PJ</TableHead>
+              <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">G</TableHead>
+              <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">E</TableHead>
+              <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">P</TableHead>
+              <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">GF</TableHead>
+              <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">GC</TableHead>
+              <TableHead className="w-12 text-center text-sm font-medium text-muted-foreground">DG</TableHead>
+              <TableHead className="w-12 text-center text-sm font-semibold text-foreground">Pts</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

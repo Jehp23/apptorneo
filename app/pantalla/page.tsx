@@ -6,6 +6,14 @@ import { DisplayAutorefresh } from "@/components/display/display-autorefresh"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
+import {
+  buildGroupedStandings,
+  detectStandingsVariant,
+  type AdminDisciplineMatch as Match,
+  type AdminDisciplineTeam as Team,
+  type RankedSimpleStandingRow,
+  type RankedStandingRow,
+} from "@/lib/admin-discipline-workflows"
 
 function formatDate(date: Date | null) {
   if (!date) return "Sin horario"
@@ -141,21 +149,28 @@ export default async function DisplayPage({
     .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
     .slice(0, 6)
 
-  const spotlightDisciplines = disciplines
-    .map((discipline) => {
-      const pending = discipline.matches.filter((match) => !match.played).length
-      const completed = discipline.matches.filter((match) => match.played).length
-      return {
-        id: discipline.id,
-        name: discipline.name,
-        format: discipline.format,
-        teams: discipline._count.teams,
-        matches: discipline._count.matches,
-        pending,
-        completed,
-      }
-    })
-    .slice(0, 4)
+  const spotlightDisciplines = disciplines.map((discipline) => {
+    const pending = discipline.matches.filter((match) => !match.played).length
+    const completed = discipline.matches.filter((match) => match.played).length
+    const standingsVariant = detectStandingsVariant(discipline.slug, discipline.format)
+    const groupedStandings = buildGroupedStandings(
+      discipline.teams as Team[],
+      discipline.matches as Match[],
+      standingsVariant
+    )
+    return {
+      id: discipline.id,
+      name: discipline.name,
+      slug: discipline.slug,
+      format: discipline.format,
+      teams: discipline._count.teams,
+      matches: discipline._count.matches,
+      pending,
+      completed,
+      standingsVariant,
+      groupedStandings,
+    }
+  })
 
   return (
     <div className="min-h-screen bg-background px-6 py-8 md:px-10">
@@ -371,6 +386,30 @@ export default async function DisplayPage({
                           <p className="text-sm text-muted-foreground">Pendientes</p>
                         </div>
                       </div>
+                      {discipline.groupedStandings.length > 0 && (
+                        <div className="mt-4 space-y-3">
+                          {discipline.groupedStandings.map((group) => (
+                            <div key={group.groupName} className="rounded-2xl bg-muted/20 p-4">
+                              <h3 className="text-sm font-semibold text-foreground mb-2">{group.groupName}</h3>
+                              <div className="space-y-1">
+                                {(group.standings as RankedSimpleStandingRow[]).slice(0, 5).map((standing, idx) => (
+                                  <div key={standing.teamId} className="flex items-center justify-between text-sm">
+                                    <div className="flex items-center gap-2">
+                                      <span className="w-6 text-center font-medium text-muted-foreground">{idx + 1}</span>
+                                      <span className="font-medium text-foreground">{standing.teamName}</span>
+                                    </div>
+                                    <div className="flex gap-3 text-muted-foreground">
+                                      <span>{standing.pg}G</span>
+                                      <span>{standing.pp}P</span>
+                                      <span className="font-semibold text-foreground">{standing.pts}pts</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -380,35 +419,62 @@ export default async function DisplayPage({
 
           <Card className="rounded-[1.75rem]">
             <CardHeader>
-              <CardTitle className="text-3xl">Guía de operación</CardTitle>
-              <CardDescription className="text-base">Porque la pantalla grande tiene que acompañar al backoffice, no competirle.</CardDescription>
+              <CardTitle className="text-3xl">Posiciones en vivo</CardTitle>
+              <CardDescription className="text-base">Tablas actualizadas por disciplina, en tiempo real.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                {[
-                  {
-                    title: "Admin carga",
-                    description: "Los resultados y cruces salen del panel admin; esta pantalla nunca debería inventar estado.",
-                  },
-                  {
-                    title: "Pantalla comunica",
-                    description: "Mostramos próximo, reciente y panorama general. Eso es lo que la gente necesita ver a distancia.",
-                  },
-                  {
-                    title: "Modo auto",
-                    description: "Con auto refresh activo, la pantalla se mantiene viva sin intervención manual cada pocos segundos.",
-                  },
-                  {
-                    title: "Torneo activo",
-                    description: "Podés elegir qué torneo proyectar si hay varios en simultáneo. FUNDAMENTAL para no mezclar contextos.",
-                  },
-                ].map((item) => (
-                  <div key={item.title} className="rounded-3xl border border-border p-5">
-                    <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
-                    <p className="mt-2 text-sm text-muted-foreground md:text-base">{item.description}</p>
-                  </div>
-                ))}
-              </div>
+              {spotlightDisciplines.filter(d => d.groupedStandings.length > 0).length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-border p-10 text-center text-lg text-muted-foreground">
+                  Todavía no hay posiciones calculadas.
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {spotlightDisciplines
+                    .filter(d => d.groupedStandings.length > 0 && d.standingsVariant !== "loba")
+                    .map((discipline) => (
+                      <div key={discipline.id}>
+                        <h3 className="mb-3 text-xl font-semibold text-foreground">{discipline.name}</h3>
+                        <div className={`grid gap-4 ${discipline.groupedStandings.length > 1 ? "md:grid-cols-2" : ""}`}>
+                          {discipline.groupedStandings.map((group) => (
+                            <div key={group.groupName} className="rounded-2xl border border-border overflow-hidden">
+                              <div className="bg-muted/30 px-4 py-2 border-b border-border">
+                                <p className="text-sm font-semibold text-foreground">{group.groupName}</p>
+                              </div>
+                              <table className="w-full text-sm">
+                                <thead>
+                                  <tr className="border-b border-border">
+                                    <th className="px-3 py-2 text-left text-xs text-muted-foreground font-medium">#</th>
+                                    <th className="px-3 py-2 text-left text-xs text-muted-foreground font-medium">Equipo</th>
+                                    <th className="px-3 py-2 text-center text-xs text-muted-foreground font-medium">PJ</th>
+                                    <th className="px-3 py-2 text-center text-xs text-muted-foreground font-medium">G</th>
+                                    <th className="px-3 py-2 text-center text-xs text-muted-foreground font-medium">P</th>
+                                    <th className="px-3 py-2 text-center text-xs font-semibold text-foreground">Pts</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {(group.standings as RankedSimpleStandingRow[]).map((row, idx) => (
+                                    <tr key={row.teamId} className={`border-b border-border last:border-0 ${idx % 2 === 1 ? "bg-muted/20" : ""}`}>
+                                      <td className="px-3 py-2 text-center">
+                                        <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium ${row.position <= 2 ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+                                          {row.position}
+                                        </span>
+                                      </td>
+                                      <td className="px-3 py-2 font-medium text-foreground">{row.teamName}</td>
+                                      <td className="px-3 py-2 text-center text-muted-foreground">{row.pj}</td>
+                                      <td className="px-3 py-2 text-center text-muted-foreground">{row.pg}</td>
+                                      <td className="px-3 py-2 text-center text-muted-foreground">{row.pp}</td>
+                                      <td className="px-3 py-2 text-center font-semibold text-foreground">{row.pts}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </section>

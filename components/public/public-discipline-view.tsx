@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Check, Minus, Plus, Swords, Trash2, Trophy, UserPlus } from "lucide-react"
+import { ArrowLeft, Check, Minus, Plus, Swords, Trash2, Trophy, UserPlus, List, Calendar, Users } from "lucide-react"
 
 import { DisciplineHeader } from "@/components/discipline-header"
 import { InfoPanel } from "@/components/info-panel"
@@ -11,11 +11,13 @@ import { StandingsTable } from "@/components/standings-table"
 import { SimpleStandingsTable } from "@/components/simple-standings-table"
 import { CompactStandingsTable } from "@/components/compact-standings-table"
 import { LobaTableView, type LobaTable } from "@/components/loba-table-view"
+import { Bracket, type BracketMatch } from "@/components/bracket"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   buildBracketPlan,
   buildGroupedStandings,
   detectStandingsVariant,
+  getCurrentPhase,
   type AdminDisciplineMatch as Match,
   type AdminDisciplineTeam as Team,
   type RankedSimpleStandingRow,
@@ -39,10 +41,9 @@ export interface PublicDisciplineData {
 }
 
 const tabs = [
-  { id: "posiciones",    label: "Posiciones" },
-  { id: "fixture",       label: "Fixture" },
-  { id: "participantes", label: "Participantes" },
-  { id: "info",          label: "Info" },
+  { id: "posiciones",    label: "Posiciones", icon: List },
+  { id: "fixture",       label: "Fixture", icon: Calendar },
+  { id: "participantes", label: "Participantes", icon: Users },
 ]
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -154,6 +155,8 @@ export function PublicDisciplineView({
     [teams, matches, standingsVariant]
   )
 
+  const currentPhase = useMemo(() => getCurrentPhase(discipline.slug, matches, teams), [teams, matches, standingsVariant])
+
   // Build Loba tables from teams (using group field)
   const lobaTables = useMemo(() => {
     if (standingsVariant !== "loba") return []
@@ -181,6 +184,38 @@ export function PublicDisciplineView({
     if (standingsVariant !== "sapo") return []
     return groupedStandings.flatMap((g) => g.standings as RankedSimpleStandingRow[])
   }, [groupedStandings, standingsVariant])
+
+  // For Sapo bracket display
+  const bracketMatches = useMemo(() => {
+    if (standingsVariant !== "sapo") return null
+    const eliminationMatches = matches.filter(m =>
+      m.stage?.toLowerCase().includes("cuarto") ||
+      m.stage?.toLowerCase().includes("semi") ||
+      m.stage === "Final" ||
+      m.stage === "3er Puesto"
+    )
+    if (eliminationMatches.length === 0) return null
+
+    const toBracketMatch = (m: Match): BracketMatch => ({
+      id: m.id,
+      team1: m.team1?.name ?? "Por definir",
+      team2: m.team2?.name ?? "Por definir",
+      score1: m.score1 ?? "-",
+      score2: m.score2 ?? "-",
+      played: m.played,
+      winner: m.played ? (m.score1 ?? 0) >= (m.score2 ?? 0) ? m.team1?.name : m.team2?.name : undefined,
+    })
+
+    const semifinals = eliminationMatches.filter(m => m.stage?.toLowerCase().startsWith("semi")).map(toBracketMatch)
+    const finalMatch = eliminationMatches.find(m => m.stage === "Final")
+    const thirdPlaceMatch = eliminationMatches.find(m => m.stage === "3er Puesto")
+
+    return {
+      semifinals,
+      final: finalMatch ? toBracketMatch(finalMatch) : undefined,
+      thirdPlace: thirdPlaceMatch ? toBracketMatch(thirdPlaceMatch) : undefined,
+    }
+  }, [matches, standingsVariant])
 
   const fixtureGroups = useMemo(
     () => groupedStandings.map((group) => ({
@@ -226,6 +261,11 @@ export function PublicDisciplineView({
         description={discipline.format ?? ""}
       />
 
+      <div className="mb-6 rounded-xl bg-primary/10 border border-primary/20 px-4 py-3">
+        <p className="text-sm font-semibold text-primary">{currentPhase.label}</p>
+        <p className="text-xs text-muted-foreground">{currentPhase.description}</p>
+      </div>
+
       {isAdmin && (
         <div className="mb-6 flex flex-wrap gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3">
           <p className="mr-2 self-center text-xs font-semibold text-primary">Admin</p>
@@ -260,9 +300,19 @@ export function PublicDisciplineView({
                       No hay participantes.
                     </p>
                   ) : (
-                    <div className="rounded-xl border border-border bg-card p-4">
-                      <h3 className="mb-3 font-serif text-sm font-semibold text-foreground">Tabla de Clasificación</h3>
-                      <SimpleStandingsTable title="" standings={sapoStandings} highlightTop={8} />
+                    <div className="space-y-4">
+                      <div className="rounded-xl border border-border bg-card p-4">
+                        <h3 className="mb-3 font-serif text-sm font-semibold text-foreground">Tabla de Clasificación</h3>
+                        <SimpleStandingsTable title="" standings={sapoStandings} highlightTop={8} />
+                      </div>
+                      {bracketMatches && bracketMatches.semifinals.length > 0 && (
+                        <Bracket
+                          title="Bracket Eliminatorio"
+                          semifinals={bracketMatches.semifinals}
+                          final={bracketMatches.final}
+                          thirdPlace={bracketMatches.thirdPlace}
+                        />
+                      )}
                     </div>
                   )}
                 </>
@@ -416,14 +466,17 @@ export function PublicDisciplineView({
             </div>
           )}
 
-          {/* ── Info ── */}
-          {activeTab === "info" && (
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="text-lg font-semibold text-foreground">Información general</h2>
-              <p className="mt-3 whitespace-pre-line text-muted-foreground">
-                {discipline.details ?? "Todavía no hay detalles cargados."}
-              </p>
-            </div>
+          {discipline.details && (
+            <details className="mt-4 rounded-2xl border border-border bg-card">
+              <summary className="cursor-pointer select-none px-5 py-4 text-sm font-medium text-muted-foreground hover:text-foreground">
+                Ver reglamento
+              </summary>
+              <div className="px-5 pb-5">
+                <p className="whitespace-pre-line text-sm text-muted-foreground">
+                  {discipline.details}
+                </p>
+              </div>
+            </details>
           )}
         </div>
 

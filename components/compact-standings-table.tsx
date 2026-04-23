@@ -38,12 +38,12 @@ export function CompactStandingsTable({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
-              <TableHead className="w-8 text-center text-[10px] font-medium text-muted-foreground">#</TableHead>
-              <TableHead className="text-[10px] font-medium text-muted-foreground">Pareja</TableHead>
-              <TableHead className="w-8 text-center text-[10px] font-medium text-muted-foreground">PJ</TableHead>
-              <TableHead className="w-8 text-center text-[10px] font-medium text-muted-foreground">G</TableHead>
-              <TableHead className="w-8 text-center text-[10px] font-medium text-muted-foreground">P</TableHead>
-              <TableHead className="w-10 text-center text-[10px] font-semibold text-foreground">Pts</TableHead>
+              <TableHead className="w-8 text-center text-xs font-medium text-muted-foreground">#</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">Pareja</TableHead>
+              <TableHead className="w-8 text-center text-xs font-medium text-muted-foreground">PJ</TableHead>
+              <TableHead className="w-8 text-center text-xs font-medium text-muted-foreground">G</TableHead>
+              <TableHead className="w-8 text-center text-xs font-medium text-muted-foreground">P</TableHead>
+              <TableHead className="w-10 text-center text-xs font-semibold text-foreground">Pts</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -65,11 +65,11 @@ export function CompactStandingsTable({
                     {row.position}
                   </span>
                 </TableCell>
-                <TableCell className="font-medium text-foreground text-xs">{row.teamName}</TableCell>
-                <TableCell className="text-center font-mono text-xs text-muted-foreground">{row.pj}</TableCell>
-                <TableCell className="text-center font-mono text-xs text-muted-foreground">{row.pg}</TableCell>
-                <TableCell className="text-center font-mono text-xs text-muted-foreground">{row.pp}</TableCell>
-                <TableCell className="text-center font-semibold text-foreground text-xs">{row.pts}</TableCell>
+                <TableCell className="font-medium text-foreground text-sm">{row.teamName}</TableCell>
+                <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.pj}</TableCell>
+                <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.pg}</TableCell>
+                <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.pp}</TableCell>
+                <TableCell className="text-center font-semibold text-foreground text-sm">{row.pts}</TableCell>
               </TableRow>
             ))}
           </TableBody>
