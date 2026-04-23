@@ -163,6 +163,39 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
     }
   }
 
+  async function handleGenerateFinal() {
+    const finalCross = finalPlan.cross
+    if (!finalPlan.ready || !finalCross) return
+
+    try {
+      const res = await fetch(`/api/disciplines/${initial.slug}/matches`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          team1Id: finalCross.team1.id,
+          team2Id: finalCross.team2.id,
+          stage: finalCross.stage,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+
+      setMatches((prev) => [...prev, {
+        id: data.id,
+        score1: null,
+        score2: null,
+        played: false,
+        stage: data.stage ?? finalCross.stage,
+        date: null,
+        team1: { id: finalCross.team1.id, name: finalCross.team1.name },
+        team2: { id: finalCross.team2.id, name: finalCross.team2.name },
+      }])
+      notify(true, "Final generada.")
+    } catch {
+      notify(false, "No se pudo generar la final.")
+    }
+  }
+
   function handleScoreUpdated(updated: Match) {
     setMatches((prev) => prev.map((m) => m.id === updated.id ? updated : m))
     setScoring(null)
@@ -177,6 +210,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
   const registrationTone = teamCap != null && teamCap > 0 && teams.length >= teamCap ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20" : "bg-primary/10 text-primary border border-primary/20"
   const groupedStandings = buildGroupedStandings(teams, matches)
   const semifinalPlan = buildSemifinalPlan(groupedStandings, matches)
+  const finalPlan = buildFinalPlan(matches)
 
   return (
     <div className="min-h-screen bg-background">
@@ -295,32 +329,58 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         {/* ── Partidos ── */}
         {tab === "posiciones" && (
           <>
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Fase siguiente</p>
-                  <p className="text-sm text-muted-foreground">Para Fútbol 5 / Pádel: genera semifinales cuando las dos zonas estén completas.</p>
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-4">
+              <div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Fase siguiente</p>
+                    <p className="text-sm text-muted-foreground">Para Fútbol 5 / Pádel: genera semifinales cuando las dos zonas estén completas.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleGenerateSemifinals}
+                    disabled={!semifinalPlan.ready}
+                    className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Generar semifinales
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleGenerateSemifinals}
-                  disabled={!semifinalPlan.ready}
-                  className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Generar semifinales
-                </button>
+                {!semifinalPlan.ready ? (
+                  <p className="mt-3 text-xs text-muted-foreground">{semifinalPlan.reason}</p>
+                ) : (
+                  <div className="mt-3 grid gap-2 md:grid-cols-2">
+                    {semifinalPlan.crosses.map((cross) => (
+                      <div key={cross.stage} className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground">
+                        <span className="font-semibold">{cross.stage}:</span> {cross.team1.name} vs {cross.team2.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              {!semifinalPlan.ready ? (
-                <p className="mt-3 text-xs text-muted-foreground">{semifinalPlan.reason}</p>
-              ) : (
-                <div className="mt-3 grid gap-2 md:grid-cols-2">
-                  {semifinalPlan.crosses.map((cross) => (
-                    <div key={cross.stage} className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground">
-                      <span className="font-semibold">{cross.stage}:</span> {cross.team1.name} vs {cross.team2.name}
-                    </div>
-                  ))}
+
+              <div className="border-t border-border pt-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Cierre de torneo</p>
+                    <p className="text-sm text-muted-foreground">Genera la final cuando las dos semifinales ya tienen ganador.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleGenerateFinal}
+                    disabled={!finalPlan.ready}
+                    className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Generar final
+                  </button>
                 </div>
-              )}
+                {!finalPlan.ready ? (
+                  <p className="mt-3 text-xs text-muted-foreground">{finalPlan.reason}</p>
+                ) : finalPlan.cross ? (
+                  <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground">
+                    <span className="font-semibold">{finalPlan.cross.stage}:</span> {finalPlan.cross.team1.name} vs {finalPlan.cross.team2.name}
+                  </div>
+                ) : null}
+              </div>
             </div>
 
             {groupedStandings.length === 0 ? (
@@ -897,5 +957,47 @@ function buildSemifinalPlan(
         team2: { id: groupA.standings[1].teamId, name: groupA.standings[1].teamName },
       },
     ],
+  }
+}
+
+function buildFinalPlan(matches: Match[]) {
+  const existingFinal = matches.some((match) => match.stage?.toLowerCase() === "final")
+  if (existingFinal) {
+    return { ready: false, reason: "La final ya fue generada.", cross: null as null | { stage: string; team1: { id: string; name: string }; team2: { id: string; name: string } } }
+  }
+
+  const semifinals = matches.filter((match) => match.stage?.toLowerCase().includes("semifinal"))
+  if (semifinals.length < 2) {
+    return { ready: false, reason: "Primero tenés que generar las dos semifinales.", cross: null as null | { stage: string; team1: { id: string; name: string }; team2: { id: string; name: string } } }
+  }
+
+  const playedSemifinals = semifinals.filter((match) => match.played && match.team1 && match.team2)
+  if (playedSemifinals.length < 2) {
+    return { ready: false, reason: "Todavía faltan resultados en semifinales para definir la final.", cross: null as null | { stage: string; team1: { id: string; name: string }; team2: { id: string; name: string } } }
+  }
+
+  const winners = playedSemifinals.slice(0, 2).map((match) => {
+    const score1 = match.score1 ?? 0
+    const score2 = match.score2 ?? 0
+    if (score1 === score2) return null
+    return score1 > score2 ? match.team1 : match.team2
+  })
+
+  if (winners.some((winner) => !winner)) {
+    return { ready: false, reason: "Las semifinales no pueden terminar empatadas para generar la final.", cross: null as null | { stage: string; team1: { id: string; name: string }; team2: { id: string; name: string } } }
+  }
+
+  if (!winners[0] || !winners[1]) {
+    return { ready: false, reason: "No se pudieron determinar los finalistas.", cross: null as null | { stage: string; team1: { id: string; name: string }; team2: { id: string; name: string } } }
+  }
+
+  return {
+    ready: true,
+    reason: "Listo para generar la final.",
+    cross: {
+      stage: "Final",
+      team1: { id: winners[0].id, name: winners[0].name },
+      team2: { id: winners[1].id, name: winners[1].name },
+    },
   }
 }
