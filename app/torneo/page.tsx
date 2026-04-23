@@ -136,7 +136,7 @@ export default async function TournamentHomePage({
       <header className="rounded-3xl border border-border bg-card p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
-            <div className="relative h-20 w-80 overflow-hidden rounded-3xl bg-muted">
+            <div className="relative h-20 w-20 overflow-hidden rounded-3xl bg-muted">
               <Image src="/logotipo_sanatorio.png" alt="Sanatorio El Carmen" fill className="object-contain" />
             </div>
             <div className="space-y-1">
