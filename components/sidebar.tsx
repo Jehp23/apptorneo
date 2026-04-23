@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Home } from "lucide-react"
+import { Home, Trophy } from "lucide-react"
 
 const navigation = [
   { name: "Inicio", href: "/torneo", icon: Home },
