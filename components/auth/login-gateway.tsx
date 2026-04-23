@@ -32,19 +32,23 @@ export function LoginGateway() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-6 py-12">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 px-6 py-12">
       {/* Grid pattern background */}
-      <div className="absolute inset-0 -z-10 opacity-[0.03]" style={{
+      <div className="absolute inset-0 -z-10 opacity-[0.08]" style={{
         backgroundImage: `
-          linear-gradient(to right, hsl(var(--foreground)) 1px, transparent 1px),
-          linear-gradient(to bottom, hsl(var(--foreground)) 1px, transparent 1px)
+          linear-gradient(to right, hsl(var(--primary)) 1px, transparent 1px),
+          linear-gradient(to bottom, hsl(var(--primary)) 1px, transparent 1px)
         `,
-        backgroundSize: '40px 40px'
+        backgroundSize: '50px 50px'
       }}></div>
+      
+      {/* Decorative circles */}
+      <div className="absolute top-20 left-20 h-64 w-64 rounded-full bg-primary/5 blur-3xl -z-10"></div>
+      <div className="absolute bottom-20 right-20 h-80 w-80 rounded-full bg-primary/10 blur-3xl -z-10"></div>
       
       <div className="w-full max-w-xs space-y-6">
         <div className="flex flex-col items-center gap-4 text-center">
-          <div className="relative h-32 w-32 overflow-hidden rounded-2xl bg-muted shadow-lg">
+          <div className="relative h-32 w-32 overflow-hidden rounded-2xl bg-muted shadow-xl shadow-primary/10">
             <Image src="/logotipo_sanatorio.png" alt="Sanatorio El Carmen" fill className="object-contain" />
           </div>
           <div>
