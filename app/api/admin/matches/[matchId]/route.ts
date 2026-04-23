@@ -40,11 +40,11 @@ export async function PATCH(
     const match = await prisma.match.update({
       where: { id: matchId },
       data: {
-        score1: body.score1,
-        score2: body.score2,
-        played: body.played,
-        date: body.date ? new Date(body.date) : undefined,
-        stage: body.stage,
+        score1: body.score1 ?? null,
+        score2: body.score2 ?? null,
+        played: body.played ?? false,
+        ...(body.date !== undefined && { date: body.date ? new Date(body.date) : null }),
+        ...(body.stage !== undefined && { stage: body.stage }),
       },
       include: {
         team1: { select: { id: true, name: true } },
@@ -52,7 +52,9 @@ export async function PATCH(
       },
     })
     return NextResponse.json(match)
-  } catch {
-    return NextResponse.json({ error: "No se pudo actualizar el partido" }, { status: 400 })
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Error desconocido"
+    console.error("[PATCH match]", matchId, msg)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
