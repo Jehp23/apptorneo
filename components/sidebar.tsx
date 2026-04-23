@@ -3,23 +3,10 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import {
-  Home,
-  Trophy,
-  Gamepad2,
-  Spade,
-  Target,
-  CircleDot,
-} from "lucide-react"
+import { Home } from "lucide-react"
 
 const navigation = [
   { name: "Inicio", href: "/torneo", icon: Home },
-  { name: "Futbol 5", href: "/futbol5", icon: Trophy },
-  { name: "Padel", href: "/padel", icon: Target },
-  { name: "Loba", href: "/loba", icon: Spade },
-  { name: "Truco", href: "/truco", icon: Spade },
-  { name: "Metegol", href: "/metegol", icon: Gamepad2 },
-  { name: "Sapo", href: "/sapo", icon: CircleDot },
 ]
 
 export function Sidebar() {

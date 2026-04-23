@@ -23,7 +23,7 @@ export function LoginGateway() {
         body: JSON.stringify({ password }),
       })
       if (!res.ok) { setError("Contraseña incorrecta"); setLoading(false); return }
-      router.push("/torneo")
+      router.push("/admin")
       router.refresh()
     } catch {
       setError("No se pudo conectar. Intentá de nuevo.")

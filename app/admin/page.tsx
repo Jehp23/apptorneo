@@ -138,7 +138,7 @@ export default async function AdminPage() {
               <Link href="/pantalla?mode=auto">Modo pantalla</Link>
             </Button>
             <Button asChild>
-              <Link href="/admin/operacion">Modo operación</Link>
+              <Link href="/torneo">Vista pública</Link>
             </Button>
             {isAdmin ? (
               <form action={logout}>
