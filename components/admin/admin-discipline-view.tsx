@@ -442,7 +442,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
           </>
         )}
 
-        {/* ── Partidos ── */}
+        {/* ── Posiciones ── */}
         {tab === "posiciones" && (
           <>
             {standingsVariant === "sapo" ? (
