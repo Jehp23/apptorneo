@@ -137,7 +137,7 @@ export default async function TournamentHomePage({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
             <div className="relative h-16 w-48 overflow-hidden rounded-3xl bg-muted">
-              <Image src="/logosanatorio.avif" alt="Sanatorio El Carmen" fill className="object-contain p-3" />
+              <Image src="/logosanatorio.avif" alt="Sanatorio El Carmen" fill className="object-cover" />
             </div>
             <div className="space-y-1">
               {activeTournament ? (

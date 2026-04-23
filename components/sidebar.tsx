@@ -17,8 +17,8 @@ export function Sidebar() {
     <aside className="fixed left-0 top-0 h-screen w-64 border-r border-border bg-card flex flex-col">
       <div className="border-b border-border p-6">
         <div className="flex items-center gap-3">
-          <div className="relative h-10 w-32 overflow-hidden rounded-xl bg-muted">
-            <Image src="/logosanatorio.avif" alt="Sanatorio El Carmen" fill className="object-contain p-2" />
+          <div className="relative h-10 w-40 overflow-hidden rounded-xl bg-muted">
+            <Image src="/logosanatorio.avif" alt="Sanatorio El Carmen" fill className="object-cover" />
           </div>
           <div>
             <h1 className="font-serif text-sm font-semibold text-foreground">Torneo Interno</h1>
