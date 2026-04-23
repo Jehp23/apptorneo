@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { unstable_noStore as noStore } from "next/cache"
 import { cookies } from "next/headers"
-import { Activity, ArrowRight, Calendar, LogIn, LogOut, Settings, Trophy, Users } from "lucide-react"
+import { Activity, ArrowRight, Calendar, LogIn, LogOut, Trophy, Users } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -151,22 +151,13 @@ export default async function TournamentHomePage({
 
           <div className="flex items-center gap-3">
             {isAdmin ? (
-              <>
-                <Link
-                  href="/admin"
-                  className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <Settings className="h-4 w-4" />
-                  Configuración
-                </Link>
-                <Link
-                  href="/api/admin/auth/logout"
-                  className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Salir
-                </Link>
-              </>
+              <Link
+                href="/api/admin/auth/logout"
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <LogOut className="h-4 w-4" />
+                Salir
+              </Link>
             ) : (
               <Link
                 href="/login"
