@@ -3,11 +3,13 @@ import { unstable_noStore as noStore } from "next/cache"
 import { Activity, Calendar, Eye, MonitorPlay, RefreshCcw, TimerReset, Trophy, Users } from "lucide-react"
 
 import { DisplayAutorefresh } from "@/components/display/display-autorefresh"
+import { ChampionBanner } from "@/components/champion-banner"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
 import {
   buildGroupedStandings,
+  detectChampion,
   detectStandingsVariant,
   type AdminDisciplineMatch as Match,
   type AdminDisciplineTeam as Team,
@@ -169,8 +171,11 @@ export default async function DisplayPage({
       completed,
       standingsVariant,
       groupedStandings,
+      champion: detectChampion(discipline.matches as Match[]),
     }
   })
+
+  const champions = spotlightDisciplines.filter((d) => d.champion !== null)
 
   return (
     <div className="min-h-screen bg-background px-6 py-8 md:px-10">
@@ -261,6 +266,24 @@ export default async function DisplayPage({
             </div>
           ))}
         </section>
+
+        {champions.length > 0 && (
+          <section>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Campeones</p>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {champions.map((d) => (
+                <ChampionBanner
+                  key={d.id}
+                  disciplineName={d.name}
+                  championName={d.champion!.championName}
+                  score1={d.champion!.score1}
+                  score2={d.champion!.score2}
+                  runnerUpName={d.champion!.runnerUpName}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <Card className="rounded-xl">

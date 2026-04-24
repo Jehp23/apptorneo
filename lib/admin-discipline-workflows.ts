@@ -636,3 +636,33 @@ export function buildBracketFinalPlan(matches: AdminDisciplineMatch[]): BracketP
     ]
   }
 }
+
+export interface ChampionResult {
+  championName: string
+  runnerUpName: string
+  score1: number
+  score2: number
+}
+
+export function detectChampion(matches: AdminDisciplineMatch[]): ChampionResult | null {
+  const final = matches.find(
+    (m) => m.played && m.stage?.toLowerCase() === "final" && m.team1 && m.team2
+  )
+  if (!final) return null
+
+  const s1 = final.score1 ?? 0
+  const s2 = final.score2 ?? 0
+  if (s1 === s2) return null
+
+  const champion = s1 > s2 ? final.team1! : final.team2!
+  const runnerUp  = s1 > s2 ? final.team2! : final.team1!
+  const champScore = s1 > s2 ? s1 : s2
+  const runnerScore = s1 > s2 ? s2 : s1
+
+  return {
+    championName: champion.name,
+    runnerUpName: runnerUp.name,
+    score1: champScore,
+    score2: runnerScore,
+  }
+}

@@ -7,6 +7,7 @@ import { ArrowLeft, Check, Minus, Plus, Swords, Trash2, Trophy, UserPlus, List, 
 
 import { DisciplineHeader } from "@/components/discipline-header"
 import { LiveIndicator } from "@/components/live-indicator"
+import { ChampionBanner } from "@/components/champion-banner"
 import { InfoPanel } from "@/components/info-panel"
 import { PremiumTabs } from "@/components/premium-tabs"
 import { StandingsTable } from "@/components/standings-table"
@@ -18,6 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import {
   buildBracketPlan,
   buildGroupedStandings,
+  detectChampion,
   detectStandingsVariant,
   getCurrentPhase,
   type AdminDisciplineMatch as Match,
@@ -189,6 +191,8 @@ export function PublicDisciplineView({
 
   const currentPhase = useMemo(() => getCurrentPhase(discipline.slug, matches, teams), [teams, matches, standingsVariant])
 
+  const champion = useMemo(() => detectChampion(matches), [matches])
+
   // Build Loba tables from teams (using group field)
   const lobaTables = useMemo(() => {
     if (standingsVariant !== "loba") return []
@@ -296,6 +300,18 @@ export function PublicDisciplineView({
         Icon={Trophy}
         description={discipline.format ?? ""}
       />
+
+      {champion && (
+        <div className="mb-6">
+          <ChampionBanner
+            disciplineName={discipline.name}
+            championName={champion.championName}
+            score1={champion.score1}
+            score2={champion.score2}
+            runnerUpName={champion.runnerUpName}
+          />
+        </div>
+      )}
 
       <div className="mb-6 rounded-xl bg-primary/10 border border-primary/20 px-4 py-3">
         <p className="text-sm font-semibold text-primary">{currentPhase.label}</p>
