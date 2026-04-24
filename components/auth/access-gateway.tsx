@@ -79,8 +79,8 @@ export function AccessGateway({
         <div className="grid w-full gap-8 lg:grid-cols-[1fr_0.8fr]">
           <section className="hidden rounded-xl border border-border bg-card/50 p-6 lg:block">
             <div className="mb-6 flex items-center gap-3">
-              <div className="relative h-16 w-16 overflow-hidden rounded-xl bg-primary/10">
-                <Image src="/logotipo_sanatorio.png" alt="Logo Sanatorio El Carmen" fill className="object-contain" />
+              <div className="relative h-16 w-16">
+                <Image src="/logo.png" alt="Logo Sanatorio El Carmen" fill className="object-contain drop-shadow-sm" />
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-primary">Sanatorio El Carmen</p>

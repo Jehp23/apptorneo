@@ -137,8 +137,8 @@ export default async function TournamentHomePage({
         <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-primary/0 via-primary to-primary/0" />
         <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
-            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-border bg-muted">
-              <Image src="/logotipo_sanatorio.png" alt="Sanatorio El Carmen" fill className="object-contain p-2" />
+            <div className="relative h-14 w-14 shrink-0">
+              <Image src="/logo.png" alt="Sanatorio El Carmen" fill className="object-contain" />
             </div>
             <div>
               {activeTournament ? (

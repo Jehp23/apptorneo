@@ -48,8 +48,8 @@ export function LoginGateway({ redirectTo = "/admin" }: { redirectTo?: string })
       
       <div className="w-full max-w-sm space-y-8">
         <div className="flex flex-col items-center gap-4 text-center">
-          <div className="relative h-36 w-36 overflow-hidden rounded-2xl bg-muted shadow-xl shadow-primary/10 ring-4 ring-primary/10">
-            <Image src="/logotipo_sanatorio.png" alt="Sanatorio El Carmen" fill className="object-contain" />
+          <div className="relative h-36 w-36">
+            <Image src="/logo.png" alt="Sanatorio El Carmen" fill className="object-contain drop-shadow-md" />
           </div>
           <div>
             <h1 className="font-serif text-3xl font-semibold text-foreground">Torneo Interno</h1>
