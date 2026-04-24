@@ -356,7 +356,7 @@ export function PublicDisciplineView({
                   )}
                 </>
               ) : (
-                <div className={standingsVariant === "compact" ? "grid gap-3 md:grid-cols-2 lg:grid-cols-3" : "grid gap-4 lg:grid-cols-2"}>
+                <div className={standingsVariant === "compact" ? "grid gap-3 md:grid-cols-2 lg:grid-cols-3" : "grid gap-4"}>
                   {groupedStandings.map((group) => (
                     standingsVariant === "compact" ? (
                       <CompactStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={1} />

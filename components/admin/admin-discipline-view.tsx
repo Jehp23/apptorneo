@@ -765,7 +765,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                 {groupedStandings.length === 0 ? (
                   <p className="py-12 text-center text-muted-foreground">Todavía no hay participantes para calcular posiciones.</p>
                 ) : (
-                  <div className={standingsVariant === "compact" ? "grid gap-3 md:grid-cols-2 lg:grid-cols-3" : "grid gap-4 lg:grid-cols-2"}>
+                  <div className={standingsVariant === "compact" ? "grid gap-3 md:grid-cols-2 lg:grid-cols-3" : "grid gap-4"}>
                     {groupedStandings.map((group) => (
                       standingsVariant === "compact" ? (
                         <CompactStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={1} />
