@@ -529,7 +529,7 @@ function NewDisciplineDialog({
               setForm((current) => ({
                 ...current,
                 name,
-                teamsCount: lower.includes("sapo") ? "16" : lower.includes("loba") ? "10" : current.teamsCount,
+                teamsCount: lower.includes("sapo") ? "34" : lower.includes("loba") ? "40" : current.teamsCount,
                 playersCount: lower.includes("sapo") ? "2" : lower.includes("loba") ? "1" : current.playersCount,
               }))
             }}
@@ -545,7 +545,7 @@ function NewDisciplineDialog({
               type="number"
               min="1"
               className="w-full rounded-2xl border-2 border-border bg-background px-4 py-3 text-base outline-none focus:border-primary"
-              placeholder="Cupo (Sapo=16, Loba=10)"
+              placeholder="Cupo (Sapo=34, Loba=40)"
               value={form.teamsCount}
               onChange={(event) => setForm((current) => ({ ...current, teamsCount: event.target.value }))}
             />

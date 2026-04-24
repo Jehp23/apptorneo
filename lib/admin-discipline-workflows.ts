@@ -120,6 +120,8 @@ export function getZoneOptions(slug: string, format?: string | null): Array<{ va
       { value: "Mesa 4", label: "Mesa 4" },
       { value: "Mesa 5", label: "Mesa 5" },
       { value: "Mesa 6", label: "Mesa 6" },
+      { value: "Mesa 7", label: "Mesa 7" },
+      { value: "Mesa 8", label: "Mesa 8" },
       { value: "Mesa Final", label: "Mesa Final" },
     ]
   }
