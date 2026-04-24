@@ -17,6 +17,7 @@ export interface SimpleStandingRow {
   pp: number
   pts: number
   bonus?: number
+  pc?: number
 }
 
 interface SimpleStandingsTableProps {
@@ -24,6 +25,7 @@ interface SimpleStandingsTableProps {
   standings: SimpleStandingRow[]
   highlightTop?: number
   showBonus?: boolean
+  showPC?: boolean
   teamLabel?: string
 }
 
@@ -32,6 +34,7 @@ export function SimpleStandingsTable({
   standings,
   highlightTop = 2,
   showBonus = false,
+  showPC = false,
   teamLabel = "Equipo",
 }: SimpleStandingsTableProps) {
   return (
@@ -48,6 +51,9 @@ export function SimpleStandingsTable({
               <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">PJ</TableHead>
               <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">G</TableHead>
               <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">P</TableHead>
+              {showPC && (
+                <TableHead className="w-12 text-center text-sm font-medium text-muted-foreground">PC</TableHead>
+              )}
               {showBonus && (
                 <TableHead className="w-12 text-center text-sm font-semibold text-accent">BP</TableHead>
               )}
@@ -63,13 +69,9 @@ export function SimpleStandingsTable({
                 } ${row.position <= highlightTop ? "bg-primary/5" : ""}`}
               >
                 <TableCell className="text-center">
-                  <span
-                    className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
-                      row.position <= highlightTop
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground"
-                    }`}
-                  >
+                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
+                    row.position <= highlightTop ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                  }`}>
                     {row.position}
                   </span>
                 </TableCell>
@@ -77,6 +79,11 @@ export function SimpleStandingsTable({
                 <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.pj}</TableCell>
                 <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.pg}</TableCell>
                 <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.pp}</TableCell>
+                {showPC && (
+                  <TableCell className="text-center font-mono text-sm text-muted-foreground">
+                    {row.pc ?? 0}
+                  </TableCell>
+                )}
                 {showBonus && (
                   <TableCell className="text-center font-mono text-sm font-semibold text-accent">
                     {row.bonus ? `+${row.bonus}` : "–"}

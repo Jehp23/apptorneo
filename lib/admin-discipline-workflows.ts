@@ -278,6 +278,7 @@ export function calculateSimpleStandings(
       pg: 0,
       pp: 0,
       pts: 0,
+      pc: 0,
     }
   })
 
@@ -291,6 +292,8 @@ export function calculateSimpleStandings(
 
       team1.pj += 1
       team2.pj += 1
+      team1.pc = (team1.pc ?? 0) + score2
+      team2.pc = (team2.pc ?? 0) + score1
 
       if (score1 > score2) {
         team1.pg += 1
@@ -304,7 +307,7 @@ export function calculateSimpleStandings(
     })
 
   return Object.values(stats)
-    .sort((a, b) => b.pts - a.pts || b.pg - a.pg || a.pp - b.pp)
+    .sort((a, b) => b.pts - a.pts || (a.pc ?? 0) - (b.pc ?? 0) || b.pg - a.pg)
     .map((row, index) => ({ ...row, position: index + 1 }))
 }
 

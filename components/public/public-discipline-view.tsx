@@ -396,7 +396,7 @@ export function PublicDisciplineView({
                       standingsVariant === "compact" ? (
                         <CompactStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={1} />
                       ) : standingsVariant === "simple" ? (
-                        <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} />
+                        <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} showPC />
                       ) : standingsVariant === "padel" ? (
                         <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} showBonus />
                       ) : (
