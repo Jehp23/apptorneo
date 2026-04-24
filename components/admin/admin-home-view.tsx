@@ -523,7 +523,16 @@ function NewDisciplineDialog({
             className="w-full rounded-2xl border-2 border-border bg-background px-4 py-4 text-xl outline-none focus:border-primary placeholder:text-muted-foreground"
             placeholder="Nombre (ej: Fútbol 5)"
             value={form.name}
-            onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+            onChange={(event) => {
+              const name = event.target.value
+              const lower = name.toLowerCase()
+              setForm((current) => ({
+                ...current,
+                name,
+                teamsCount: lower.includes("sapo") ? "16" : lower.includes("loba") ? "10" : current.teamsCount,
+                playersCount: lower.includes("sapo") ? "2" : lower.includes("loba") ? "1" : current.playersCount,
+              }))
+            }}
           />
           <input
             className="w-full rounded-2xl border-2 border-border bg-background px-4 py-3 text-base outline-none focus:border-primary placeholder:text-muted-foreground"
@@ -536,7 +545,7 @@ function NewDisciplineDialog({
               type="number"
               min="1"
               className="w-full rounded-2xl border-2 border-border bg-background px-4 py-3 text-base outline-none focus:border-primary"
-              placeholder="Cupo"
+              placeholder="Cupo (Sapo=16, Loba=10)"
               value={form.teamsCount}
               onChange={(event) => setForm((current) => ({ ...current, teamsCount: event.target.value }))}
             />

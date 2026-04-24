@@ -24,6 +24,7 @@ interface SimpleStandingsTableProps {
   standings: SimpleStandingRow[]
   highlightTop?: number
   showBonus?: boolean
+  teamLabel?: string
 }
 
 export function SimpleStandingsTable({
@@ -31,6 +32,7 @@ export function SimpleStandingsTable({
   standings,
   highlightTop = 2,
   showBonus = false,
+  teamLabel = "Equipo",
 }: SimpleStandingsTableProps) {
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden">
@@ -42,12 +44,12 @@ export function SimpleStandingsTable({
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
               <TableHead className="w-12 text-center text-sm font-medium text-muted-foreground">#</TableHead>
-              <TableHead className="text-sm font-medium text-muted-foreground">Pareja</TableHead>
+              <TableHead className="text-sm font-medium text-muted-foreground">{teamLabel}</TableHead>
               <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">PJ</TableHead>
               <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">G</TableHead>
               <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">P</TableHead>
               {showBonus && (
-                <TableHead className="w-14 text-center text-sm font-medium text-muted-foreground">Bonus</TableHead>
+                <TableHead className="w-12 text-center text-sm font-semibold text-accent">BP</TableHead>
               )}
               <TableHead className="w-12 text-center text-sm font-semibold text-foreground">Pts</TableHead>
             </TableRow>
@@ -76,8 +78,8 @@ export function SimpleStandingsTable({
                 <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.pg}</TableCell>
                 <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.pp}</TableCell>
                 {showBonus && (
-                  <TableCell className="text-center font-mono text-sm text-accent">
-                    +{row.bonus || 0}
+                  <TableCell className="text-center font-mono text-sm font-semibold text-accent">
+                    {row.bonus ? `+${row.bonus}` : "–"}
                   </TableCell>
                 )}
                 <TableCell className="text-center font-semibold text-foreground">{row.pts}</TableCell>

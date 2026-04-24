@@ -49,7 +49,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
   const [tableWinners, setTableWinners] = useState<Record<string, string>>(() => {
     const winners: Record<string, string> = {}
     teams.forEach(t => {
-      if (t.seed === 1 && t.group) winners[t.group] = t.id
+      if (t.seed === -1 && t.group) winners[t.group] = t.id
     })
     return winners
   })
@@ -310,7 +310,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
             method: "PATCH",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ seed: t.id === winnerId ? 1 : null })
+            body: JSON.stringify({ seed: t.id === winnerId ? -1 : (t.seed !== -1 ? t.seed : null) })
           })
           if (response.status === 401) {
             throw new Error("UNAUTHORIZED")
@@ -321,7 +321,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
       setTeams(prev =>
         prev.map(t =>
           t.group === tableId
-            ? { ...t, seed: t.id === winnerId ? 1 : null }
+            ? { ...t, seed: t.id === winnerId ? -1 : (t.seed !== -1 ? t.seed : null) }
             : t
         )
       )
@@ -333,6 +333,21 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         return
       }
       notify(false, "No se pudo guardar el ganador.")
+    }
+  }
+
+  async function handleLobaPointsUpdate(teamId: string, points: number) {
+    try {
+      const res = await fetch(`/api/admin/disciplines/${initial.slug}/teams/${teamId}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ seed: points }),
+      })
+      if (res.status === 401) { handleUnauthorized(); return }
+      setTeams(prev => prev.map(t => t.id === teamId ? { ...t, seed: points } : t))
+    } catch {
+      notify(false, "No se pudo guardar los puntos.")
     }
   }
 
@@ -479,7 +494,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         id: groupName,
         name: groupName === "General" ? `Mesa ${index + 1}` : groupName,
         teams: groupTeams.map((t) => ({ id: t.id, name: t.name, seed: t.seed })),
-        winnerId: groupTeams.find(t => t.seed === 1)?.id ?? null,
+        winnerId: groupTeams.find(t => t.seed === -1)?.id ?? null,
         isFinal: groupName.toLowerCase().includes("final"),
       }))
   })() : []
@@ -688,6 +703,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                   <LobaTableView
                     tables={lobaTables}
                     onWinnerSelect={handleLobaWinnerSelect}
+                    onPointsUpdate={handleLobaPointsUpdate}
                     isEditable={true}
                   />
                 )}
@@ -771,6 +787,8 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                         <CompactStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={1} />
                       ) : standingsVariant === "simple" ? (
                         <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} />
+                      ) : standingsVariant === "padel" ? (
+                        <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} showBonus />
                       ) : (
                         <StandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedStandingRow[]} highlightTop={2} />
                       )
