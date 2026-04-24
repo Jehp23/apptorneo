@@ -181,19 +181,23 @@ export function LobaTableView({
 
                     {/* Winner button */}
                     <div className="w-16 flex justify-center">
-                      {!isEliminated && isEditable ? (
+                      {isWinner && isEditable ? (
                         <button
-                          onClick={() => !isWinner && onWinnerSelect(table.id, team.id)}
-                          className={`rounded-lg px-2 py-1 text-xs font-semibold transition-all ${
-                            isWinner
-                              ? "bg-emerald-500/20 text-emerald-700 cursor-default"
-                              : "border border-border text-muted-foreground hover:border-emerald-400 hover:text-emerald-600"
-                          }`}
+                          onClick={() => onWinnerSelect(table.id, "")}
+                          className="rounded-lg border border-emerald-300 bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-700 hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive transition-all"
+                          title="Quitar ganador"
                         >
-                          {isWinner ? "✓" : "Pasar"}
+                          ✓ Quitar
                         </button>
                       ) : isWinner ? (
                         <span className="text-xs font-semibold text-emerald-600">✓</span>
+                      ) : !isEliminated && isEditable ? (
+                        <button
+                          onClick={() => onWinnerSelect(table.id, team.id)}
+                          className="rounded-lg border border-border px-2 py-1 text-xs font-semibold text-muted-foreground hover:border-emerald-400 hover:text-emerald-600 transition-all"
+                        >
+                          Pasar
+                        </button>
                       ) : null}
                     </div>
                   </div>

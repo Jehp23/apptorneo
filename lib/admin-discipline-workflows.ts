@@ -78,7 +78,7 @@ export function detectStandingsVariant(slug: string, format?: string | null): St
   }
 
   if (normalizedSlug.includes("metegol") || normalizedFormat.includes("metegol")) {
-    return "compact"
+    return "padel"
   }
 
   if (normalizedSlug.includes("loba") || normalizedFormat.includes("loba")) {
@@ -154,7 +154,7 @@ export function buildGroupedStandings(
     .map(([groupName, groupTeams]) => ({
       groupName,
       teams: groupTeams,
-      standings: variant === "padel" ? calculatePadelStandings(groupTeams, matches) : variant === "simple" ? calculateSimpleStandings(groupTeams, matches) : variant === "compact" ? calculateCompactStandings(groupTeams, matches) : variant === "sapo" ? calculateSapoStandings(groupTeams, matches) : calculateStandings(groupTeams, matches),
+      standings: variant === "padel" ? calculatePadelStandings(groupTeams, matches) : variant === "simple" ? calculateSimpleStandings(groupTeams, matches) : variant === "compact" ? calculateCompactStandings(groupTeams, matches) : variant === "sapo" ? calculateSapoStandings(groupTeams) : calculateStandings(groupTeams, matches),
       playedMatches: countPlayedMatches(groupTeams, matches),
       expectedMatches: expectedRoundRobinMatches(groupTeams.length),
     }))
@@ -355,49 +355,58 @@ export function calculateCompactStandings(
 
 export function calculateSapoStandings(
   teams: AdminDisciplineTeam[],
-  matches: AdminDisciplineMatch[],
 ): RankedSimpleStandingRow[] {
-  const stats: Record<string, RankedSimpleStandingRow> = {}
-
-  teams.forEach((team, index) => {
-    stats[team.id] = {
+  // seed = total points from 2 group rounds (entered manually by admin)
+  return teams
+    .filter((t) => t.seed !== null && t.seed !== undefined && t.seed >= 0)
+    .sort((a, b) => (b.seed ?? 0) - (a.seed ?? 0))
+    .map((team, index) => ({
       teamId: team.id,
       position: index + 1,
       teamName: team.name,
       pj: 0,
       pg: 0,
       pp: 0,
-      pts: 0,
-    }
-  })
+      pts: team.seed ?? 0,
+    }))
+}
 
-  matches
-    .filter((match) => match.played && match.team1 && match.team2 && stats[match.team1.id] && stats[match.team2.id])
-    .forEach((match) => {
-      const team1 = stats[match.team1!.id]
-      const team2 = stats[match.team2!.id]
-      const score1 = match.score1 ?? 0
-      const score2 = match.score2 ?? 0
+export interface SapoBracketPlan {
+  ready: boolean
+  reason: string
+  crosses: MatchCross[]
+}
 
-      team1.pj += 1
-      team2.pj += 1
+export function buildSapoBracketPlan(
+  teams: AdminDisciplineTeam[],
+  matches: AdminDisciplineMatch[],
+): SapoBracketPlan {
+  const bracketExists = matches.some(m =>
+    m.stage?.toLowerCase().includes("cuartos") ||
+    m.stage?.toLowerCase().includes("eliminación") ||
+    m.stage?.toLowerCase().includes("1vo") ||
+    m.stage?.toLowerCase().includes("vs")
+  )
+  if (bracketExists) {
+    return { ready: false, reason: "El bracket ya fue generado.", crosses: [] }
+  }
 
-      // For Sapo, pts = accumulated score
-      team1.pts += score1
-      team2.pts += score2
+  const ranked = calculateSapoStandings(teams)
+  if (ranked.length < 8) {
+    return { ready: false, reason: `Necesitás 8 equipos con puntaje. Solo hay ${ranked.length}.`, crosses: [] }
+  }
 
-      if (score1 > score2) {
-        team1.pg += 1
-        team2.pp += 1
-      } else if (score2 > score1) {
-        team2.pg += 1
-        team1.pp += 1
-      }
-    })
-
-  return Object.values(stats)
-    .sort((a, b) => b.pts - a.pts || b.pg - a.pg || a.pp - b.pp)
-    .map((row, index) => ({ ...row, position: index + 1 }))
+  const top8 = ranked.slice(0, 8)
+  return {
+    ready: true,
+    reason: "Listo para generar el bracket de los 8 mejores.",
+    crosses: [
+      { team1: { id: top8[0].teamId, name: top8[0].teamName }, team2: { id: top8[7].teamId, name: top8[7].teamName }, stage: "1° vs 8°" },
+      { team1: { id: top8[1].teamId, name: top8[1].teamName }, team2: { id: top8[6].teamId, name: top8[6].teamName }, stage: "2° vs 7°" },
+      { team1: { id: top8[2].teamId, name: top8[2].teamName }, team2: { id: top8[5].teamId, name: top8[5].teamName }, stage: "3° vs 6°" },
+      { team1: { id: top8[3].teamId, name: top8[3].teamName }, team2: { id: top8[4].teamId, name: top8[4].teamName }, stage: "4° vs 5°" },
+    ],
+  }
 }
 
 export function buildSemifinalPlan(

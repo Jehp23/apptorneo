@@ -8,6 +8,7 @@ import { ArrowLeft, Check, Minus, Plus, Swords, Trash2, Trophy, UserPlus, List, 
 import { DisciplineHeader } from "@/components/discipline-header"
 import { LiveIndicator } from "@/components/live-indicator"
 import { ChampionBanner } from "@/components/champion-banner"
+import { ScorersTable } from "@/components/scorers-table"
 import { InfoPanel } from "@/components/info-panel"
 import { PremiumTabs } from "@/components/premium-tabs"
 import { StandingsTable } from "@/components/standings-table"
@@ -218,8 +219,12 @@ export function PublicDisciplineView({
   // For Sapo, get overall standings (not grouped)
   const sapoStandings = useMemo(() => {
     if (standingsVariant !== "sapo") return []
-    return groupedStandings.flatMap((g) => g.standings as RankedSimpleStandingRow[])
-  }, [groupedStandings, standingsVariant])
+    // Use seed-based standings (total group phase points per team)
+    return [...teams]
+      .filter(t => t.seed !== null && t.seed !== undefined && t.seed >= 0)
+      .sort((a, b) => (b.seed ?? 0) - (a.seed ?? 0))
+      .map((t, i) => ({ teamId: t.id, teamName: t.name, position: i + 1, pj: 0, pg: 0, pp: 0, pts: t.seed ?? 0 }))
+  }, [teams, standingsVariant])
 
   // For Sapo bracket display
   const bracketMatches = useMemo(() => {
@@ -228,7 +233,9 @@ export function PublicDisciplineView({
       m.stage?.toLowerCase().includes("cuarto") ||
       m.stage?.toLowerCase().includes("semi") ||
       m.stage === "Final" ||
-      m.stage === "3er Puesto"
+      m.stage === "3er Puesto" ||
+      m.stage?.includes("°") || // 1° vs 8°, etc.
+      m.stage?.includes("vs")
     )
     if (eliminationMatches.length === 0) return null
 
@@ -383,18 +390,23 @@ export function PublicDisciplineView({
                   )}
                 </>
               ) : (
-                <div className={standingsVariant === "compact" ? "grid gap-3 md:grid-cols-2 lg:grid-cols-3" : "grid gap-4"}>
-                  {groupedStandings.map((group) => (
-                    standingsVariant === "compact" ? (
-                      <CompactStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={1} />
-                    ) : standingsVariant === "simple" ? (
-                      <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} />
-                    ) : standingsVariant === "padel" ? (
-                      <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} showBonus />
-                    ) : (
-                      <StandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedStandingRow[]} highlightTop={2} />
-                    )
-                  ))}
+                <div className="space-y-4">
+                  <div className={standingsVariant === "compact" ? "grid gap-3 md:grid-cols-2 lg:grid-cols-3" : "grid gap-4"}>
+                    {groupedStandings.map((group) => (
+                      standingsVariant === "compact" ? (
+                        <CompactStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={1} />
+                      ) : standingsVariant === "simple" ? (
+                        <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} />
+                      ) : standingsVariant === "padel" ? (
+                        <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} showBonus />
+                      ) : (
+                        <StandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedStandingRow[]} highlightTop={2} />
+                      )
+                    ))}
+                  </div>
+                  {standingsVariant === "classic" && (
+                    <ScorersTable slug={discipline.slug} isAdmin={false} />
+                  )}
                 </div>
               )}
             </>

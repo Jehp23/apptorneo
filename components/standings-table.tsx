@@ -44,9 +44,9 @@ export function StandingsTable({ title, standings, highlightTop = 2 }: Standings
               <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">G</TableHead>
               <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">E</TableHead>
               <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">P</TableHead>
-              <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground hidden sm:table-cell">GF</TableHead>
-              <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground hidden sm:table-cell">GC</TableHead>
-              <TableHead className="w-12 text-center text-sm font-medium text-muted-foreground hidden sm:table-cell">DG</TableHead>
+              <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">GF</TableHead>
+              <TableHead className="w-10 text-center text-sm font-medium text-muted-foreground">GC</TableHead>
+              <TableHead className="w-12 text-center text-sm font-medium text-muted-foreground">DG</TableHead>
               <TableHead className="w-12 text-center text-sm font-semibold text-foreground">Pts</TableHead>
             </TableRow>
           </TableHeader>
@@ -72,9 +72,9 @@ export function StandingsTable({ title, standings, highlightTop = 2 }: Standings
                 <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.pg}</TableCell>
                 <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.pe}</TableCell>
                 <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.pp}</TableCell>
-                <TableCell className="text-center font-mono text-sm text-muted-foreground hidden sm:table-cell">{row.gf}</TableCell>
-                <TableCell className="text-center font-mono text-sm text-muted-foreground hidden sm:table-cell">{row.gc}</TableCell>
-                <TableCell className={`text-center font-mono text-sm hidden sm:table-cell ${
+                <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.gf}</TableCell>
+                <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.gc}</TableCell>
+                <TableCell className={`text-center font-mono text-sm ${
                   row.dg > 0 ? "text-accent" : row.dg < 0 ? "text-destructive" : "text-muted-foreground"
                 }`}>
                   {row.dg > 0 ? `+${row.dg}` : row.dg}

@@ -10,6 +10,7 @@ import { StandingsTable } from "@/components/standings-table"
 import { SimpleStandingsTable } from "@/components/simple-standings-table"
 import { CompactStandingsTable } from "@/components/compact-standings-table"
 import { LobaTableView, type LobaTable } from "@/components/loba-table-view"
+import { ScorersTable } from "@/components/scorers-table"
 import {
   buildBracketFinalPlan,
   buildBracketPlan,
@@ -17,7 +18,9 @@ import {
   buildFinalPlan,
   buildGroupedStandings,
   buildHexagonalFinalPlan,
+  buildSapoBracketPlan,
   buildSemifinalPlan,
+  calculateSapoStandings,
   detectStandingsVariant,
   getCurrentPhase,
   getZoneOptions,
@@ -36,6 +39,45 @@ interface Discipline {
   format?: string | null; details?: string | null
   teamsCount?: number | null; playersCount?: number | null
   teams: Team[]; matches: Match[]
+}
+
+// ─── Sapo points input ────────────────────────────────────────────────────────
+
+function PointsInputSapo({
+  teamId, currentPoints, onSave,
+}: { teamId: string; currentPoints: number | null; onSave: (id: string, pts: number) => void }) {
+  const [value, setValue] = useState(currentPoints !== null ? String(currentPoints) : "")
+  const [editing, setEditing] = useState(false)
+
+  function commit() {
+    const parsed = parseInt(value, 10)
+    if (!isNaN(parsed) && parsed >= 0) onSave(teamId, parsed)
+    setEditing(false)
+  }
+
+  if (!editing) {
+    return (
+      <button
+        onClick={() => setEditing(true)}
+        className={`min-w-[52px] rounded-lg border px-2 py-1 text-center text-sm font-mono font-bold transition-colors ${
+          currentPoints === null
+            ? "border-dashed border-border text-muted-foreground/40 hover:border-primary/40"
+            : "border-border bg-muted/30 text-foreground hover:border-primary/40"
+        }`}
+      >
+        {currentPoints === null ? "—" : currentPoints}
+      </button>
+    )
+  }
+  return (
+    <input
+      autoFocus type="number" min={0} value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") setEditing(false) }}
+      className="w-16 rounded-lg border-2 border-primary bg-background px-2 py-1 text-center text-sm font-mono font-bold outline-none"
+    />
+  )
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -302,36 +344,38 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
 
   async function handleLobaWinnerSelect(tableId: string, winnerId: string) {
     const teamsInTable = teams.filter(t => t.group === tableId)
+    const isUndo = winnerId === ""
 
     try {
       await Promise.all(
         teamsInTable.map(async (t) => {
+          const newSeed = isUndo
+            ? (t.seed === -1 ? null : t.seed)           // undo: quitar -1 del ex-ganador
+            : t.id === winnerId ? -1 : (t.seed !== -1 ? t.seed : null)  // set winner
           const response = await fetch(`/api/admin/disciplines/${initial.slug}/teams/${t.id}`, {
             method: "PATCH",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ seed: t.id === winnerId ? -1 : (t.seed !== -1 ? t.seed : null) })
+            body: JSON.stringify({ seed: newSeed }),
           })
-          if (response.status === 401) {
-            throw new Error("UNAUTHORIZED")
-          }
+          if (response.status === 401) throw new Error("UNAUTHORIZED")
         })
       )
 
       setTeams(prev =>
-        prev.map(t =>
-          t.group === tableId
-            ? { ...t, seed: t.id === winnerId ? -1 : (t.seed !== -1 ? t.seed : null) }
-            : t
-        )
+        prev.map(t => {
+          if (t.group !== tableId) return t
+          const newSeed = isUndo
+            ? (t.seed === -1 ? null : t.seed)
+            : t.id === winnerId ? -1 : (t.seed !== -1 ? t.seed : null)
+          return { ...t, seed: newSeed }
+        })
       )
-      setTableWinners((prev) => ({ ...prev, [tableId]: winnerId }))
-      notify(true, "Ganador de mesa guardado.")
+      const newWinnerId = isUndo ? "" : winnerId
+      setTableWinners((prev) => ({ ...prev, [tableId]: newWinnerId }))
+      notify(true, isUndo ? "Ganador quitado." : "Ganador de mesa guardado.")
     } catch (error) {
-      if (error instanceof Error && error.message === "UNAUTHORIZED") {
-        handleUnauthorized()
-        return
-      }
+      if (error instanceof Error && error.message === "UNAUTHORIZED") { handleUnauthorized(); return }
       notify(false, "No se pudo guardar el ganador.")
     }
   }
@@ -476,8 +520,10 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
   const currentPhase = getCurrentPhase(initial.slug, matches, teams)
 
   // For Sapo, get overall standings (not grouped) for bracket generation
-  const sapoStandings = standingsVariant === "sapo" ? groupedStandings.flatMap((g) => g.standings as RankedSimpleStandingRow[]) : []
-  const bracketPlan = buildBracketPlan(sapoStandings, matches)
+  const sapoStandings = standingsVariant === "sapo" ? calculateSapoStandings(teams) : []
+  const bracketPlan = standingsVariant === "sapo"
+    ? buildSapoBracketPlan(teams, matches)
+    : buildBracketPlan(groupedStandings.flatMap((g) => g.standings as RankedSimpleStandingRow[]), matches)
 
   // Build Loba tables from teams (using group field)
   const lobaTables = standingsVariant === "loba" ? (() => {
@@ -623,24 +669,67 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
           <>
             {standingsVariant === "sapo" ? (
               <>
-                <div className="rounded-xl border border-border bg-card p-6 space-y-3">
+                {/* Score entry per team */}
+                <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+                  <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Puntaje de fase grupal</p>
+                      <p className="text-xs text-muted-foreground">Cargá el total de las 2 rondas por equipo. Clasifican los 8 con más puntos.</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 border-b border-border/50 bg-muted/20 px-4 py-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">Equipo</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 w-16 text-center">Puntaje</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 w-8 text-center">#</span>
+                  </div>
+                  <div className="divide-y divide-border/40">
+                    {[...teams]
+                      .sort((a, b) => (b.seed ?? -1) - (a.seed ?? -1))
+                      .map((team, idx) => (
+                        <div key={team.id} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 px-4 py-2.5">
+                          <span className="text-sm font-medium text-foreground">{team.name}</span>
+                          <div className="w-16 flex justify-center">
+                            <PointsInputSapo
+                              teamId={team.id}
+                              currentPoints={team.seed !== null && team.seed !== undefined && team.seed >= 0 ? team.seed : null}
+                              onSave={async (id, pts) => {
+                                const res = await fetch(`/api/admin/disciplines/${initial.slug}/teams/${id}`, {
+                                  method: "PATCH", credentials: "include",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ seed: pts }),
+                                })
+                                if (res.status === 401) { handleUnauthorized(); return }
+                                if (res.ok) setTeams(prev => prev.map(t => t.id === id ? { ...t, seed: pts } : t))
+                              }}
+                            />
+                          </div>
+                          <span className={`w-8 text-center text-xs font-bold ${idx < 8 && (team.seed ?? -1) >= 0 ? "text-primary" : "text-muted-foreground"}`}>
+                            {(team.seed ?? -1) >= 0 ? `#${idx + 1}` : "—"}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Bracket generator */}
+                <div className="rounded-xl border border-border bg-card p-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-foreground">Cuartos de Final</p>
-                      <p className="text-xs text-muted-foreground">Genera el bracket con al menos 8 clasificados.</p>
+                      <p className="text-sm font-semibold text-foreground">Bracket eliminatorio (top 8)</p>
+                      <p className="text-xs text-muted-foreground">1°vs8°, 2°vs7°, 3°vs6°, 4°vs5°</p>
                     </div>
                     <button
                       type="button"
                       onClick={handleGenerateBracket}
                       disabled={!bracketPlan.ready}
-                      className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      Generar Cuartos
+                      Generar bracket
                     </button>
                   </div>
-                  {!bracketPlan.ready ? (
+                  {!bracketPlan.ready && (
                     <p className="text-xs text-muted-foreground">{bracketPlan.reason}</p>
-                  ) : null}
+                  )}
                 </div>
 
                 {(() => {
@@ -781,18 +870,23 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                 {groupedStandings.length === 0 ? (
                   <p className="py-12 text-center text-muted-foreground">Todavía no hay participantes para calcular posiciones.</p>
                 ) : (
-                  <div className={standingsVariant === "compact" ? "grid gap-3 md:grid-cols-2 lg:grid-cols-3" : "grid gap-4"}>
-                    {groupedStandings.map((group) => (
-                      standingsVariant === "compact" ? (
-                        <CompactStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={1} />
-                      ) : standingsVariant === "simple" ? (
-                        <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} />
-                      ) : standingsVariant === "padel" ? (
-                        <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} showBonus />
-                      ) : (
-                        <StandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedStandingRow[]} highlightTop={2} />
-                      )
-                    ))}
+                  <div className="space-y-4">
+                    <div className={standingsVariant === "compact" ? "grid gap-3 md:grid-cols-2 lg:grid-cols-3" : "grid gap-4"}>
+                      {groupedStandings.map((group) => (
+                        standingsVariant === "compact" ? (
+                          <CompactStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={1} />
+                        ) : standingsVariant === "simple" ? (
+                          <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} />
+                        ) : standingsVariant === "padel" ? (
+                          <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} showBonus />
+                        ) : (
+                          <StandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedStandingRow[]} highlightTop={2} />
+                        )
+                      ))}
+                    </div>
+                    {standingsVariant === "classic" && (
+                      <ScorersTable slug={initial.slug} isAdmin={true} />
+                    )}
                   </div>
                 )}
               </>
@@ -815,13 +909,33 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
 
         {tab === "partidos" && (
           <>
-            <button
-              onClick={() => setMatchOpen(true)}
-              disabled={teams.length < 2}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 py-4 text-base font-semibold text-primary transition-colors hover:border-primary hover:bg-primary/10 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <Plus className="h-5 w-5" /> Crear partido
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setMatchOpen(true)}
+                disabled={teams.length < 2}
+                className="flex-1 flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 py-4 text-base font-semibold text-primary transition-colors hover:border-primary hover:bg-primary/10 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Plus className="h-5 w-5" /> Crear partido
+              </button>
+              {matches.length > 0 && (
+                <button
+                  onClick={async () => {
+                    if (!confirm("¿Resetear todos los resultados? Se borran scores y los partidos vuelven a Pendiente. No se eliminan los partidos.")) return
+                    const res = await fetch(`/api/admin/disciplines/${initial.slug}/matches/reset`, { method: "POST", credentials: "include" })
+                    if (res.status === 401) { handleUnauthorized(); return }
+                    if (res.ok) {
+                      setMatches(prev => prev.map(m => ({ ...m, score1: null, score2: null, played: false })))
+                      notify(true, "Resultados reseteados.")
+                    } else {
+                      notify(false, "No se pudo resetear.")
+                    }
+                  }}
+                  className="flex items-center gap-2 rounded-2xl border-2 border-dashed border-destructive/30 bg-destructive/5 px-4 py-4 text-sm font-semibold text-destructive transition-colors hover:border-destructive/60 hover:bg-destructive/10"
+                >
+                  <Minus className="h-4 w-4" /> Reset scores
+                </button>
+              )}
+            </div>
 
             {teams.length < 2 && (
               <p className="text-center text-sm text-muted-foreground">Necesitás al menos 2 participantes para crear partidos.</p>
