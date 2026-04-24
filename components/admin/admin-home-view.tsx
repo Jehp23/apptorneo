@@ -100,6 +100,7 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
   const [editTournament, setEditTournament] = useState(false)
   const [quickAddDiscipline, setQuickAddDiscipline] = useState<Discipline | null>(null)
   const [capacityDiscipline, setCapacityDiscipline] = useState<Discipline | null>(null)
+  const [loggingOut, setLoggingOut] = useState(false)
 
   const totalParticipants = useMemo(
     () => disciplines.reduce((acc, d) => acc + d.teams.reduce((a, t) => a + t.players.length, 0), 0),
@@ -138,6 +139,18 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
     // la página refresca estado del torneo en la próxima navegación
   }
 
+  async function handleLogout() {
+    setLoggingOut(true)
+    try {
+      await fetch("/api/admin/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      })
+    } finally {
+      window.location.assign("/admin/login")
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-5xl">
@@ -149,12 +162,14 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
               <p className="text-xs text-muted-foreground">{tournament.year}</p>
             ) : null}
           </div>
-          <Link
-            href="/api/admin/auth/logout"
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
             className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-foreground"
           >
             <LogOut className="h-4 w-4" />
-          </Link>
+          </button>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
           {tournament ? (
@@ -225,10 +240,9 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
                 const pendingCount = discipline.matches.filter((match) => !match.played).length
 
                   return (
-                    <Link
+                    <a
                       key={discipline.id}
                       href={`/admin/${discipline.slug}`}
-                      prefetch={false}
                       className="group rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30 active:scale-[0.98] transition-transform"
                     >
                     <div className="flex items-start justify-between gap-2 mb-3">
@@ -249,7 +263,7 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
                       <span>{players} jugadores</span>
                       <span>{pendingCount} pendientes</span>
                     </div>
-                  </Link>
+                  </a>
                 )
               })}
             </div>
