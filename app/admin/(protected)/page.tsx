@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma"
+import { unstable_noStore as noStore } from "next/cache"
 import { AdminHomeView } from "@/components/admin/admin-home-view"
 
 export default async function AdminPage() {
+  noStore()
 
   const tournament = await prisma.tournament.findFirst({
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],

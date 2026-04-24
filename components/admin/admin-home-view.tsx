@@ -224,12 +224,13 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
                 const players = discipline.teams.reduce((acc, team) => acc + team.players.length, 0)
                 const pendingCount = discipline.matches.filter((match) => !match.played).length
 
-                return (
-                  <Link
-                    key={discipline.id}
-                    href={`/admin/${discipline.slug}`}
-                    className="group rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30 active:scale-[0.98] transition-transform"
-                  >
+                  return (
+                    <Link
+                      key={discipline.id}
+                      href={`/admin/${discipline.slug}`}
+                      prefetch={false}
+                      className="group rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30 active:scale-[0.98] transition-transform"
+                    >
                     <div className="flex items-start justify-between gap-2 mb-3">
                       <div>
                         <h3 className="font-semibold text-foreground">{discipline.name}</h3>

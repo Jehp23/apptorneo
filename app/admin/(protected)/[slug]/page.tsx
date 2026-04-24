@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation"
+import { unstable_noStore as noStore } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { AdminDisciplineView } from "@/components/admin/admin-discipline-view"
 
 export default async function AdminDisciplinePage({ params }: { params: Promise<{ slug: string }> }) {
+  noStore()
   const { slug } = await params
 
   const discipline = await prisma.discipline.findUnique({

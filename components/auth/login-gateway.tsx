@@ -24,8 +24,7 @@ export function LoginGateway({ redirectTo = "/admin" }: { redirectTo?: string })
         body: JSON.stringify({ password }),
       })
       if (!res.ok) { setError("Contraseña incorrecta"); setLoading(false); return }
-      router.push(redirectTo)
-      router.refresh()
+      window.location.assign(redirectTo)
     } catch {
       setError("No se pudo conectar. Intentá de nuevo.")
       setLoading(false)
