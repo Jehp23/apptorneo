@@ -51,17 +51,12 @@ export function InfoPanel({ teams, players, format, classification, upcomingMatc
             <Calendar className="w-4 h-4 text-primary" />
             <h3 className="font-serif font-semibold text-sm text-foreground">Proximos Partidos</h3>
           </div>
-          <div className="space-y-3">
+          <div className="divide-y divide-border/50">
             {upcomingMatches.map((match, index) => (
-              <div key={index} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium text-foreground">{match.team1}</span>
-                  <span className="text-muted-foreground">vs</span>
-                  <span className="font-medium text-foreground">{match.team2}</span>
-                </div>
-                {match.date && (
-                  <span className="text-xs text-muted-foreground">{match.date}</span>
-                )}
+              <div key={index} className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 py-2.5">
+                <span className="text-sm font-medium text-foreground text-right leading-snug">{match.team1}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">vs</span>
+                <span className="text-sm font-medium text-foreground text-left leading-snug">{match.team2}</span>
               </div>
             ))}
           </div>

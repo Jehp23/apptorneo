@@ -392,46 +392,54 @@ export function PublicDisciplineView({
                   <div className="divide-y divide-border">
                     {group.matches.length === 0 ? (
                       <p className="px-4 py-6 text-xs text-muted-foreground">Sin partidos.</p>
-                    ) : group.matches.map((match, index) => (
-                      <div
-                        key={match.id}
-                        onClick={() => isAdmin && !match.played && setScoreMatchId(match.id)}
-                        className={`flex items-center px-5 py-4 transition-colors ${index % 2 === 1 ? "bg-muted/20" : ""} ${isAdmin && !match.played ? "cursor-pointer hover:bg-primary/5" : ""}`}
-                      >
-                        <span className="w-8 font-mono text-xs text-muted-foreground">
-                          {String(match.matchNumber).padStart(2, "0")}
-                        </span>
-                        <div className="flex flex-1 items-center justify-center gap-4">
-                          {match.played ? (
-                            <span className="shrink-0 w-12 font-mono text-sm font-semibold text-muted-foreground text-right">
-                              {match.score1 ?? 0}
-                            </span>
-                          ) : <span className="shrink-0 w-12" />}
-                          <span className="flex-1 truncate text-right font-medium text-foreground">
-                            {match.team1?.name ?? "Por definir"}
-                          </span>
-                          {match.played ? (
-                            <div className="flex min-w-[90px] items-center justify-center gap-2 rounded-lg bg-muted/50 px-3 py-1.5">
-                              <span className="font-mono font-semibold">{match.score1 ?? 0}</span>
-                              <span className="text-xs text-muted-foreground">-</span>
-                              <span className="font-mono font-semibold">{match.score2 ?? 0}</span>
+                    ) : group.matches.map((match, index) => {
+                        const s1 = match.score1 ?? 0
+                        const s2 = match.score2 ?? 0
+                        const w1 = match.played && s1 > s2
+                        const w2 = match.played && s2 > s1
+                        return (
+                          <div
+                            key={match.id}
+                            onClick={() => isAdmin && !match.played && setScoreMatchId(match.id)}
+                            className={`grid grid-cols-[1fr_80px_1fr] items-center gap-2 px-4 py-3.5 transition-colors
+                              ${index % 2 === 1 ? "bg-muted/20" : ""}
+                              ${isAdmin && !match.played ? "cursor-pointer hover:bg-primary/5" : ""}`}
+                          >
+                            {/* Equipo 1 */}
+                            <div className="flex items-center justify-end gap-2">
+                              <span className={`text-sm text-right leading-snug ${w1 ? "font-bold text-foreground" : match.played ? "font-medium text-muted-foreground" : "font-medium text-foreground"}`}>
+                                {match.team1?.name ?? "Por definir"}
+                              </span>
+                              {w1 && <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-primary" />}
                             </div>
-                          ) : (
-                            <span className={`min-w-[90px] rounded-lg px-3 py-1.5 text-center text-sm font-medium ${isAdmin ? "bg-amber-500/10 text-amber-600" : "bg-muted/30 text-muted-foreground"}`}>
-                              {isAdmin ? "Cargar" : "Pendiente"}
-                            </span>
-                          )}
-                          <span className="flex-1 truncate text-left font-medium text-foreground">
-                            {match.team2?.name ?? "Por definir"}
-                          </span>
-                          {match.played ? (
-                            <span className="shrink-0 w-12 font-mono text-sm font-semibold text-muted-foreground text-left">
-                              {match.score2 ?? 0}
-                            </span>
-                          ) : <span className="shrink-0 w-12" />}
-                        </div>
-                      </div>
-                    ))}
+
+                            {/* Centro */}
+                            <div className="flex items-center justify-center">
+                              {match.played ? (
+                                <div className="flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 shadow-sm">
+                                  <span className={`w-5 text-center font-mono font-bold text-sm leading-none ${w1 ? "text-primary" : "text-foreground"}`}>{s1}</span>
+                                  <span className="text-muted-foreground/40 text-xs leading-none">–</span>
+                                  <span className={`w-5 text-center font-mono font-bold text-sm leading-none ${w2 ? "text-primary" : "text-foreground"}`}>{s2}</span>
+                                </div>
+                              ) : (
+                                <span className={`rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] ${
+                                  isAdmin ? "bg-amber-500/10 text-amber-600" : "text-muted-foreground/50"
+                                }`}>
+                                  {isAdmin ? "cargar" : "vs"}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Equipo 2 */}
+                            <div className="flex items-center justify-start gap-2">
+                              {w2 && <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-primary" />}
+                              <span className={`text-sm text-left leading-snug ${w2 ? "font-bold text-foreground" : match.played ? "font-medium text-muted-foreground" : "font-medium text-foreground"}`}>
+                                {match.team2?.name ?? "Por definir"}
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })}
                   </div>
                 </div>
               ))}
