@@ -132,23 +132,27 @@ export default async function TournamentHomePage({
     .slice(0, 5)
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6 lg:p-8">
-      <header className="rounded-3xl border border-border bg-card p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="mx-auto max-w-4xl space-y-5 p-4 sm:p-6 lg:p-8">
+      <header className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        {/* Accent bar */}
+        <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-primary/0 via-primary to-primary/0" />
+        <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
-            <div className="relative h-16 w-16 overflow-hidden rounded-3xl bg-muted">
-              <Image src="/logosanatorio.avif" alt="Sanatorio El Carmen" fill className="object-contain p-3" />
+            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-border bg-muted">
+              <Image src="/logosanatorio.avif" alt="Sanatorio El Carmen" fill className="object-contain p-2" />
             </div>
-            <div className="space-y-1">
+            <div>
               {activeTournament ? (
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">
-                  {activeTournament.name} · {activeTournament.location} · {activeTournament.year}
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+                  {activeTournament.name} · {activeTournament.year}
                 </p>
               ) : null}
-              <h1 className="font-serif text-3xl font-semibold text-foreground">Torneo en vivo</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">Torneo en vivo</h1>
+              {activeTournament?.location ? (
+                <p className="text-sm text-muted-foreground">{activeTournament.location}</p>
+              ) : null}
             </div>
           </div>
-
           <AdminHeaderActions />
         </div>
       </header>
@@ -179,24 +183,22 @@ export default async function TournamentHomePage({
         </section>
       ) : null}
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[
           { label: "Disciplinas", value: disciplines.length, icon: Trophy },
           { label: "Participantes", value: totalParticipants, icon: Users },
           { label: "Partidos", value: totalMatches, icon: Calendar },
           { label: "Jugados", value: playedMatches, icon: Activity },
         ].map((item) => (
-          <Card key={item.label}>
-            <CardContent className="flex items-center justify-between p-6">
-              <div>
-                <p className="text-sm text-muted-foreground">{item.label}</p>
-                <p className="text-3xl font-semibold text-foreground">{item.value}</p>
+          <div key={item.label} className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="rounded-lg bg-primary/10 p-1.5">
+                <item.icon className="h-3.5 w-3.5 text-primary" />
               </div>
-              <div className="rounded-2xl bg-primary/10 p-3">
-                <item.icon className="h-5 w-5 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
+              <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
+            </div>
+            <p className="text-2xl font-bold tracking-tight text-foreground">{item.value}</p>
+          </div>
         ))}
       </section>
 
@@ -222,35 +224,36 @@ export default async function TournamentHomePage({
                     <Link
                       key={discipline.id}
                       href={`/torneo/${discipline.slug}`}
-                      className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-sm"
+                      className="group relative overflow-hidden rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-md"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h2 className="text-xl font-semibold text-foreground">{discipline.name}</h2>
-                          <p className="text-sm text-muted-foreground">{discipline.format || "Formato sin definir"}</p>
+                      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <div className="min-w-0">
+                          <h2 className="font-bold text-base text-foreground truncate">{discipline.name}</h2>
+                          <p className="text-xs text-muted-foreground truncate">{discipline.format || "Sin formato"}</p>
                         </div>
-                        <Badge variant={status.tone}>{status.label}</Badge>
+                        <Badge variant={status.tone} className="shrink-0 text-xs">{status.label}</Badge>
                       </div>
 
-                      <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-                        <div className="rounded-xl bg-muted/30 p-3">
-                          <p className="text-2xl font-semibold text-foreground">{discipline.teams.length}</p>
-                          <p className="text-xs text-muted-foreground">Inscripciones</p>
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="rounded-lg bg-muted/40 py-2">
+                          <p className="text-lg font-bold text-foreground">{discipline.teams.length}</p>
+                          <p className="text-[10px] text-muted-foreground">equipos</p>
                         </div>
-                        <div className="rounded-xl bg-muted/30 p-3">
-                          <p className="text-2xl font-semibold text-foreground">{players}</p>
-                          <p className="text-xs text-muted-foreground">Jugadores</p>
+                        <div className="rounded-lg bg-muted/40 py-2">
+                          <p className="text-lg font-bold text-foreground">{players}</p>
+                          <p className="text-[10px] text-muted-foreground">jugadores</p>
                         </div>
-                        <div className="rounded-xl bg-muted/30 p-3">
-                          <p className="text-2xl font-semibold text-foreground">{discipline.matches.length}</p>
-                          <p className="text-xs text-muted-foreground">Partidos</p>
+                        <div className="rounded-lg bg-muted/40 py-2">
+                          <p className="text-lg font-bold text-foreground">{discipline.matches.length}</p>
+                          <p className="text-[10px] text-muted-foreground">partidos</p>
                         </div>
                       </div>
 
-                      <span className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary">
+                      <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-primary">
                         Ver detalle
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </span>
+                        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                      </div>
                     </Link>
                   )
                 })}
@@ -291,19 +294,26 @@ export default async function TournamentHomePage({
             </CardHeader>
             <CardContent>
               {recentResults.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-border p-6 text-muted-foreground">
+                <p className="rounded-xl border border-dashed border-border p-6 text-sm text-center text-muted-foreground">
                   Todavía no hay resultados cerrados.
                 </p>
               ) : (
-                <div className="space-y-3">
-                  {recentResults.map((result) => (
-                    <div key={result.id} className="rounded-2xl border border-border p-4">
-                      <p className="text-sm text-muted-foreground">{result.discipline}</p>
-                      <p className="text-lg font-semibold text-foreground">
-                        {result.team1} <span className="text-primary">{result.score1} - {result.score2}</span> {result.team2}
-                      </p>
-                    </div>
-                  ))}
+                <div className="divide-y divide-border/50 -mx-6">
+                  {recentResults.map((result) => {
+                    const w1 = result.score1 > result.score2
+                    const w2 = result.score2 > result.score1
+                    return (
+                      <div key={result.id} className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-6 py-3">
+                        <span className={`text-sm text-right truncate ${w1 ? "font-bold text-foreground" : "text-muted-foreground"}`}>{result.team1}</span>
+                        <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/30 px-2.5 py-1">
+                          <span className={`w-4 text-center font-mono font-bold text-sm ${w1 ? "text-primary" : "text-foreground"}`}>{result.score1}</span>
+                          <span className="text-muted-foreground/40 text-xs">–</span>
+                          <span className={`w-4 text-center font-mono font-bold text-sm ${w2 ? "text-primary" : "text-foreground"}`}>{result.score2}</span>
+                        </div>
+                        <span className={`text-sm text-left truncate ${w2 ? "font-bold text-foreground" : "text-muted-foreground"}`}>{result.team2}</span>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </CardContent>
