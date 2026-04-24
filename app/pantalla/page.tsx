@@ -175,59 +175,44 @@ export default async function DisplayPage({
   return (
     <div className="min-h-screen bg-background px-6 py-8 md:px-10">
       <div className="mx-auto max-w-[1600px] space-y-8">
-        <header className="rounded-[2rem] border border-border bg-card p-8 shadow-sm">
-          <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <Badge className="gap-2 rounded-full px-4 py-1 text-sm">
-                  <MonitorPlay className="h-4 w-4" />
-                  Pantalla grande
-                </Badge>
-                <DisplayAutorefresh enabled={mode === "auto"} intervalSeconds={20} />
-                {activeTournament ? <Badge variant="outline">{activeTournament.status}</Badge> : null}
+        <header className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-primary/0 via-primary to-primary/0" />
+          <div className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="rounded-xl bg-primary/10 p-2.5">
+                <MonitorPlay className="h-5 w-5 text-primary" />
               </div>
-
               <div>
-                <h1 className="font-serif text-4xl font-semibold text-foreground md:text-6xl">Estado general del torneo</h1>
-                <p className="mt-3 max-w-4xl text-lg text-muted-foreground md:text-xl">
-                  Pantalla pensada para TV o monitor institucional. Muestra el torneo activo, próximos cruces y resultados recientes mientras el admin actualiza todo en simultáneo.
-                </p>
+                {activeTournament ? (
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+                    {activeTournament.name} · {activeTournament.year}
+                  </p>
+                ) : null}
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Pantalla grande</h1>
+                {activeTournament?.location ? (
+                  <p className="text-sm text-muted-foreground">{activeTournament.location}</p>
+                ) : null}
               </div>
-
-              {activeTournament ? (
-                <div className="flex flex-wrap items-center gap-3 text-base text-muted-foreground md:text-lg">
-                  <span className="font-semibold text-primary">{activeTournament.name}</span>
-                  <span>· {activeTournament.location}</span>
-                  <span>· {activeTournament.year}</span>
-                  <span>· {activeTournament.disciplines.length} disciplinas</span>
-                </div>
-              ) : (
-                <p className="text-lg text-muted-foreground">No hay torneos cargados todavía.</p>
-              )}
             </div>
 
-            <div className="flex flex-col gap-3 xl:min-w-[360px]">
-              <div className="flex flex-wrap gap-3">
-                <Link href={`/pantalla${activeTournament ? `?tournament=${activeTournament.id}&mode=auto` : ""}`} className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
-                  <RefreshCcw className="h-4 w-4" />
-                  Auto refresh
-                </Link>
-                <Link href={`/pantalla${activeTournament ? `?tournament=${activeTournament.id}&mode=manual` : ""}`} className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted">
-                  <TimerReset className="h-4 w-4" />
-                  Manual
-                </Link>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <Link href="/torneo" className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted">
-                  <Eye className="h-4 w-4" />
-                  Vista participante
-                </Link>
-                <Link href="/admin" className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted">
-                  <Activity className="h-4 w-4" />
-                  Operar torneo
-                </Link>
-              </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <DisplayAutorefresh enabled={mode === "auto"} intervalSeconds={20} />
+              <Link href={`/pantalla${activeTournament ? `?tournament=${activeTournament.id}&mode=auto` : ""}`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
+                <RefreshCcw className="h-3.5 w-3.5" /> Auto
+              </Link>
+              <Link href={`/pantalla${activeTournament ? `?tournament=${activeTournament.id}&mode=manual` : ""}`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
+                <TimerReset className="h-3.5 w-3.5" /> Manual
+              </Link>
+              <Link href="/torneo"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
+                <Eye className="h-3.5 w-3.5" /> Participantes
+              </Link>
+              <Link href="/admin"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+                <Activity className="h-3.5 w-3.5" /> Admin
+              </Link>
             </div>
           </div>
         </header>
@@ -258,58 +243,51 @@ export default async function DisplayPage({
           </section>
         ) : null}
 
-        <section className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
+        <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {[
             { label: "Disciplinas", value: disciplines.length, icon: Trophy },
             { label: "Participantes", value: totalPlayers, icon: Users },
             { label: "Inscripciones", value: totalTeams, icon: Activity },
-            { label: "Partidos jugados", value: `${playedMatches}/${totalMatches}`, icon: Calendar },
+            { label: "Jugados", value: `${playedMatches}/${totalMatches}`, icon: Calendar },
           ].map((item) => (
-            <Card key={item.label} className="rounded-[1.75rem]">
-              <CardContent className="flex items-center justify-between p-6">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.18em] text-muted-foreground">{item.label}</p>
-                  <p className="mt-2 text-4xl font-semibold text-foreground md:text-5xl">{item.value}</p>
+            <div key={item.label} className="rounded-xl border border-border bg-card p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="rounded-lg bg-primary/10 p-1.5">
+                  <item.icon className="h-3.5 w-3.5 text-primary" />
                 </div>
-                <div className="rounded-2xl bg-primary/10 p-4">
-                  <item.icon className="h-8 w-8 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
+                <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
+              </div>
+              <p className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">{item.value}</p>
+            </div>
           ))}
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <Card className="rounded-[1.75rem]">
+          <Card className="rounded-xl">
             <CardHeader>
               <CardTitle className="text-3xl">Próximos partidos</CardTitle>
               <CardDescription className="text-base">Lo que se viene en el torneo activo. Ideal para que la gente se ubique rápido.</CardDescription>
             </CardHeader>
             <CardContent>
               {upcomingMatches.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-border p-10 text-center text-lg text-muted-foreground">
+                <div className="rounded-xl border border-dashed border-border p-10 text-center text-lg text-muted-foreground">
                   No hay próximos partidos cargados todavía.
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="divide-y divide-border/50">
                   {upcomingMatches.map((match, index) => (
-                    <div key={match.id} className="flex flex-col gap-4 rounded-3xl border border-border p-5 md:flex-row md:items-center md:justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-lg font-semibold text-primary">
-                          {index + 1}
-                        </div>
-                        <div>
-                          <p className="text-lg font-semibold text-foreground md:text-2xl">
-                            {match.team1} <span className="text-primary">vs</span> {match.team2}
-                          </p>
-                          <p className="text-sm text-muted-foreground md:text-base">
-                            {match.discipline} · {match.stage || "Fase por definir"}
-                          </p>
-                        </div>
+                    <div key={match.id} className="py-4 first:pt-0">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-primary">
+                        {match.discipline}{match.stage ? ` · ${match.stage}` : ""}
+                      </p>
+                      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                        <span className="text-right text-xl font-bold text-foreground md:text-2xl leading-snug">{match.team1}</span>
+                        <span className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground/50 px-2">vs</span>
+                        <span className="text-left text-xl font-bold text-foreground md:text-2xl leading-snug">{match.team2}</span>
                       </div>
-                      <Badge variant="outline" className="w-fit px-4 py-2 text-sm">
-                        {formatDate(match.date)}
-                      </Badge>
+                      {match.date && (
+                        <p className="mt-1.5 text-center text-sm text-muted-foreground">{formatDate(match.date)}</p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -317,33 +295,38 @@ export default async function DisplayPage({
             </CardContent>
           </Card>
 
-          <Card className="rounded-[1.75rem]">
+          <Card className="rounded-xl">
             <CardHeader>
               <CardTitle className="text-3xl">Resultados recientes</CardTitle>
               <CardDescription className="text-base">Últimos cierres cargados por administración.</CardDescription>
             </CardHeader>
             <CardContent>
               {recentResults.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-border p-10 text-center text-lg text-muted-foreground">
+                <div className="rounded-xl border border-dashed border-border p-10 text-center text-lg text-muted-foreground">
                   Todavía no hay resultados cerrados.
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {recentResults.map((result) => (
-                    <div key={result.id} className="rounded-3xl border border-border p-5">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm text-muted-foreground">{result.discipline} · {result.stage || "Fase sin definir"}</p>
-                          <p className="mt-1 text-xl font-semibold text-foreground md:text-2xl">
-                            {result.team1} <span className="text-primary">{result.score1} - {result.score2}</span> {result.team2}
-                          </p>
+                <div className="divide-y divide-border/50">
+                  {recentResults.map((result) => {
+                    const w1 = result.score1 > result.score2
+                    const w2 = result.score2 > result.score1
+                    return (
+                      <div key={result.id} className="py-4 first:pt-0">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-primary">
+                          {result.discipline}{result.stage ? ` · ${result.stage}` : ""}
+                        </p>
+                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                          <span className={`text-right text-xl font-bold leading-snug md:text-2xl ${w1 ? "text-foreground" : "text-muted-foreground"}`}>{result.team1}</span>
+                          <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 shadow-sm">
+                            <span className={`w-6 text-center font-mono font-black text-xl md:text-2xl ${w1 ? "text-primary" : "text-foreground"}`}>{result.score1}</span>
+                            <span className="text-muted-foreground/40">–</span>
+                            <span className={`w-6 text-center font-mono font-black text-xl md:text-2xl ${w2 ? "text-primary" : "text-foreground"}`}>{result.score2}</span>
+                          </div>
+                          <span className={`text-left text-xl font-bold leading-snug md:text-2xl ${w2 ? "text-foreground" : "text-muted-foreground"}`}>{result.team2}</span>
                         </div>
-                        <Badge variant="secondary" className="px-4 py-2 text-sm">
-                          {formatDate(result.updatedAt)}
-                        </Badge>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </CardContent>
@@ -351,20 +334,20 @@ export default async function DisplayPage({
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-          <Card className="rounded-[1.75rem]">
+          <Card className="rounded-xl">
             <CardHeader>
               <CardTitle className="text-3xl">Radar por disciplina</CardTitle>
               <CardDescription className="text-base">Resumen rápido para rotar la mirada sin perderte.</CardDescription>
             </CardHeader>
             <CardContent>
               {spotlightDisciplines.length === 0 ? (
-                <p className="rounded-3xl border border-dashed border-border p-10 text-center text-lg text-muted-foreground">
+                <p className="rounded-xl border border-dashed border-border p-10 text-center text-lg text-muted-foreground">
                   No hay disciplinas para mostrar.
                 </p>
               ) : (
                 <div className="space-y-4">
                   {spotlightDisciplines.map((discipline) => (
-                    <div key={discipline.id} className="rounded-3xl border border-border p-5">
+                    <div key={discipline.id} className="rounded-xl border border-border p-5">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                           <h2 className="text-2xl font-semibold text-foreground">{discipline.name}</h2>
@@ -417,14 +400,14 @@ export default async function DisplayPage({
             </CardContent>
           </Card>
 
-          <Card className="rounded-[1.75rem]">
+          <Card className="rounded-xl">
             <CardHeader>
               <CardTitle className="text-3xl">Posiciones en vivo</CardTitle>
               <CardDescription className="text-base">Tablas actualizadas por disciplina, en tiempo real.</CardDescription>
             </CardHeader>
             <CardContent>
               {spotlightDisciplines.filter(d => d.groupedStandings.length > 0).length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-border p-10 text-center text-lg text-muted-foreground">
+                <div className="rounded-xl border border-dashed border-border p-10 text-center text-lg text-muted-foreground">
                   Todavía no hay posiciones calculadas.
                 </div>
               ) : (
