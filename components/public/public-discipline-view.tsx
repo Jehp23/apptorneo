@@ -403,21 +403,21 @@ export function PublicDisciplineView({
                         </span>
                         <div className="flex flex-1 items-center justify-center gap-4">
                           {match.played ? (
-                            <span className="shrink-0 font-mono text-sm font-semibold text-muted-foreground">
+                            <span className="shrink-0 w-12 font-mono text-sm font-semibold text-muted-foreground text-right">
                               {match.score1 ?? 0}
                             </span>
-                          ) : null}
+                          ) : <span className="shrink-0 w-12" />}
                           <span className="flex-1 truncate text-right font-medium text-foreground">
                             {match.team1?.name ?? "Por definir"}
                           </span>
                           {match.played ? (
-                            <div className="flex min-w-[80px] items-center justify-center gap-3 rounded-lg bg-muted/50 px-3 py-1.5">
+                            <div className="flex min-w-[90px] items-center justify-center gap-2 rounded-lg bg-muted/50 px-3 py-1.5">
                               <span className="font-mono font-semibold">{match.score1 ?? 0}</span>
                               <span className="text-xs text-muted-foreground">-</span>
                               <span className="font-mono font-semibold">{match.score2 ?? 0}</span>
                             </div>
                           ) : (
-                            <span className={`min-w-[80px] rounded-lg px-3 py-1.5 text-center text-sm font-medium ${isAdmin ? "bg-amber-500/10 text-amber-600" : "bg-muted/30 text-muted-foreground"}`}>
+                            <span className={`min-w-[90px] rounded-lg px-3 py-1.5 text-center text-sm font-medium ${isAdmin ? "bg-amber-500/10 text-amber-600" : "bg-muted/30 text-muted-foreground"}`}>
                               {isAdmin ? "Cargar" : "Pendiente"}
                             </span>
                           )}
@@ -425,10 +425,10 @@ export function PublicDisciplineView({
                             {match.team2?.name ?? "Por definir"}
                           </span>
                           {match.played ? (
-                            <span className="shrink-0 font-mono text-sm font-semibold text-muted-foreground">
+                            <span className="shrink-0 w-12 font-mono text-sm font-semibold text-muted-foreground text-left">
                               {match.score2 ?? 0}
                             </span>
-                          ) : null}
+                          ) : <span className="shrink-0 w-12" />}
                         </div>
                       </div>
                     ))}

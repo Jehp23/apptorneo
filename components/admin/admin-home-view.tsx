@@ -245,23 +245,32 @@ export function AdminHomeView({ tournament, initialDisciplines }: AdminHomeViewP
                       href={`/admin/${discipline.slug}`}
                       className="group rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/30 active:scale-[0.98] transition-transform"
                     >
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <div>
+                    <div className="flex items-start justify-between gap-3 mb-4">
+                      <div className="flex-1">
                         <h3 className="font-semibold text-foreground">{discipline.name}</h3>
                         {discipline.format ? (
-                          <p className="text-xs text-muted-foreground">{discipline.format}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{discipline.format}</p>
                         ) : null}
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1.5 shrink-0">
                         <Badge variant={registration.tone} className="text-xs">{registration.label}</Badge>
                         <Badge className={`text-xs ${matchStatus.className}`}>{matchStatus.label}</Badge>
                       </div>
                     </div>
 
-                    <div className="flex gap-3 text-xs text-muted-foreground">
-                      <span>{registration.occupied}/{discipline.teamsCount || "∞"}</span>
-                      <span>{players} jugadores</span>
-                      <span>{pendingCount} pendientes</span>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="rounded-lg bg-muted/30 px-2 py-2">
+                        <p className="text-sm font-semibold text-foreground">{registration.occupied}/{discipline.teamsCount || "∞"}</p>
+                        <p className="text-xs text-muted-foreground">Equipos</p>
+                      </div>
+                      <div className="rounded-lg bg-muted/30 px-2 py-2">
+                        <p className="text-sm font-semibold text-foreground">{players}</p>
+                        <p className="text-xs text-muted-foreground">Jugadores</p>
+                      </div>
+                      <div className="rounded-lg bg-muted/30 px-2 py-2">
+                        <p className="text-sm font-semibold text-foreground">{pendingCount}</p>
+                        <p className="text-xs text-muted-foreground">Pendientes</p>
+                      </div>
                     </div>
                   </a>
                 )

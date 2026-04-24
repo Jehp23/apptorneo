@@ -582,7 +582,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => setEditingTeam(team)}
                         className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
@@ -914,23 +914,23 @@ function MatchRow({
           </span>
         </div>
       )}
-      <div className="flex items-center gap-2 px-3 py-3">
-        <button onClick={onTap} className="flex flex-1 items-center gap-3 min-w-0 min-h-[48px]">
-          <span className="flex-1 truncate text-sm font-bold text-right text-foreground">
+      <div className="flex items-center gap-3 px-4 py-4">
+        <button onClick={onTap} className="flex flex-1 items-center gap-4 min-w-0">
+          <span className="flex-1 truncate text-sm font-semibold text-right text-foreground">
             {match.team1?.name ?? "?"}
           </span>
-          <div className="shrink-0 min-w-[90px] text-center">
+          <div className="shrink-0 min-w-[100px] text-center">
             {match.played ? (
-              <span className="inline-block rounded-xl bg-muted px-3 py-2 font-mono text-lg font-black tabular-nums text-foreground">
+              <span className="inline-block rounded-xl bg-muted px-4 py-2 font-mono text-lg font-bold tabular-nums text-foreground">
                 {match.score1 ?? 0} – {match.score2 ?? 0}
               </span>
             ) : (
-              <span className="inline-block rounded-xl bg-primary/10 border border-primary/30 px-3 py-2 text-sm font-bold text-primary">
+              <span className="inline-block rounded-xl bg-primary/10 border border-primary/30 px-4 py-2 text-sm font-semibold text-primary">
                 Cargar
               </span>
             )}
           </div>
-          <span className="flex-1 truncate text-sm font-bold text-foreground">
+          <span className="flex-1 truncate text-sm font-semibold text-left text-foreground">
             {match.team2?.name ?? "?"}
           </span>
         </button>
