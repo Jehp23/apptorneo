@@ -16,18 +16,21 @@ export interface CompactStandingRow {
   pg: number
   pp: number
   pts: number
+  bonus?: number
 }
 
 interface CompactStandingsTableProps {
   title: string
   standings: CompactStandingRow[]
   highlightTop?: number
+  showBonus?: boolean
 }
 
 export function CompactStandingsTable({
   title,
   standings,
   highlightTop = 1,
+  showBonus = false,
 }: CompactStandingsTableProps) {
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden">
@@ -43,6 +46,9 @@ export function CompactStandingsTable({
               <TableHead className="w-8 text-center text-xs font-medium text-muted-foreground">PJ</TableHead>
               <TableHead className="w-8 text-center text-xs font-medium text-muted-foreground">G</TableHead>
               <TableHead className="w-8 text-center text-xs font-medium text-muted-foreground">P</TableHead>
+              {showBonus && (
+                <TableHead className="w-10 text-center text-xs font-semibold text-accent">BP</TableHead>
+              )}
               <TableHead className="w-10 text-center text-xs font-semibold text-foreground">Pts</TableHead>
             </TableRow>
           </TableHeader>
@@ -55,13 +61,9 @@ export function CompactStandingsTable({
                 } ${row.position <= highlightTop ? "bg-primary/5" : ""}`}
               >
                 <TableCell className="text-center">
-                  <span
-                    className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-medium ${
-                      row.position <= highlightTop
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground"
-                    }`}
-                  >
+                  <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-medium ${
+                    row.position <= highlightTop ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                  }`}>
                     {row.position}
                   </span>
                 </TableCell>
@@ -69,6 +71,11 @@ export function CompactStandingsTable({
                 <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.pj}</TableCell>
                 <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.pg}</TableCell>
                 <TableCell className="text-center font-mono text-sm text-muted-foreground">{row.pp}</TableCell>
+                {showBonus && (
+                  <TableCell className="text-center font-mono text-sm font-semibold text-accent">
+                    {row.bonus ? `+${row.bonus}` : "–"}
+                  </TableCell>
+                )}
                 <TableCell className="text-center font-semibold text-foreground text-sm">{row.pts}</TableCell>
               </TableRow>
             ))}

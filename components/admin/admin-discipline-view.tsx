@@ -797,7 +797,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                   />
                 )}
               </>
-            ) : standingsVariant === "compact" ? (
+            ) : (standingsVariant === "compact" || standingsVariant === "metegol") ? (
               <div className="rounded-xl border border-border bg-card p-6 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -871,9 +871,11 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
                   <p className="py-12 text-center text-muted-foreground">Todavía no hay participantes para calcular posiciones.</p>
                 ) : (
                   <div className="space-y-4">
-                    <div className={standingsVariant === "compact" ? "grid gap-3 md:grid-cols-2 lg:grid-cols-3" : "grid gap-4"}>
+                    <div className={(standingsVariant === "compact" || standingsVariant === "metegol") ? "grid gap-3 md:grid-cols-2 lg:grid-cols-3" : "grid gap-4"}>
                       {groupedStandings.map((group) => (
-                        standingsVariant === "compact" ? (
+                        standingsVariant === "metegol" ? (
+                          <CompactStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={1} showBonus />
+                        ) : standingsVariant === "compact" ? (
                           <CompactStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={1} />
                         ) : standingsVariant === "simple" ? (
                           <SimpleStandingsTable key={group.groupName} title={group.groupName} standings={group.standings as RankedSimpleStandingRow[]} highlightTop={2} showPC />

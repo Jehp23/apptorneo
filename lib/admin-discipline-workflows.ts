@@ -21,7 +21,7 @@ export interface AdminDisciplineMatch {
   date?: string | null
 }
 
-export type StandingsVariant = "classic" | "simple" | "compact" | "loba" | "sapo" | "padel"
+export type StandingsVariant = "classic" | "simple" | "compact" | "loba" | "sapo" | "padel" | "metegol"
 
 export interface RankedStandingRow extends StandingRow {
   teamId: string
@@ -78,7 +78,7 @@ export function detectStandingsVariant(slug: string, format?: string | null): St
   }
 
   if (normalizedSlug.includes("metegol") || normalizedFormat.includes("metegol")) {
-    return "padel"
+    return "metegol"
   }
 
   if (normalizedSlug.includes("loba") || normalizedFormat.includes("loba")) {
@@ -156,7 +156,7 @@ export function buildGroupedStandings(
     .map(([groupName, groupTeams]) => ({
       groupName,
       teams: groupTeams,
-      standings: variant === "padel" ? calculatePadelStandings(groupTeams, matches) : variant === "simple" ? calculateSimpleStandings(groupTeams, matches) : variant === "compact" ? calculateCompactStandings(groupTeams, matches) : variant === "sapo" ? calculateSapoStandings(groupTeams) : calculateStandings(groupTeams, matches),
+      standings: variant === "metegol" ? calculateMetegolStandings(groupTeams, matches) : variant === "padel" ? calculatePadelStandings(groupTeams, matches) : variant === "simple" ? calculateSimpleStandings(groupTeams, matches) : variant === "compact" ? calculateCompactStandings(groupTeams, matches) : variant === "sapo" ? calculateSapoStandings(groupTeams) : calculateStandings(groupTeams, matches),
       playedMatches: countPlayedMatches(groupTeams, matches),
       expectedMatches: expectedRoundRobinMatches(groupTeams.length),
     }))
@@ -245,21 +245,50 @@ export function calculatePadelStandings(
       t2.pj += 1
 
       if (s1 > s2) {
-        // team1 gana: bonus = sets ganados por ganador - sets ganados por perdedor
         const bp = s1 - s2  // 2-0 → 2, 2-1 → 1
         t1.pg += 1
         t1.bonus = (t1.bonus ?? 0) + bp
-        t1.pts += 3 + bp
+        t1.pts += 1 + bp
         t2.pp += 1
       } else if (s2 > s1) {
         const bp = s2 - s1
         t2.pg += 1
         t2.bonus = (t2.bonus ?? 0) + bp
-        t2.pts += 3 + bp
+        t2.pts += 1 + bp
         t1.pp += 1
       }
     })
 
+  return Object.values(stats)
+    .sort((a, b) => b.pts - a.pts || b.pg - a.pg || (b.bonus ?? 0) - (a.bonus ?? 0))
+    .map((row, i) => ({ ...row, position: i + 1 }))
+}
+
+export function calculateMetegolStandings(
+  teams: AdminDisciplineTeam[],
+  matches: AdminDisciplineMatch[],
+): RankedSimpleStandingRow[] {
+  const stats: Record<string, RankedSimpleStandingRow> = {}
+  teams.forEach((t) => {
+    stats[t.id] = { teamId: t.id, position: 0, teamName: t.name, pj: 0, pg: 0, pp: 0, pts: 0, bonus: 0 }
+  })
+  matches
+    .filter((m) => m.played && m.team1 && m.team2 && stats[m.team1.id] && stats[m.team2.id])
+    .forEach((m) => {
+      const t1 = stats[m.team1!.id]
+      const t2 = stats[m.team2!.id]
+      const s1 = m.score1 ?? 0
+      const s2 = m.score2 ?? 0
+      t1.pj += 1
+      t2.pj += 1
+      if (s1 > s2) {
+        const bp = s1 - s2
+        t1.pg += 1; t1.bonus = (t1.bonus ?? 0) + bp; t1.pts += 1 + bp; t2.pp += 1
+      } else if (s2 > s1) {
+        const bp = s2 - s1
+        t2.pg += 1; t2.bonus = (t2.bonus ?? 0) + bp; t2.pts += 1 + bp; t1.pp += 1
+      }
+    })
   return Object.values(stats)
     .sort((a, b) => b.pts - a.pts || b.pg - a.pg || (b.bonus ?? 0) - (a.bonus ?? 0))
     .map((row, i) => ({ ...row, position: i + 1 }))
