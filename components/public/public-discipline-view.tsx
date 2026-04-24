@@ -209,8 +209,8 @@ export function PublicDisciplineView({
       .map(([groupName, groupTeams], index) => ({
         id: groupName,
         name: groupName === "General" ? `Mesa ${index + 1}` : groupName,
-        teams: groupTeams.map((t) => ({ id: t.id, name: t.name })),
-        winnerId: tableWinners[groupName] || null,
+        teams: groupTeams.map((t) => ({ id: t.id, name: t.name, seed: t.seed })),
+        winnerId: groupTeams.find(t => t.seed === -1)?.id ?? tableWinners[groupName] ?? null,
         isFinal: groupName.toLowerCase().includes("final"),
       }))
   }, [teams, standingsVariant, tableWinners])

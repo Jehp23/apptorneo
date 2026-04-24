@@ -577,7 +577,7 @@ export function getCurrentPhase(slug: string, matches: AdminDisciplineMatch[], t
   nextAction: string | null
 } {
   if (slug === "loba") {
-    const winnersDefined = teams.filter(t => t.seed === 1).length
+    const winnersDefined = teams.filter(t => t.seed === -1).length
     const totalTables = new Set(teams.map(t => t.group)).size
     if (winnersDefined < totalTables) {
       return {
