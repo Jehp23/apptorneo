@@ -4,6 +4,7 @@ import { unstable_noStore as noStore } from "next/cache"
 import { Activity, Calendar, Trophy, Users } from "lucide-react"
 
 import { AdminHeaderActions } from "@/components/public/admin-header-actions"
+import { LiveIndicator } from "@/components/live-indicator"
 import { prisma } from "@/lib/prisma"
 
 function getDisciplineStatus(matches: Array<{ played: boolean }>) {
@@ -151,7 +152,10 @@ export default async function TournamentHomePage({
               ) : null}
             </div>
           </div>
-          <AdminHeaderActions />
+          <div className="flex items-center gap-3">
+            <LiveIndicator />
+            <AdminHeaderActions />
+          </div>
         </div>
       </header>
 

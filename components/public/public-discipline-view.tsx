@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, Check, Minus, Plus, Swords, Trash2, Trophy, UserPlus, List, Calendar, Users } from "lucide-react"
 
 import { DisciplineHeader } from "@/components/discipline-header"
+import { LiveIndicator } from "@/components/live-indicator"
 import { InfoPanel } from "@/components/info-panel"
 import { PremiumTabs } from "@/components/premium-tabs"
 import { StandingsTable } from "@/components/standings-table"
@@ -65,6 +66,13 @@ export function PublicDisciplineView({
   useEffect(() => {
     fetch("/api/admin/me", { credentials: "include" }).then((r) => { if (r.ok) setIsAdmin(true) })
   }, [])
+
+  // Auto-refresh cada 30s para participantes no-admin
+  useEffect(() => {
+    if (isAdmin) return
+    const id = window.setInterval(() => router.refresh(), 30_000)
+    return () => window.clearInterval(id)
+  }, [isAdmin, router])
 
   // admin: add participant
   const [addParticipantOpen, setAddParticipantOpen] = useState(false)
@@ -269,10 +277,13 @@ export function PublicDisciplineView({
   return (
     <div className="p-6">
       <div className="mx-auto max-w-5xl">
-      <Link href="/torneo" className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" />
-        Volver
-      </Link>
+      <div className="mb-4 flex items-center justify-between">
+        <Link href="/torneo" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-4 w-4" />
+          Volver
+        </Link>
+        {!isAdmin && <LiveIndicator />}
+      </div>
 
       {error ? (
         <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
