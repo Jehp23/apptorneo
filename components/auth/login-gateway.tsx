@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft, Eye, EyeOff, Shield, Trophy } from "lucide-react"
 
 export function LoginGateway() {
@@ -12,6 +12,12 @@ export function LoginGateway() {
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState("")
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const redirectTo = (() => {
+    const next = searchParams.get("next")
+    return next && next.startsWith("/") ? next : "/admin"
+  })()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -24,7 +30,7 @@ export function LoginGateway() {
         body: JSON.stringify({ password }),
       })
       if (!res.ok) { setError("Contraseña incorrecta"); setLoading(false); return }
-      router.push("/admin")
+      router.push(redirectTo)
       router.refresh()
     } catch {
       setError("No se pudo conectar. Intentá de nuevo.")
@@ -68,14 +74,14 @@ export function LoginGateway() {
               <div className="space-y-3">
                 <button
                   onClick={() => router.push("/torneo")}
-                  className="w-full rounded-xl bg-primary px-4 py-4 text-center text-base font-semibold text-primary-foreground transition-all hover:opacity-90 shadow-md flex items-center justify-center gap-2"
+                  className="w-full rounded-2xl bg-primary px-4 py-5 text-center text-lg font-semibold text-primary-foreground transition-all hover:opacity-90 shadow-md flex items-center justify-center gap-2"
                 >
                   <Trophy className="h-5 w-5" />
                   Ver torneo
                 </button>
                 <button
                   onClick={() => setShowLogin(true)}
-                  className="w-full rounded-xl border-2 border-border px-4 py-4 text-center text-base font-semibold text-muted-foreground transition-all hover:border-primary hover:text-foreground flex items-center justify-center gap-2"
+                  className="w-full rounded-2xl border-2 border-border px-4 py-4 text-center text-base font-semibold text-muted-foreground transition-all hover:border-primary hover:text-foreground flex items-center justify-center gap-2"
                 >
                   <Shield className="h-5 w-5" />
                   Administrar

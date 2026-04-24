@@ -1,12 +1,9 @@
-import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import { isValidAdminToken } from "@/lib/admin-auth"
+import { hasAdminSession, unauthorizedAdminResponse } from "@/lib/admin-auth"
 import { prisma } from "@/lib/prisma"
 
 async function requireAdmin() {
-  const cookieStore = await cookies()
-  const token = cookieStore.get("admin_session")?.value
-  return isValidAdminToken(token)
+  return hasAdminSession()
 }
 
 
@@ -15,7 +12,7 @@ export async function DELETE(
   { params }: { params: Promise<{ matchId: string }> }
 ) {
   if (!(await requireAdmin())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return unauthorizedAdminResponse()
   }
   const { matchId } = await params
   try {
@@ -31,7 +28,7 @@ export async function PATCH(
   { params }: { params: Promise<{ matchId: string }> }
 ) {
   if (!(await requireAdmin())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return unauthorizedAdminResponse()
   }
   const { matchId } = await params
   const body = await request.json()

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { hasAdminSession, unauthorizedAdminResponse } from "@/lib/admin-auth"
 import { prisma } from "@/lib/prisma"
 
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
@@ -26,6 +27,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  if (!(await hasAdminSession())) {
+    return unauthorizedAdminResponse()
+  }
+
   const { slug } = await params
   const body = await request.json()
 

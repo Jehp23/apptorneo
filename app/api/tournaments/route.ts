@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { hasAdminSession, unauthorizedAdminResponse } from "@/lib/admin-auth"
 import { prisma } from "@/lib/prisma"
 
 export async function GET() {
@@ -24,6 +25,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!(await hasAdminSession())) {
+    return unauthorizedAdminResponse()
+  }
+
   const body = await request.json()
 
   const tournament = await prisma.tournament.create({

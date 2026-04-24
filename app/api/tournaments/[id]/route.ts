@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server"
+import { hasAdminSession, unauthorizedAdminResponse } from "@/lib/admin-auth"
 import { prisma } from "@/lib/prisma"
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await hasAdminSession())) {
+    return unauthorizedAdminResponse()
+  }
+
   const { id } = await params
   const body = await request.json()
 

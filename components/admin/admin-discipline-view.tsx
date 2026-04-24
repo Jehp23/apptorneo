@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { ArrowLeft, Check, Minus, Pencil, Plus, Trash2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
@@ -40,6 +41,7 @@ interface Discipline {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function AdminDisciplineView({ discipline: initial }: { discipline: Discipline }) {
+  const router = useRouter()
   const [teams,   setTeams]   = useState(initial.teams)
   const [matches, setMatches] = useState(initial.matches)
   const [tab,     setTab]     = useState<"participantes" | "partidos" | "posiciones">("participantes")
@@ -63,6 +65,12 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
     setTimeout(() => setToast(null), 3000)
   }
 
+  function handleUnauthorized() {
+    notify(false, "Sesión expirada. Volvé a iniciar sesión.")
+    const next = encodeURIComponent(window.location.pathname)
+    router.push(`/admin/login?next=${next}`)
+  }
+
   // ── handlers ──
 
   async function handleAddTeam(name: string, players: string[], group?: string) {
@@ -78,6 +86,10 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
           group: group?.trim() || undefined,
         }),
       })
+      if (res.status === 401) {
+        handleUnauthorized()
+        return
+      }
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setTeams((prev) => [...prev, { ...data, players: data.players ?? [] }])
@@ -89,6 +101,10 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
     if (!confirm(`¿Eliminar "${teamName}"?`)) return
     try {
       const res = await fetch(`/api/admin/disciplines/${initial.slug}/teams/${teamId}`, { method: "DELETE", credentials: "include" })
+      if (res.status === 401) {
+        handleUnauthorized()
+        return
+      }
       if (!res.ok) throw new Error()
       setTeams((prev) => prev.filter((t) => t.id !== teamId))
       notify(true, "Eliminado.")
@@ -103,6 +119,10 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, players, group: group?.trim() || null }),
       })
+      if (res.status === 401) {
+        handleUnauthorized()
+        return
+      }
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setTeams((prev) => prev.map((t) => t.id === teamId ? { ...data, players: data.players ?? [] } : t))
@@ -114,6 +134,10 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
     if (!confirm("¿Eliminar este partido?")) return
     try {
       const res = await fetch(`/api/admin/matches/${matchId}`, { method: "DELETE", credentials: "include" })
+      if (res.status === 401) {
+        handleUnauthorized()
+        return
+      }
       if (!res.ok) throw new Error()
       setMatches((prev) => prev.filter((m) => m.id !== matchId))
       notify(true, "Partido eliminado.")
@@ -124,9 +148,14 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
     try {
       const res  = await fetch(`/api/disciplines/${initial.slug}/matches`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ team1Id, team2Id, stage: stage || undefined }),
       })
+      if (res.status === 401) {
+        handleUnauthorized()
+        return
+      }
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       const t1 = teams.find((t) => t.id === team1Id)
@@ -150,6 +179,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
       for (const cross of semifinalPlan.crosses) {
         const res = await fetch(`/api/disciplines/${initial.slug}/matches`, {
           method: "POST",
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             team1Id: cross.team1.id,
@@ -157,6 +187,10 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
             stage: cross.stage,
           }),
         })
+        if (res.status === 401) {
+          handleUnauthorized()
+          return
+        }
         const data = await res.json()
         if (!res.ok) throw new Error(data.error)
 
@@ -186,6 +220,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
     try {
       const res = await fetch(`/api/disciplines/${initial.slug}/matches`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           team1Id: finalCross.team1.id,
@@ -193,6 +228,10 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
           stage: finalCross.stage,
         }),
       })
+      if (res.status === 401) {
+        handleUnauthorized()
+        return
+      }
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
@@ -221,6 +260,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
       for (const cross of hexagonalPlan.crosses) {
         const res = await fetch(`/api/disciplines/${initial.slug}/matches`, {
           method: "POST",
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             team1Id: cross.team1.id,
@@ -228,6 +268,10 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
             stage: cross.stage,
           }),
         })
+        if (res.status === 401) {
+          handleUnauthorized()
+          return
+        }
         const data = await res.json()
         if (!res.ok) throw new Error(data.error)
 
@@ -261,14 +305,17 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
 
     try {
       await Promise.all(
-        teamsInTable.map(t =>
-          fetch(`/api/admin/disciplines/${initial.slug}/teams/${t.id}`, {
+        teamsInTable.map(async (t) => {
+          const response = await fetch(`/api/admin/disciplines/${initial.slug}/teams/${t.id}`, {
             method: "PATCH",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ seed: t.id === winnerId ? 1 : null })
           })
-        )
+          if (response.status === 401) {
+            throw new Error("UNAUTHORIZED")
+          }
+        })
       )
 
       setTeams(prev =>
@@ -280,7 +327,11 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
       )
       setTableWinners((prev) => ({ ...prev, [tableId]: winnerId }))
       notify(true, "Ganador de mesa guardado.")
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message === "UNAUTHORIZED") {
+        handleUnauthorized()
+        return
+      }
       notify(false, "No se pudo guardar el ganador.")
     }
   }
@@ -294,6 +345,7 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
       for (const cross of bracketPlan.crosses) {
         const res = await fetch(`/api/disciplines/${initial.slug}/matches`, {
           method: "POST",
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             team1Id: cross.team1.id,
@@ -301,6 +353,10 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
             stage: cross.stage,
           }),
         })
+        if (res.status === 401) {
+          handleUnauthorized()
+          return
+        }
         const data = await res.json()
         if (!res.ok) throw new Error(data.error)
 
@@ -329,21 +385,30 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
 
     try {
       const created = await Promise.all(
-        plan.crosses.map(cross =>
-          fetch(`/api/disciplines/${initial.slug}/matches`, {
+        plan.crosses.map(async (cross) => {
+          const response = await fetch(`/api/disciplines/${initial.slug}/matches`, {
             method: "POST",
+            credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               team1Id: cross.team1.id,
               team2Id: cross.team2.id,
               stage: cross.stage,
             }),
-          }).then(r => r.json())
-        )
+          })
+          if (response.status === 401) {
+            throw new Error("UNAUTHORIZED")
+          }
+          return response.json()
+        })
       )
       setMatches(prev => [...prev, ...created])
       notify(true, "Semifinales generadas.")
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message === "UNAUTHORIZED") {
+        handleUnauthorized()
+        return
+      }
       notify(false, "No se pudieron generar las semifinales.")
     }
   }
@@ -354,21 +419,30 @@ export function AdminDisciplineView({ discipline: initial }: { discipline: Disci
 
     try {
       const created = await Promise.all(
-        plan.crosses.map(cross =>
-          fetch(`/api/disciplines/${initial.slug}/matches`, {
+        plan.crosses.map(async (cross) => {
+          const response = await fetch(`/api/disciplines/${initial.slug}/matches`, {
             method: "POST",
+            credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               team1Id: cross.team1.id,
               team2Id: cross.team2.id,
               stage: cross.stage,
             }),
-          }).then(r => r.json())
-        )
+          })
+          if (response.status === 401) {
+            throw new Error("UNAUTHORIZED")
+          }
+          return response.json()
+        })
       )
       setMatches(prev => [...prev, ...created])
       notify(true, "Final y 3er Puesto generados.")
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message === "UNAUTHORIZED") {
+        handleUnauthorized()
+        return
+      }
       notify(false, "No se pudieron generar la final.")
     }
   }
@@ -1186,6 +1260,7 @@ function ScoreDialog({
   onUpdate: (updated: Match) => void
   disciplineSlug: string
 }) {
+  const router = useRouter()
   const [score1, setScore1] = useState(match.score1 ?? 0)
   const [score2, setScore2] = useState(match.score2 ?? 0)
   const [saving, setSaving] = useState(false)
@@ -1208,6 +1283,8 @@ function ScoreDialog({
       })
       if (res.status === 401) {
         setError("Sesión expirada. Volvé a iniciar sesión.")
+        const next = encodeURIComponent(window.location.pathname)
+        router.push(`/admin/login?next=${next}`)
         return
       }
       const data = await res.json()
@@ -1327,5 +1404,3 @@ function SummaryChip({
     </div>
   )
 }
-
-

@@ -8,7 +8,7 @@ export function AdminHeaderActions() {
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
-    fetch("/api/admin/me").then((r) => { if (r.ok) setIsAdmin(true) })
+    fetch("/api/admin/me", { credentials: "include" }).then((r) => { if (r.ok) setIsAdmin(true) })
   }, [])
 
   if (isAdmin) {

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Activity, Calendar, LogOut, Pencil, Plus, Settings2, Trophy, Users } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -326,6 +327,7 @@ function EditTournamentDialog({
   onClose: () => void
   onSaved: (t: Tournament) => void
 }) {
+  const router = useRouter()
   const [form, setForm] = useState({
     name: tournament.name,
     location: tournament.location,
@@ -342,9 +344,15 @@ function EditTournamentDialog({
     try {
       const response = await fetch(`/api/tournaments/${tournament.id}`, {
         method: "PATCH",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, year: Number(form.year) }),
       })
+      if (response.status === 401) {
+        const next = encodeURIComponent(window.location.pathname)
+        router.push(`/admin/login?next=${next}`)
+        return
+      }
       const data = await response.json()
       if (!response.ok) throw new Error(data.error)
       onSaved(data)
@@ -419,6 +427,7 @@ function NewDisciplineDialog({
   onClose: () => void
   onCreated: (discipline: Discipline) => void
 }) {
+  const router = useRouter()
   const [form, setForm] = useState({
     name: "",
     slug: "",
@@ -441,6 +450,7 @@ function NewDisciplineDialog({
     try {
       const response = await fetch("/api/disciplines", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tournamentId,
@@ -451,6 +461,11 @@ function NewDisciplineDialog({
           playersCount: form.playersCount ? Number(form.playersCount) : undefined,
         }),
       })
+      if (response.status === 401) {
+        const next = encodeURIComponent(window.location.pathname)
+        router.push(`/admin/login?next=${next}`)
+        return
+      }
       const data = await response.json()
       if (!response.ok) throw new Error(data.error)
       onCreated({
@@ -540,6 +555,7 @@ function QuickRegistrationDialog({
   onClose: () => void
   onCreated: (team: Team) => void
 }) {
+  const router = useRouter()
   const [name, setName] = useState("")
   const [players, setPlayers] = useState("")
   const [saving, setSaving] = useState(false)
@@ -566,6 +582,11 @@ function QuickRegistrationDialog({
             .filter((player) => player.name),
         }),
       })
+      if (response.status === 401) {
+        const next = encodeURIComponent(window.location.pathname)
+        router.push(`/admin/login?next=${next}`)
+        return
+      }
       const data = await response.json()
       if (!response.ok) throw new Error(data.error)
       onCreated({ id: data.id, players: data.players ?? [] })
@@ -627,6 +648,7 @@ function CapacityDialog({
   onClose: () => void
   onSaved: (discipline: Discipline) => void
 }) {
+  const router = useRouter()
   const [teamsCount, setTeamsCount] = useState(discipline.teamsCount?.toString() ?? "")
   const [playersCount, setPlayersCount] = useState(discipline.playersCount?.toString() ?? "")
   const [saving, setSaving] = useState(false)
@@ -640,12 +662,18 @@ function CapacityDialog({
     try {
       const response = await fetch(`/api/disciplines/${discipline.slug}/admin`, {
         method: "PATCH",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           teamsCount: teamsCount ? Number(teamsCount) : null,
           playersCount: playersCount ? Number(playersCount) : null,
         }),
       })
+      if (response.status === 401) {
+        const next = encodeURIComponent(window.location.pathname)
+        router.push(`/admin/login?next=${next}`)
+        return
+      }
       const data = await response.json()
       if (!response.ok) throw new Error(data.error)
       onSaved({

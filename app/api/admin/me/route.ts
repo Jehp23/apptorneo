@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { isValidAdminToken } from "@/lib/admin-auth"
+import { hasAdminSession, unauthorizedAdminResponse } from "@/lib/admin-auth"
 
-export async function GET(request: NextRequest) {
-  const token = request.cookies.get("admin_session")?.value
-  if (!(await isValidAdminToken(token))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+export async function GET(_request: NextRequest) {
+  if (!(await hasAdminSession())) {
+    return unauthorizedAdminResponse()
   }
   return NextResponse.json({ ok: true })
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { ArrowLeft, Check, Minus, Plus, Swords, Trash2, Trophy, UserPlus, List, Calendar, Users } from "lucide-react"
 
 import { DisciplineHeader } from "@/components/discipline-header"
@@ -53,6 +54,7 @@ export function PublicDisciplineView({
 }: {
   discipline: PublicDisciplineData
 }) {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState("posiciones")
   const [teams,   setTeams]   = useState(discipline.teams)
   const [matches, setMatches] = useState(discipline.matches)
@@ -61,7 +63,7 @@ export function PublicDisciplineView({
   const [tableWinners, setTableWinners] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    fetch("/api/admin/me").then((r) => { if (r.ok) setIsAdmin(true) })
+    fetch("/api/admin/me", { credentials: "include" }).then((r) => { if (r.ok) setIsAdmin(true) })
   }, [])
 
   // admin: add participant
@@ -77,6 +79,11 @@ export function PublicDisciplineView({
   // admin: score match
   const [scoreMatchId, setScoreMatchId] = useState<string | null>(null)
 
+  function redirectToLogin() {
+    const next = encodeURIComponent(window.location.pathname)
+    router.push(`/admin/login?next=${next}`)
+  }
+
   function showError(msg: string) {
     setError(msg)
     setTimeout(() => setError(null), 4000)
@@ -88,9 +95,14 @@ export function PublicDisciplineView({
     try {
       const res  = await fetch(`/api/admin/disciplines/${discipline.slug}/teams`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newName.trim(), type: "SINGLE" }),
       })
+      if (res.status === 401) {
+        redirectToLogin()
+        return
+      }
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setTeams((t) => [...t, { ...data, players: data.players ?? [] }])
@@ -103,7 +115,14 @@ export function PublicDisciplineView({
   async function handleRemove(teamId: string, teamName: string) {
     if (!confirm(`¿Eliminar a ${teamName}?`)) return
     try {
-      const res = await fetch(`/api/admin/disciplines/${discipline.slug}/teams/${teamId}`, { method: "DELETE" })
+      const res = await fetch(`/api/admin/disciplines/${discipline.slug}/teams/${teamId}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+      if (res.status === 401) {
+        redirectToLogin()
+        return
+      }
       if (!res.ok) throw new Error()
       setTeams((t) => t.filter((x) => x.id !== teamId))
     } catch { showError("No se pudo eliminar.") }
@@ -118,9 +137,14 @@ export function PublicDisciplineView({
     try {
       const res  = await fetch(`/api/disciplines/${discipline.slug}/matches`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ team1Id: matchForm.team1Id, team2Id: matchForm.team2Id, stage: matchForm.stage || undefined }),
       })
+      if (res.status === 401) {
+        redirectToLogin()
+        return
+      }
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       const t1 = teams.find((t) => t.id === matchForm.team1Id)
@@ -244,6 +268,7 @@ export function PublicDisciplineView({
 
   return (
     <div className="p-6">
+      <div className="mx-auto max-w-5xl">
       <Link href="/torneo" className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" />
         Volver
@@ -377,6 +402,11 @@ export function PublicDisciplineView({
                           {String(match.matchNumber).padStart(2, "0")}
                         </span>
                         <div className="flex flex-1 items-center justify-center gap-4">
+                          {match.played ? (
+                            <span className="shrink-0 font-mono text-sm font-semibold text-muted-foreground">
+                              {match.score1 ?? 0}
+                            </span>
+                          ) : null}
                           <span className="flex-1 truncate text-right font-medium text-foreground">
                             {match.team1?.name ?? "Por definir"}
                           </span>
@@ -387,13 +417,18 @@ export function PublicDisciplineView({
                               <span className="font-mono font-semibold">{match.score2 ?? 0}</span>
                             </div>
                           ) : (
-                            <span className={`min-w-[80px] rounded-lg px-3 py-1.5 text-center text-xs font-medium ${isAdmin ? "bg-amber-500/10 text-amber-600" : "bg-muted/30 text-muted-foreground"}`}>
+                            <span className={`min-w-[80px] rounded-lg px-3 py-1.5 text-center text-sm font-medium ${isAdmin ? "bg-amber-500/10 text-amber-600" : "bg-muted/30 text-muted-foreground"}`}>
                               {isAdmin ? "Cargar" : "Pendiente"}
                             </span>
                           )}
                           <span className="flex-1 truncate text-left font-medium text-foreground">
                             {match.team2?.name ?? "Por definir"}
                           </span>
+                          {match.played ? (
+                            <span className="shrink-0 font-mono text-sm font-semibold text-muted-foreground">
+                              {match.score2 ?? 0}
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                     ))}
@@ -428,7 +463,7 @@ export function PublicDisciplineView({
                   Sin participantes.
                 </div>
               ) : (
-                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   {teams.map((team) => (
                     <div key={team.id} className="overflow-hidden rounded-lg border border-border bg-card transition-shadow hover:shadow-sm">
                       <div className="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-3">
@@ -497,7 +532,7 @@ export function PublicDisciplineView({
         <DialogContent className="sm:max-w-xs">
           <DialogHeader><DialogTitle>Agregar participante</DialogTitle></DialogHeader>
           <div className="space-y-3 pt-1">
-            <input autoFocus className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
+            <input autoFocus className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base outline-none placeholder:text-muted-foreground"
               placeholder="Nombre..." value={newName} onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleAddParticipant() }} />
             <div className="flex gap-2">
@@ -515,17 +550,17 @@ export function PublicDisciplineView({
         <DialogContent className="sm:max-w-xs">
           <DialogHeader><DialogTitle>Nuevo partido</DialogTitle></DialogHeader>
           <div className="space-y-3 pt-1">
-            <select className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            <select className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base outline-none focus:border-primary"
               value={matchForm.team1Id} onChange={(e) => setMatchForm((f) => ({ ...f, team1Id: e.target.value }))}>
               <option value="">Equipo 1...</option>
               {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
-            <select className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            <select className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base outline-none focus:border-primary"
               value={matchForm.team2Id} onChange={(e) => setMatchForm((f) => ({ ...f, team2Id: e.target.value }))}>
               <option value="">Equipo 2...</option>
               {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
-            <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary placeholder:text-muted-foreground"
+            <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base outline-none focus:border-primary placeholder:text-muted-foreground"
               placeholder="Fase (opcional)" value={matchForm.stage} onChange={(e) => setMatchForm((f) => ({ ...f, stage: e.target.value }))} />
             <div className="flex gap-2">
               <button type="button" onClick={() => setAddMatchOpen(false)} className="flex-1 rounded-lg border border-border py-2 text-sm font-medium">Cancelar</button>
@@ -544,19 +579,22 @@ export function PublicDisciplineView({
           onClose={() => setScoreMatchId(null)}
           onUpdate={(u) => { updateMatch(scoringMatch.id, u); if (u.played) setScoreMatchId(null) }}
           onError={showError}
+          onUnauthorized={redirectToLogin}
         />
       )}
+    </div>
     </div>
   )
 }
 
 // ─── Score dialog ─────────────────────────────────────────────────────────────
 
-function ScoreDialog({ match, onClose, onUpdate, onError }: {
+function ScoreDialog({ match, onClose, onUpdate, onError, onUnauthorized }: {
   match: Match
   onClose: () => void
   onUpdate: (u: Partial<Match>) => void
   onError: (msg: string) => void
+  onUnauthorized: () => void
 }) {
   const [score1, setScore1] = useState(match.score1 ?? 0)
   const [score2, setScore2] = useState(match.score2 ?? 0)
@@ -567,9 +605,14 @@ function ScoreDialog({ match, onClose, onUpdate, onError }: {
     try {
       const res  = await fetch(`/api/admin/matches/${match.id}`, {
         method: "PATCH",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ score1, score2, played }),
       })
+      if (res.status === 401) {
+        onUnauthorized()
+        return
+      }
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       onUpdate({ score1: data.score1, score2: data.score2, played: data.played })
@@ -579,7 +622,7 @@ function ScoreDialog({ match, onClose, onUpdate, onError }: {
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-sm max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-center text-base font-semibold text-muted-foreground">
             {match.team1?.name ?? "—"} vs {match.team2?.name ?? "—"}

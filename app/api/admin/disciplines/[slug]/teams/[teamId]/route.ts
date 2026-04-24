@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server"
+import { hasAdminSession, unauthorizedAdminResponse } from "@/lib/admin-auth"
 import { prisma } from "@/lib/prisma"
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ slug: string; teamId: string }> }
 ) {
+  if (!(await hasAdminSession())) {
+    return unauthorizedAdminResponse()
+  }
+
   const { teamId } = await params
   const body = await request.json()
 
@@ -43,6 +48,10 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ slug: string; teamId: string }> }
 ) {
+  if (!(await hasAdminSession())) {
+    return unauthorizedAdminResponse()
+  }
+
   const { teamId } = await params
   try {
     await prisma.player.deleteMany({ where: { teamId } })
