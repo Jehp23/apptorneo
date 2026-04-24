@@ -2,22 +2,16 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { ArrowLeft, Eye, EyeOff, Shield, Trophy } from "lucide-react"
 
-export function LoginGateway() {
+export function LoginGateway({ redirectTo = "/admin" }: { redirectTo?: string }) {
   const [showLogin, setShowLogin] = useState(false)
   const [password,  setPassword]  = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState("")
   const router = useRouter()
-  const searchParams = useSearchParams()
-
-  const redirectTo = (() => {
-    const next = searchParams.get("next")
-    return next && next.startsWith("/") ? next : "/admin"
-  })()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

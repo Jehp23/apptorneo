@@ -1,5 +1,13 @@
 import { LoginGateway } from "@/components/auth/login-gateway"
 
-export default function AdminLoginPage() {
-  return <LoginGateway />
+export default async function AdminLoginPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ next?: string }>
+}) {
+  const resolvedSearchParams = (await searchParams) ?? {}
+  const next = resolvedSearchParams.next
+  const redirectTo = next && next.startsWith("/") ? next : "/admin"
+
+  return <LoginGateway redirectTo={redirectTo} />
 }
