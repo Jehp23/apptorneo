@@ -506,9 +506,16 @@ export function PublicDisciplineView({
                       const w2 = match.played && s2 > s1
                       return (
                         <div key={match.id} className={`grid grid-cols-[1fr_80px_1fr] items-center gap-2 px-4 py-3.5 ${index % 2 === 1 ? "bg-muted/20" : ""}`}>
-                          {match.stage && (
-                            <div className="col-span-3 px-0 pb-0 pt-1">
-                              <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">{match.stage}</span>
+                          {(match.stage || match.date) && (
+                            <div className="col-span-3 flex items-center justify-between px-0 pb-0 pt-1">
+                              {match.stage && (
+                                <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">{match.stage}</span>
+                              )}
+                              {match.date && !match.played && (
+                                <span className="text-[10px] font-medium text-muted-foreground">
+                                  {new Date(match.date).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Buenos_Aires" })}
+                                </span>
+                              )}
                             </div>
                           )}
                           <div className="flex items-center justify-end gap-2">
