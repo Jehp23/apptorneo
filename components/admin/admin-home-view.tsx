@@ -529,7 +529,7 @@ function NewDisciplineDialog({
               setForm((current) => ({
                 ...current,
                 name,
-                teamsCount: lower.includes("sapo") ? "34" : lower.includes("loba") ? "40" : current.teamsCount,
+                teamsCount: lower.includes("sapo") ? "16" : lower.includes("loba") ? "40" : current.teamsCount,
                 playersCount: lower.includes("sapo") ? "2" : lower.includes("loba") ? "1" : current.playersCount,
               }))
             }}

@@ -39,9 +39,9 @@ async function main() {
     {
       name: "Loba",
       slug: "loba",
-      format: "38 participantes, 6 mesas (4 de 6, 2 de 7)",
-      teamsCount: 38,
-      playersCount: 38,
+      format: "40 participantes, 6 mesas (4 de 7, 2 de 6)",
+      teamsCount: 40,
+      playersCount: 40,
       details: "Se juega al que menos punto tiene. 100 puntos sigue jugando, 101 puntos afuera. Ganadores de cada mesa a definición por campeón. Perdedores a mesas de consuelo.",
     },
     {
@@ -63,9 +63,9 @@ async function main() {
     {
       name: "Sapo",
       slug: "sapo",
-      format: "30 personas (15 parejas)",
-      teamsCount: 15,
-      playersCount: 30,
+      format: "32 personas (16 parejas)",
+      teamsCount: 16,
+      playersCount: 32,
       details: "Fase preeliminar: 2 rondas por pareja, 8 mejores parejas clasifican. Fase eliminatoria: mata-mata desde 4tos. Desempate: 5 tiros.",
     },
   ]
