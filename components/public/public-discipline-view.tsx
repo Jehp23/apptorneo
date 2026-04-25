@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Check, Minus, Plus, Swords, Trash2, Trophy, UserPlus, List, Calendar, Users } from "lucide-react"
+import { ArrowLeft, Check, Clock, Minus, Plus, Swords, Trash2, Trophy, UserPlus, List, Calendar, Users } from "lucide-react"
 
 import { DisciplineHeader } from "@/components/discipline-header"
 import { LiveIndicator } from "@/components/live-indicator"
@@ -89,6 +89,9 @@ export function PublicDisciplineView({
 
   // admin: score match
   const [scoreMatchId, setScoreMatchId] = useState<string | null>(null)
+
+  // admin: schedule match
+  const [dateMatchId, setDateMatchId] = useState<string | null>(null)
 
   function redirectToLogin() {
     const next = encodeURIComponent(window.location.pathname)
@@ -448,45 +451,50 @@ export function PublicDisciplineView({
                         const w1 = match.played && s1 > s2
                         const w2 = match.played && s2 > s1
                         return (
-                          <div
-                            key={match.id}
-                            onClick={() => isAdmin && !match.played && setScoreMatchId(match.id)}
-                            className={`grid grid-cols-[1fr_80px_1fr] items-center gap-2 px-4 py-3.5 transition-colors
-                              ${index % 2 === 1 ? "bg-muted/20" : ""}
-                              ${isAdmin && !match.played ? "cursor-pointer hover:bg-primary/5" : ""}`}
-                          >
-                            {/* Equipo 1 */}
-                            <div className="flex items-center justify-end gap-2">
-                              <span className={`text-sm text-right leading-snug ${w1 ? "font-bold text-foreground" : match.played ? "font-medium text-muted-foreground" : "font-medium text-foreground"}`}>
-                                {match.team1?.name ?? "Por definir"}
-                              </span>
-                              {w1 && <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-primary" />}
-                            </div>
-
-                            {/* Centro */}
-                            <div className="flex items-center justify-center">
-                              {match.played ? (
-                                <div className="flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 shadow-sm">
-                                  <span className={`w-5 text-center font-mono font-bold text-sm leading-none ${w1 ? "text-primary" : "text-foreground"}`}>{s1}</span>
-                                  <span className="text-muted-foreground/40 text-xs leading-none">–</span>
-                                  <span className={`w-5 text-center font-mono font-bold text-sm leading-none ${w2 ? "text-primary" : "text-foreground"}`}>{s2}</span>
-                                </div>
-                              ) : (
-                                <span className={`rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] ${
-                                  isAdmin ? "bg-amber-500/10 text-amber-600" : "text-muted-foreground/50"
-                                }`}>
-                                  {isAdmin ? "cargar" : "vs"}
+                          <div key={match.id} className={`px-4 py-3 transition-colors ${index % 2 === 1 ? "bg-muted/20" : ""}`}>
+                            <div
+                              onClick={() => isAdmin && !match.played && setScoreMatchId(match.id)}
+                              className={`grid grid-cols-[1fr_80px_1fr] items-center gap-2 ${isAdmin && !match.played ? "cursor-pointer" : ""}`}
+                            >
+                              <div className="flex items-center justify-end gap-2">
+                                <span className={`text-sm text-right leading-snug ${w1 ? "font-bold text-foreground" : match.played ? "font-medium text-muted-foreground" : "font-medium text-foreground"}`}>
+                                  {match.team1?.name ?? "Por definir"}
                                 </span>
-                              )}
+                                {w1 && <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-primary" />}
+                              </div>
+                              <div className="flex items-center justify-center">
+                                {match.played ? (
+                                  <div className="flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 shadow-sm">
+                                    <span className={`w-5 text-center font-mono font-bold text-sm leading-none ${w1 ? "text-primary" : "text-foreground"}`}>{s1}</span>
+                                    <span className="text-muted-foreground/40 text-xs leading-none">–</span>
+                                    <span className={`w-5 text-center font-mono font-bold text-sm leading-none ${w2 ? "text-primary" : "text-foreground"}`}>{s2}</span>
+                                  </div>
+                                ) : (
+                                  <span className={`rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] ${isAdmin ? "bg-amber-500/10 text-amber-600" : "text-muted-foreground/50"}`}>
+                                    {isAdmin ? "cargar" : "vs"}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center justify-start gap-2">
+                                {w2 && <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-primary" />}
+                                <span className={`text-sm text-left leading-snug ${w2 ? "font-bold text-foreground" : match.played ? "font-medium text-muted-foreground" : "font-medium text-foreground"}`}>
+                                  {match.team2?.name ?? "Por definir"}
+                                </span>
+                              </div>
                             </div>
-
-                            {/* Equipo 2 */}
-                            <div className="flex items-center justify-start gap-2">
-                              {w2 && <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-primary" />}
-                              <span className={`text-sm text-left leading-snug ${w2 ? "font-bold text-foreground" : match.played ? "font-medium text-muted-foreground" : "font-medium text-foreground"}`}>
-                                {match.team2?.name ?? "Por definir"}
-                              </span>
-                            </div>
+                            {isAdmin && !match.played && (
+                              <div className="mt-1.5 flex justify-center">
+                                <button
+                                  onClick={() => setDateMatchId(match.id)}
+                                  className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                  <Clock className="h-3 w-3" />
+                                  {match.date
+                                    ? new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(match.date))
+                                    : "Agregar horario"}
+                                </button>
+                              </div>
+                            )}
                           </div>
                         )
                       })}
@@ -505,42 +513,57 @@ export function PublicDisciplineView({
                       const w1 = match.played && s1 > s2
                       const w2 = match.played && s2 > s1
                       return (
-                        <div key={match.id} className={`grid grid-cols-[1fr_80px_1fr] items-center gap-2 px-4 py-3.5 ${index % 2 === 1 ? "bg-muted/20" : ""}`}>
+                        <div key={match.id} className={`px-4 py-3 ${index % 2 === 1 ? "bg-muted/20" : ""}`}>
                           {(match.stage || match.date) && (
-                            <div className="col-span-3 flex items-center justify-between px-0 pb-0 pt-1">
+                            <div className="flex items-center justify-between mb-1">
                               {match.stage && (
                                 <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">{match.stage}</span>
                               )}
                               {match.date && !match.played && (
                                 <span className="text-[10px] font-medium text-muted-foreground">
-                                  {new Date(match.date).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Buenos_Aires" })}
+                                  {new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(match.date))}
                                 </span>
                               )}
                             </div>
                           )}
-                          <div className="flex items-center justify-end gap-2">
-                            <span className={`text-sm text-right leading-snug ${w1 ? "font-bold text-foreground" : match.played ? "font-medium text-muted-foreground" : "font-medium text-foreground"}`}>
-                              {match.team1?.name ?? "Por definir"}
-                            </span>
-                            {w1 && <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-primary" />}
+                          <div className="grid grid-cols-[1fr_80px_1fr] items-center gap-2">
+                            <div className="flex items-center justify-end gap-2">
+                              <span className={`text-sm text-right leading-snug ${w1 ? "font-bold text-foreground" : match.played ? "font-medium text-muted-foreground" : "font-medium text-foreground"}`}>
+                                {match.team1?.name ?? "Por definir"}
+                              </span>
+                              {w1 && <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-primary" />}
+                            </div>
+                            <div className="flex items-center justify-center">
+                              {match.played ? (
+                                <div className="flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 shadow-sm">
+                                  <span className={`w-5 text-center font-mono font-bold text-sm leading-none ${w1 ? "text-primary" : "text-foreground"}`}>{s1}</span>
+                                  <span className="text-muted-foreground/40 text-xs leading-none">–</span>
+                                  <span className={`w-5 text-center font-mono font-bold text-sm leading-none ${w2 ? "text-primary" : "text-foreground"}`}>{s2}</span>
+                                </div>
+                              ) : (
+                                <span className="rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">vs</span>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-start gap-2">
+                              {w2 && <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-primary" />}
+                              <span className={`text-sm text-left leading-snug ${w2 ? "font-bold text-foreground" : match.played ? "font-medium text-muted-foreground" : "font-medium text-foreground"}`}>
+                                {match.team2?.name ?? "Por definir"}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex items-center justify-center">
-                            {match.played ? (
-                              <div className="flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 shadow-sm">
-                                <span className={`w-5 text-center font-mono font-bold text-sm leading-none ${w1 ? "text-primary" : "text-foreground"}`}>{s1}</span>
-                                <span className="text-muted-foreground/40 text-xs leading-none">–</span>
-                                <span className={`w-5 text-center font-mono font-bold text-sm leading-none ${w2 ? "text-primary" : "text-foreground"}`}>{s2}</span>
-                              </div>
-                            ) : (
-                              <span className="rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">vs</span>
-                            )}
-                          </div>
-                          <div className="flex items-center justify-start gap-2">
-                            {w2 && <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-primary" />}
-                            <span className={`text-sm text-left leading-snug ${w2 ? "font-bold text-foreground" : match.played ? "font-medium text-muted-foreground" : "font-medium text-foreground"}`}>
-                              {match.team2?.name ?? "Por definir"}
-                            </span>
-                          </div>
+                          {isAdmin && !match.played && (
+                            <div className="mt-1.5 flex justify-center">
+                              <button
+                                onClick={() => setDateMatchId(match.id)}
+                                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors"
+                              >
+                                <Clock className="h-3 w-3" />
+                                {match.date
+                                  ? new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(match.date))
+                                  : "Agregar horario"}
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )
                     })}
@@ -694,6 +717,19 @@ export function PublicDisciplineView({
           onUnauthorized={redirectToLogin}
         />
       )}
+
+      {dateMatchId && (() => {
+        const m = matches.find((x) => x.id === dateMatchId)
+        return m ? (
+          <DateDialog
+            match={m}
+            onClose={() => setDateMatchId(null)}
+            onUpdate={(u) => { updateMatch(m.id, u); setDateMatchId(null) }}
+            onError={showError}
+            onUnauthorized={redirectToLogin}
+          />
+        ) : null
+      })()}
     </div>
     </div>
   )
@@ -771,6 +807,87 @@ function ScoreDialog({ match, onClose, onUpdate, onError, onUnauthorized }: {
             className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3.5 text-base font-bold text-white hover:bg-emerald-700 disabled:opacity-40">
             <Check className="h-5 w-5" /> Cerrar partido
           </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ─── Date dialog ──────────────────────────────────────────────────────────────
+
+function DateDialog({ match, onClose, onUpdate, onError, onUnauthorized }: {
+  match: Match
+  onClose: () => void
+  onUpdate: (u: Partial<Match>) => void
+  onError: (msg: string) => void
+  onUnauthorized: () => void
+}) {
+  const toARParts = (iso: string) => {
+    const d = new Date(iso)
+    const date = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit" }).format(d)
+    const time = new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", hour: "2-digit", minute: "2-digit", hour12: false }).format(d)
+    return { date, time }
+  }
+
+  const defaults = match.date ? toARParts(match.date) : { date: "", time: "" }
+  const [dateVal, setDateVal] = useState(defaults.date)
+  const [timeVal, setTimeVal] = useState(defaults.time)
+  const [saving, setSaving] = useState(false)
+
+  async function save() {
+    if (!dateVal || !timeVal) return
+    setSaving(true)
+    try {
+      const iso = new Date(`${dateVal}T${timeVal}:00-03:00`).toISOString()
+      const res = await fetch(`/api/admin/matches/${match.id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: iso }),
+      })
+      if (res.status === 401) { onUnauthorized(); return }
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      onUpdate({ date: data.date ? new Date(data.date).toISOString() : null })
+    } catch { onError("No se pudo guardar el horario.") }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onClose() }}>
+      <DialogContent className="sm:max-w-xs">
+        <DialogHeader>
+          <DialogTitle className="text-base font-semibold">Horario del partido</DialogTitle>
+        </DialogHeader>
+        <p className="text-xs text-muted-foreground -mt-2">
+          {match.team1?.name ?? "?"} vs {match.team2?.name ?? "?"}
+        </p>
+        <div className="space-y-3 pt-1">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Fecha</label>
+            <input
+              type="date"
+              value={dateVal}
+              onChange={(e) => setDateVal(e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base outline-none focus:border-primary"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Hora (Argentina)</label>
+            <input
+              type="time"
+              value={timeVal}
+              onChange={(e) => setTimeVal(e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base outline-none focus:border-primary"
+            />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-border py-2 text-sm font-medium">Cancelar</button>
+            <button type="button" disabled={saving || !dateVal || !timeVal} onClick={save}
+              className="flex-1 rounded-lg bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-40">
+              {saving ? "..." : "Guardar"}
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
