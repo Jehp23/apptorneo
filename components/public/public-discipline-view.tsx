@@ -274,6 +274,13 @@ export function PublicDisciplineView({
     [groupedStandings, matches]
   )
 
+  const eliminationMatches = useMemo(() => {
+    const coveredIds = new Set(
+      fixtureGroups.flatMap((g) => g.matches.map((m) => m.id))
+    )
+    return matches.filter((m) => m.team1 && m.team2 && !coveredIds.has(m.id))
+  }, [fixtureGroups, matches])
+
   const upcomingMatches = useMemo(
     () => matches.filter((m) => !m.played).slice(0, 4).map((m) => ({
       team1: m.team1?.name ?? "Por definir",
@@ -486,6 +493,53 @@ export function PublicDisciplineView({
                   </div>
                 </div>
               ))}
+              {eliminationMatches.length > 0 && (
+                <div className="overflow-hidden rounded-xl border border-primary/20 bg-card">
+                  <div className="border-b border-primary/20 bg-primary/5 px-4 py-3">
+                    <h3 className="font-serif text-sm font-semibold text-primary">Eliminatorias</h3>
+                  </div>
+                  <div className="divide-y divide-border">
+                    {eliminationMatches.map((match, index) => {
+                      const s1 = match.score1 ?? 0
+                      const s2 = match.score2 ?? 0
+                      const w1 = match.played && s1 > s2
+                      const w2 = match.played && s2 > s1
+                      return (
+                        <div key={match.id} className={`grid grid-cols-[1fr_80px_1fr] items-center gap-2 px-4 py-3.5 ${index % 2 === 1 ? "bg-muted/20" : ""}`}>
+                          {match.stage && (
+                            <div className="col-span-3 px-0 pb-0 pt-1">
+                              <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">{match.stage}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center justify-end gap-2">
+                            <span className={`text-sm text-right leading-snug ${w1 ? "font-bold text-foreground" : match.played ? "font-medium text-muted-foreground" : "font-medium text-foreground"}`}>
+                              {match.team1?.name ?? "Por definir"}
+                            </span>
+                            {w1 && <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-primary" />}
+                          </div>
+                          <div className="flex items-center justify-center">
+                            {match.played ? (
+                              <div className="flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 shadow-sm">
+                                <span className={`w-5 text-center font-mono font-bold text-sm leading-none ${w1 ? "text-primary" : "text-foreground"}`}>{s1}</span>
+                                <span className="text-muted-foreground/40 text-xs leading-none">–</span>
+                                <span className={`w-5 text-center font-mono font-bold text-sm leading-none ${w2 ? "text-primary" : "text-foreground"}`}>{s2}</span>
+                              </div>
+                            ) : (
+                              <span className="rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">vs</span>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-start gap-2">
+                            {w2 && <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-primary" />}
+                            <span className={`text-sm text-left leading-snug ${w2 ? "font-bold text-foreground" : match.played ? "font-medium text-muted-foreground" : "font-medium text-foreground"}`}>
+                              {match.team2?.name ?? "Por definir"}
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
